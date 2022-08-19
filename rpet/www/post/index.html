@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="utf-8"/>
+	<title>Spinnenwebservetjes</title>
+</head>
+
+<body>
+	<h3>&copy; Spinnenwebservetjes' official form</h3>
+	
+	<form method="post" action="submission.php">
+
+		<label for="name">Your name</label>
+		<div>
+			<input type="text" id="name" name="name" required>
+		</div>
+		
+		<label for="game">Your favourite game</label>
+		<div>
+			<input type="text" id="game" name="game" required>
+		</div>
+		
+		<label></label>
+		<div>
+			<button type="submit">Submit</button>
+		</div>
+
+    </form>
+	<br>
+	<form enctype="multipart/form-data" method="post" action="upload.php">
+
+		<label for="file">Upload an image</label>
+		<div>
+			<input type="file" id="imageupload" name="imageupload" />
+		</div>
+		<div>
+			<input type="submit" name="submit" value="Upload image" />
+		</div>
+
+	</form>
+
+</body>
+</html>

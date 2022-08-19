@@ -13,6 +13,29 @@
 # include <string>
 # include <limits>
 # include <cstdio>
+# include <vector>
+
+char	*ft_strjoin(char const *s1, char const *s2)
+{
+	char	*s3;
+	int		i;
+	int		j;
+
+	i = -1;
+	j = -1;
+	if (s1 == NULL && s2 == NULL)
+		return (NULL);
+	if ((s3 = (char *)malloc(sizeof(char)
+					* (strlen(s1) + strlen(s2) + 1))) == NULL)
+		return (NULL);
+	while (s1 != NULL && s1[++j] != '\0')
+		s3[++i] = s1[j];
+	j = -1;
+	while (s2 != NULL && s2[++j] != '\0')
+		s3[++i] = s2[j];
+	s3[++i] = '\0';
+	return (s3);
+}
 
 #define PORT 8080
 
@@ -65,68 +88,105 @@ int main(int argc, char const *argv[])
         }
         char buffer[30000] = {0};
 
+        // inet_pton(AF_INET, "example.com", &(address.sin_addr));
+
+
+
+
 
 		valread = recv( new_socket , buffer, 30000, 0);
 
         // parse request-line
+        char temp[5][1000];
         std::string method, uri, version;
 
-        sscanf(buffer, "%s %s %s", method, uri, version);
+        sscanf(buffer, "%s %s %s", temp[0], temp[1], temp[2]);
 
-        
+        method = temp[0];
+        uri = temp[1];
+        version = temp[2];
 
-		// process
-				if (buffer[10] == '1')
-		{
-			// do link_1
-			char *arr= strdup(link_1);
+        // print vars
+        printf("[%d] method: (%s) uri: (%s) version: (%s)\n", new_socket, temp[0], temp[1], temp[2]);
 
-			send(new_socket , arr , strlen(arr) , 0 );
-
-		}
-		else if (buffer[10] == '2')
-		{
-			// do link_2
-			char *arr= strdup(link_2);
-
-			send(new_socket , arr , strlen(arr) , 0 );
-		}
-        else if (buffer[4] == '/' && buffer[5] == 'f')
+        if (method == "GET")
         {
-            std::ifstream file;
-            std::stringstream	buffer;
+            if (uri == "/")
+            {
+                char *response = strdup(main_page);
 
-            file.open("/mnt/c/Users/Bob/Documents/webserv/favicon.ico", std::ifstream::in);
+                printf("Sending response: [%s]\n", response);
 
-            buffer << file.rdbuf();
+                send(new_socket , response , strlen(response) , 0 );
+                printf("Main page sent");
 
-            std::string str = favi + buffer.str();
+                free(response);
+            }
+            else if (uri == "/favicon.ico")
+            {
+                // std::ifstream file;
+                // std::stringstream	buffer;
 
-            char *arr = strdup(str.c_str());
-            // print all variables
-            std::cout << "buffer: [" << buffer.str() << "]" << std::endl;
-            // size of buffer
-            std::cout << "size of buffer: " << buffer.str().size() << std::endl;
-        
+                // file.open("/mnt/c/Users/Bob/Documents/webserv" + uri, std::ifstream::in);
 
+                // buffer << file.rdbuf();
 
-			send(new_socket , str.c_str() , strlen(favi) + buffer.str().size() , 0 );
+                // std::string str = favi + buffer.str();
+
+                // char *arr = strdup(str.c_str());
+
+                // send(new_socket , str.c_str() , strlen(favi) + buffer.str().size() , 0 );
+                // std::cout << str.substr(0, 100) << std::endl;
+                printf("Favicon sent");
+            }
+            else
+            {
+                std::ifstream file;
+                std::stringstream	buffer;
+                
+                file.open("/mnt/c/Users/Bob/Documents/webserv" + uri, std::ifstream::in);
+                buffer << file.rdbuf();
+
+                printf("looking at [%s%s]\n", "/mnt/c/Users/Bob/Documents/webserv", uri.c_str());
+                std::string temp;
+
+                if (uri.find("jpg") == uri.npos)
+                    temp = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: ";
+                else
+                    temp = "HTTP/1.1 200 OK\nContent-Type:image/jpeg\nContent-Length: ";
+                // temp.insert(0, "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: ");
+
+                temp.insert(temp.size(), std::to_string(buffer.str().size()));
+                temp.insert(temp.size(), "\n\n");
+                // temp.insert(temp.size(), buffer.str());
+                // char *response = strdup(temp.c_str());
+
+                std::vector<char> v;
+
+                v.insert(v.end(), temp.begin(), temp.end());
+                v.insert(v.end(), buffer.str().begin(), buffer.str().end());
+
+                char *response = &v[0];
+
+                printf("looping\n");
+
+                ssize_t bytes_send = 0;
+
+                for (; bytes_send < buffer.str().size();)
+                {
+                    ssize_t bytes = send(new_socket, response + bytes_send,  buffer.str().size(), 0);
+                    if (bytes == -1)
+                    {
+                        perror("send");
+                        exit(1);
+                    }
+                    bytes_send += bytes;
+                }
+
+                // send(new_socket , response, strlen(response), 0);
+                printf("Response [%ld][%s]\n", bytes_send, response);
+            }
         }
-		else
-		{
-			char *arr= strdup(main_page);
-
-			send(new_socket , arr , strlen(arr) , 0 );
-		}
-
-
-
-
-        // valread = read( new_socket , buffer, 30000);
-        printf("\n%s\n", buffer);
-
-        // write(new_socket , hello , strlen(hello));
-        // printf("------------------Hello message sent-------------------\n");
         close(new_socket);
     }
     return 0;
