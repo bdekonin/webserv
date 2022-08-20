@@ -127,7 +127,7 @@ std::vector<std::string>	StringUtils::splitServers(const std::string& fileconten
 		posBegin = filecontents.find_first_not_of(Whitespaces, posBegin);
 		if (posBegin == std::string::npos)
 			break;
-		if (filecontents.compare(posBegin, 6, "server"))
+		if (filecontents.compare(posBegin, 6, "server")) // skipt alle whitespaces en zoekt naar server
 			throw std::runtime_error("configfile: not a server");
 		braceOpen = filecontents.find_first_not_of(Whitespaces, posBegin + 6);
 		if (braceOpen == std::string::npos)

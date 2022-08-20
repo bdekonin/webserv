@@ -6,7 +6,7 @@
 
 int		main(int argc, char **argv)
 {
-	Parser			parser;
+ 	Parser			parser;
 	WebServer		webServer;
 	std::string		configFile;
 
@@ -23,6 +23,7 @@ int		main(int argc, char **argv)
 	{
 		parser.init(configFile);
 		webServer.setup(parser.getServerConfigs());
+		exit(1);
 		webServer.run();
 	}
 	catch (std::exception &e)

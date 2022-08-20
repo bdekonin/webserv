@@ -1,6 +1,6 @@
 NAME =			webserv
 
-CC =			g++
+CC =			g++ -g
 # CFLAGS =		-Wall -Werror -Wextra -std=c++98 -pedantic
 UNUSED = 		-Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-private-field
 

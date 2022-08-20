@@ -106,10 +106,15 @@ void	Parser::semicolonsErrorCheck() const
 	}
 }
 
+#include <iostream>
+
 void	Parser::createServerConfig()
 {
 	const std::string			id = "server";
 	std::vector<std::string>	lines = StringUtils::splitServers(this->_filecontent);
+
+	for (size_t i = 0; i < lines.size(); i++)
+		std::cout << lines[i] << std::endl;
 
 	for (size_t i = 0; i < lines.size(); i++)
 	{
