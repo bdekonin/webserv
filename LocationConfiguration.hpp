@@ -6,17 +6,17 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:42:51 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/20 21:57:11 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/21 00:01:13 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef LOCATIONCONFIGURATION_HPP
 # define LOCATIONCONFIGURATION_HPP
 
-# include "ServerConfiguration.hpp"
+# include "Configuration.hpp"
 
 
-class LocationConfiguration : public ServerConfiguration
+class LocationConfiguration : public Configuration
 {
 	public:
 		/* Constructor  */

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/20 21:59:03 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/21 00:11:22 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,15 @@ class serverConfig
 		bool									_aliasSet;	
 };
 
+size_t		count(std::string str, char c)
+{
+	size_t count = 0;
+	for (size_t i = 0; i < str.length(); i++)
+		if (str[i] == c)
+			count++;
+	return (count);
+}
+
 std::string getFilecontent(const char *filename)
 {
 	std::ifstream in(filename, std::ios::in);
@@ -80,8 +89,6 @@ void	split(const std::string& str, const char* delims, std::vector<std::string>&
 	size_t	braceOpen;
 	size_t	braceClose;
 	size_t	subLength;
-
-	std::cout << str << std::endl;
 
 	while (posBegin < str.length())
 	{
@@ -149,12 +156,15 @@ std::vector<std::vector<std::string> > splitServer(const std::string &content)
 	}
 	return serverBlocks;
 }
+#include "Configuration.hpp"
 
 void readblocks(std::vector<std::string> &block)
 {
 	std::string identifier;
 	std::string value;
 	std::string temp;
+
+	Configuration config;
 
 	for (size_t i = 0; i < block.size(); i++)
 	{
@@ -165,8 +175,43 @@ void readblocks(std::vector<std::string> &block)
 
 		value = value.substr(0, value.find_last_not_of(whitespaces) + 1); // removes back whitespaces + 1 for ;. or location / and the {} of location
 
-		if (identifier == "listen")
-		std::cout << std::setw(25) << identifier << " : " << std::setw(25) << value << std::endl;
+		if (identifier == "location")
+		{
+			size_t bracketOpen;
+			size_t bracketClose;
+			std::vector<std::string> copy; // a copy of the location block
+			
+			bracketOpen = i + 2;
+				
+			while (block[i] != "}")
+				i++;
+			bracketClose = i + j;
+
+			copy = std::vector<std::string>(block.begin() + bracketOpen, block.begin() + bracketClose);
+
+			std::cout <<"-----" << value << std::endl;
+			
+			continue;
+		}
+		if (identifier == "error_page")
+		{
+			config.set_error_page(value);
+		}
+		else if (identifier == "limit_except")
+		{
+			config.set_methods(value);
+		}
+		else if (identifier == "return")
+			config.set_return(value);
+		else if (identifier == "root")
+			config.set_root(value);
+		else if (identifier == "autoindex")
+			config.set_autoindex(value);
+		else if (identifier == "index")
+			config.set_index(value);
+		else if (identifier == "cgi")
+			config.set_cgi(value);
+		std::cout << std::setw(30) << "[" << identifier << "] : " << std::setw(30) << "[" << value << "]" << std::endl;
 	}
 	std::cout << std::endl;
 }
@@ -195,6 +240,9 @@ int main(int argc, char **argv)
 		}
 		std::cout << std::endl;
 	}
+
+	// std::cout << std::setw(30) << "[" << identifier << "] : " << std::setw(30) << "[" << value << "]" << std::endl;
+
 
 	return 0;
 }
