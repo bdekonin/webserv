@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/20 15:23:20 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/20 19:36:48 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,15 @@ static size_t	getCurlyBraceMatch(const std::string& str, size_t curlyBraceOpen)
 	return pos;
 }
 
+std::string getLineFromNpos(const std::string& str, size_t pos)
+{
+	size_t begin = str.find_first_of('\n', pos);
+	size_t end = str.find_last_of('\n', pos);
+
+	std::string temp = str.substr(begin, end);
+	return temp;
+}
+
 std::vector<std::vector<std::string> > splitServer(const std::string &content)
 {
 	size_t posBegin = 0; 
@@ -99,12 +108,15 @@ std::vector<std::vector<std::string> > splitServer(const std::string &content)
 		{
 			std::string s = content.substr(posBegin, length);
 			s.push_back('\n');
+			for (int k = 0; k < s.length(); k++)
+			{
+				if (s[k] == '{' || s[k] == '}')
+					s.insert(k++, 1, '\n');
+			}
 			std::vector<std::string> block;
 			std::string temp = "";
 			bool inString = false;
-			
-			
-			
+
 			for (int i = 0; i < s.length(); ++i)
 			{
 				if(s[i] =='\n'){
@@ -136,12 +148,20 @@ std::vector<std::vector<std::string> > splitServer(const std::string &content)
 	// line[0]: server
 	// line[1]: {
 	// line[line.size() - 1]: }
+	// for (int i = 0; i < serverBlocks.size(); ++i)
+	// {
+	// 	serverBlocks[i].erase(serverBlocks[i].begin());
+	// 	serverBlocks[i].erase(serverBlocks[i].begin());
+	// 	serverBlocks[i].erase(serverBlocks[i].end() - 1);
+	// }
 
-	for (int i = 0; i < serverBlocks.size(); ++i)
+		for (int i = 0; i < serverBlocks.size(); i++)
 	{
-		serverBlocks[i].erase(serverBlocks[i].begin());
-		serverBlocks[i].erase(serverBlocks[i].begin());
-		serverBlocks[i].erase(serverBlocks[i].end() - 1);
+		for (int j = 0; j < serverBlocks[i].size(); j++)
+		{
+			std::cout << i << " - " << serverBlocks[i][j] << std::endl;
+		}
+		std::cout << std::endl;
 	}
 	return serverBlocks;
 }
@@ -164,7 +184,7 @@ void readblocks(std::vector<std::string> &block)
 		{
 			
 		}
-		std::cout << std::setw(20) << id << " : " << std::setw(20) << value << std::endl;
+		std::cout << std::setw(25) << id << " : " << std::setw(25) << value << std::endl;
 	}
 	std::cout << std::endl;
 }
@@ -172,31 +192,23 @@ void readblocks(std::vector<std::string> &block)
 
 int main(int argc, char **argv)
 {
-	argv[1] = strdup("config/default_configfile.conf");
+	argv[1] = strdup("config/2_serv_test.conf");
 	std::string filecontent = getFilecontent(argv[1]);
 	
 	std::vector<std::vector<std::string> > blocks;
 	
 	blocks = splitServer(filecontent);
 
+
 	// for (int i = 0; i < blocks.size(); ++i)
 	// {
-	// 	for (int j = 0; j < blocks[i].size(); ++j)
+	// 	readblocks(blocks[i]);
+	// 	for (int j = 0; j < 100; ++j)
 	// 	{
-	// 		std::cout << i << " " << blocks[i][j] << std::endl;
+	// 		std::cout << "_";
 	// 	}
 	// 	std::cout << std::endl;
 	// }
-	for (int i = 0; i < blocks.size(); ++i)
-	{
-		readblocks(blocks[i]);
-		for (int j = 0; j < 50; ++j)
-		{
-			std::cout << "_";
-		}
-		std::cout << std::endl;
-	}
 
-	
 	return 0;
 }
