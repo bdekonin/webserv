@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/21 00:11:22 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/21 01:10:54 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,15 +156,16 @@ std::vector<std::vector<std::string> > splitServer(const std::string &content)
 	}
 	return serverBlocks;
 }
-#include "Configuration.hpp"
+#include "ServerConfiguration.hpp"
 
-void readblocks(std::vector<std::string> &block)
+void readblocks(std::vector<std::string> &block, Configuration &config)
 {
 	std::string identifier;
 	std::string value;
 	std::string temp;
 
-	Configuration config;
+	char *identifier_c;
+	char *value_c;
 
 	for (size_t i = 0; i < block.size(); i++)
 	{
@@ -175,6 +176,8 @@ void readblocks(std::vector<std::string> &block)
 
 		value = value.substr(0, value.find_last_not_of(whitespaces) + 1); // removes back whitespaces + 1 for ;. or location / and the {} of location
 
+		identifier_c = (char*)identifier.c_str();
+		value_c = (char*)value.c_str();
 		if (identifier == "location")
 		{
 			size_t bracketOpen;
@@ -182,15 +185,23 @@ void readblocks(std::vector<std::string> &block)
 			std::vector<std::string> copy; // a copy of the location block
 			
 			bracketOpen = i + 2;
-				
-			while (block[i] != "}")
-				i++;
-			bracketClose = i + j;
-
+			bracketClose = i;
+			while (block[bracketClose] != "}")
+				bracketClose++;
+			i--;
 			copy = std::vector<std::string>(block.begin() + bracketOpen, block.begin() + bracketClose);
+			block.erase(block.begin() + bracketOpen - 2, block.begin() + bracketClose + 1);
 
-			std::cout <<"-----" << value << std::endl;
+			LocationConfiguration location(value);
+
+			readblocks(copy, location);
 			
+			// config._locations.push_back(value, location);
+			
+			ServerConfiguration &server = dynamic_cast<ServerConfiguration&>(config);
+
+			server._locations[value] = location;
+
 			continue;
 		}
 		if (identifier == "error_page")
@@ -216,9 +227,10 @@ void readblocks(std::vector<std::string> &block)
 	std::cout << std::endl;
 }
 
-
+#include <chrono>
 int main(int argc, char **argv)
 {
+	auto start = std::chrono::high_resolution_clock::now();
 	if (argv[1] == NULL)
 	{
 		std::cout << "No file given" << std::endl;
@@ -230,10 +242,11 @@ int main(int argc, char **argv)
 	
 	blocks = splitServer(filecontent);
 
+	ServerConfiguration temp;
 
 	for (int i = 0; i < blocks.size(); ++i)
 	{
-		readblocks(blocks[i]);
+		readblocks(blocks[i], temp);
 		for (int j = 0; j < 100; ++j)
 		{
 			std::cout << "_";
@@ -241,8 +254,29 @@ int main(int argc, char **argv)
 		std::cout << std::endl;
 	}
 
+	std::cout << "SIZE: " << temp._locations.size() << std::endl;
+	
+// loop through blocks
+	for (std::map<std::string, LocationConfiguration>::iterator it = temp._locations.begin(); it != temp._locations.end(); ++it)
+	{
+		std::cout << "KEY: " << it->first << std::endl;
+		// std::cout << "ROOT: " << it->second._root() << std::endl;
+		// std::cout << "INDEX: " << it->second._index << std::endl;
+		// std::cout << "AUTOINDEX: " << it->second.get_autoindex() << std::endl;
+		// std::cout << "CGI: " << it->second.get_cgi() << std::endl;
+		// std::cout << "RETURN: " << it->second.get_return() << std::endl;
+		// std::cout << "ERROR_PAGE: " << it->second.get_error_page() << std::endl;
+		// std::cout << "METHODS: " << it->second.get_methods() << std::endl;
+	}
 	// std::cout << std::setw(30) << "[" << identifier << "] : " << std::setw(30) << "[" << value << "]" << std::endl;
 
+	auto stop = std::chrono::high_resolution_clock::now();
 
+
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+ 
+// To get the value of duration use the count()
+// member function on the duration object
+std::cout << duration.count() << std::endl;
 	return 0;
 }

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/21 00:02:14 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/21 01:08:03 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,45 +42,61 @@ class Configuration
 		/* Destructor */
 		virtual ~Configuration()
 		{
-			for (std::map<size_t, std::string>::iterator it = _error_page.begin(); it != _error_page.end(); it++)
-				std::cout << it->first << " " << it->second << std::endl;
+			// for (std::map<size_t, std::string>::iterator it = _error_page.begin(); it != _error_page.end(); it++)
+			// 	std::cout << it->first << " " << it->second << std::endl;
 
 
-			if (this->_methods[0] == true || this->_methods[1] == true || this->_methods[2] == true)
-			{
-				std::cout << "GET: " << this->_methods[0] << std::endl;
-				std::cout << "POST: " << this->_methods[1] << std::endl;
-				std::cout << "DELETE: " << this->_methods[2] << std::endl;
-			}
+			// if (this->_methods[0] == true || this->_methods[1] == true || this->_methods[2] == true)
+			// {
+			// 	std::cout << "GET: " << this->_methods[0] << std::endl;
+			// 	std::cout << "POST: " << this->_methods[1] << std::endl;
+			// 	std::cout << "DELETE: " << this->_methods[2] << std::endl;
+			// }
 
 			
-			if (this->_return.size() > 0)
-				std::cout << "Return: " << this->_return.begin()->first << " -> " << this->_return.begin()->second << std::endl;
+			// if (this->_return.size() > 0)
+			// 	std::cout << "Return: " << this->_return.begin()->first << " -> " << this->_return.begin()->second << std::endl;
 			
-			if (this->_autoindex == true)
-			{
-				std::cout << "autoindex: " << this->_autoindex << std::endl;
-			}
-			if (this->_index.size() > 0)
-			{
-				std::cout << "index: ";
-				for (size_t i = 0; i < this->_index.size(); i++)
-					std::cout << this->_index[i] << " ";
-				std::cout << std::endl;
-			}
+			// if (this->_autoindex == true)
+			// {
+			// 	std::cout << "autoindex: " << this->_autoindex << std::endl;
+			// }
+			// if (this->_index.size() > 0)
+			// {
+			// 	std::cout << "index: ";
+			// 	for (size_t i = 0; i < this->_index.size(); i++)
+			// 		std::cout << this->_index[i] << " ";
+			// 	std::cout << std::endl;
+			// }
 
-			if (this->_cgi.size() > 0)
-			{
-				for (std::map<std::string, std::string>::iterator it = _cgi.begin(); it != _cgi.end(); it++)
-					std::cout << it->first << " " << it->second << std::endl;
-			}
+			// if (this->_cgi.size() > 0)
+			// {
+			// 	for (std::map<std::string, std::string>::iterator it = _cgi.begin(); it != _cgi.end(); it++)
+			// 		std::cout << it->first << " " << it->second << std::endl;
+			// }
 		}
 
 		/* Copy constructor */
-		Configuration(const Configuration&);
+		Configuration(const Configuration &src)
+		{
+			*this = src;
+		}
 
 		/* Operation overload = */
-		Configuration& operator = (const Configuration& e);
+		Configuration& operator = (const Configuration& src)
+		{
+			this->_error_page = src._error_page;
+			this->_client_max_body_size = src._client_max_body_size;
+			this->_methods[0] = src._methods[0];
+			this->_methods[1] = src._methods[1];
+			this->_methods[2] = src._methods[2];
+			this->_return = src._return;
+			this->_root = src._root;
+			this->_autoindex = src._autoindex;
+			this->_index = src._index;
+			this->_cgi = src._cgi;
+			return *this;
+		}
 
 		// Methods
 		void clear() // clear all data
@@ -222,7 +238,7 @@ class Configuration
 
 			this->_cgi[v[0]] = v[1];
 		}
-	private:
+	public:
 		std::map<size_t, std::string>		_error_page; // <error code, path>
 		size_t								_client_max_body_size; // max size of body
 		bool								_methods[3]; // GET, POST, DELETE

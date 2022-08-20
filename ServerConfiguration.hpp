@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/20 22:04:02 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/21 01:04:26 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,26 +17,46 @@
 # include <vector>
 # include <map>
 
-class ServerConfiguration
+# include "Configuration.hpp"
+# include "LocationConfiguration.hpp"
+
+class ServerConfiguration : public Configuration
 {
 	public:
 		/* Constructor  */
-		ServerConfiguration();
+		ServerConfiguration()
+		: Configuration()
+		{
+			
+		}
 
 		/* Destructor */
-		virtual ~ServerConfiguration();
+		virtual ~ServerConfiguration()
+		{
+			
+		}
 
 		/* Copy constructor */
-		ServerConfiguration(const ServerConfiguration&);
+		ServerConfiguration(const ServerConfiguration &src)
+		{
+			*this = src;
+		}
 
 		/* Operation overload = */
-		ServerConfiguration& operator = (const ServerConfiguration& e);
+		ServerConfiguration& operator = (const ServerConfiguration &src)
+		{
+			this->_ports = src._ports;
+			this->_names = src._names;
+			
+			// this->_locations = src._locations;
+			return *this;
+		}
 
 		// Methods
-	protected:
+	public:
 		std::map<std::string, size_t>		_ports; // <host(ip), port>
 		std::vector<std::string>			_names; // server names
-		// std::map<std::string, locationConfiguration> _locations; // location path, location config
+		std::map<std::string, LocationConfiguration> _locations; // location path, location config
 };
 
 #endif // SERVERCONFIGURATION_HPP
