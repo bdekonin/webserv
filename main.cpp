@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/20 19:36:48 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/20 21:59:03 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,6 @@ std::string getFilecontent(const char *filename)
 	return contents.str();
 }
 
-
 static size_t	getCurlyBraceMatch(const std::string& str, size_t curlyBraceOpen)
 {
 	size_t	pos = curlyBraceOpen;
@@ -73,13 +72,42 @@ static size_t	getCurlyBraceMatch(const std::string& str, size_t curlyBraceOpen)
 	return pos;
 }
 
-std::string getLineFromNpos(const std::string& str, size_t pos)
+void	split(const std::string& str, const char* delims, std::vector<std::string>& out)
 {
-	size_t begin = str.find_first_of('\n', pos);
-	size_t end = str.find_last_of('\n', pos);
+	size_t	posBegin = 0;
+	size_t	posEnd;
+	size_t  posDelim;
+	size_t	braceOpen;
+	size_t	braceClose;
+	size_t	subLength;
 
-	std::string temp = str.substr(begin, end);
-	return temp;
+	std::cout << str << std::endl;
+
+	while (posBegin < str.length())
+	{
+		braceOpen = str.find('{', posBegin);
+		if (braceOpen != std::string::npos)
+			braceClose = getCurlyBraceMatch(str, braceOpen);
+		posDelim = str.find_first_of(delims, posBegin);
+		// if (braceOpen < posDelim)
+		// 	posEnd = braceClose + 1;
+		// else
+		posEnd = std::min(posDelim, str.length());
+		subLength = posEnd - posBegin;
+		if (subLength)
+		{
+			std::string sub = str.substr(posBegin, subLength);
+			{
+				size_t begin = sub.find_first_not_of(whitespaces);
+				if (begin != std::string::npos)
+					sub = sub.substr(begin);
+			}
+			
+			if (sub.find_first_not_of(whitespaces) != std::string::npos)
+				out.push_back(sub);
+		}
+		posBegin = posEnd + 1;
+	}
 }
 
 std::vector<std::vector<std::string> > splitServer(const std::string &content)
@@ -107,84 +135,38 @@ std::vector<std::vector<std::string> > splitServer(const std::string &content)
 		if (length)
 		{
 			std::string s = content.substr(posBegin, length);
-			s.push_back('\n');
-			for (int k = 0; k < s.length(); k++)
 			{
-				if (s[k] == '{' || s[k] == '}')
-					s.insert(k++, 1, '\n');
+				size_t start = s.find('{');
+				size_t end = s.rfind('}');
+				size_t len = end - start - 1;
+				s = s.substr(start + 1, len);
 			}
-			std::vector<std::string> block;
-			std::string temp = "";
-			bool inString = false;
-
-			for (int i = 0; i < s.length(); ++i)
-			{
-				if(s[i] =='\n'){
-					if (temp.length() > 0)
-						block.push_back(temp);
-					temp = "";
-					inString = false;
-				}
-				else{
-					if (inString == false)
-					{
-						if (s[i] == 32 || s[i] == '\t')
-							s[i] = '\b';
-						else if (s[i] != 32 || s[i] != '\t')
-						{
-							inString = true;
-						}
-					}
-					if (s[i] != '\b')
-						temp.push_back(s[i]);
-				}
-			}
-			serverBlocks.push_back(block);
+			std::vector<std::string> lines;
+			split(s, "\n", lines);
+			serverBlocks.push_back(lines);
 		}
 		posBegin = bracketClose + 1;
-	}
-
-	// Everything went well. Removing
-	// line[0]: server
-	// line[1]: {
-	// line[line.size() - 1]: }
-	// for (int i = 0; i < serverBlocks.size(); ++i)
-	// {
-	// 	serverBlocks[i].erase(serverBlocks[i].begin());
-	// 	serverBlocks[i].erase(serverBlocks[i].begin());
-	// 	serverBlocks[i].erase(serverBlocks[i].end() - 1);
-	// }
-
-		for (int i = 0; i < serverBlocks.size(); i++)
-	{
-		for (int j = 0; j < serverBlocks[i].size(); j++)
-		{
-			std::cout << i << " - " << serverBlocks[i][j] << std::endl;
-		}
-		std::cout << std::endl;
 	}
 	return serverBlocks;
 }
 
 void readblocks(std::vector<std::string> &block)
 {
-	std::string id;
+	std::string identifier;
 	std::string value;
 	std::string temp;
 
 	for (size_t i = 0; i < block.size(); i++)
 	{
-		id = block[i].substr(0, block[i].find_first_of(whitespaces)); // gets id
+
+		identifier = block[i].substr(0, block[i].find_first_of(whitespaces)); // gets identifier
 		temp = block[i].substr(block[i].find_first_of(whitespaces) + 1); // gets value with whitespaces
 		value = temp.substr(temp.find_first_not_of(whitespaces)); // removes front whitespaces
 
 		value = value.substr(0, value.find_last_not_of(whitespaces) + 1); // removes back whitespaces + 1 for ;. or location / and the {} of location
-		
-		if (id == "listen")
-		{
-			
-		}
-		std::cout << std::setw(25) << id << " : " << std::setw(25) << value << std::endl;
+
+		if (identifier == "listen")
+		std::cout << std::setw(25) << identifier << " : " << std::setw(25) << value << std::endl;
 	}
 	std::cout << std::endl;
 }
@@ -192,7 +174,11 @@ void readblocks(std::vector<std::string> &block)
 
 int main(int argc, char **argv)
 {
-	argv[1] = strdup("config/2_serv_test.conf");
+	if (argv[1] == NULL)
+	{
+		std::cout << "No file given" << std::endl;
+		return 0;
+	}
 	std::string filecontent = getFilecontent(argv[1]);
 	
 	std::vector<std::vector<std::string> > blocks;
@@ -200,15 +186,15 @@ int main(int argc, char **argv)
 	blocks = splitServer(filecontent);
 
 
-	// for (int i = 0; i < blocks.size(); ++i)
-	// {
-	// 	readblocks(blocks[i]);
-	// 	for (int j = 0; j < 100; ++j)
-	// 	{
-	// 		std::cout << "_";
-	// 	}
-	// 	std::cout << std::endl;
-	// }
+	for (int i = 0; i < blocks.size(); ++i)
+	{
+		readblocks(blocks[i]);
+		for (int j = 0; j < 100; ++j)
+		{
+			std::cout << "_";
+		}
+		std::cout << std::endl;
+	}
 
 	return 0;
 }

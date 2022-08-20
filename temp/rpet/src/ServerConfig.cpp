@@ -83,7 +83,8 @@ void	ServerConfig::init(std::string& str)
 	std::string					identifier;
 
 	StringUtils::trimBraces(str);
-	StringUtils::split(str, ";", lines);
+	StringUtils::split(str, "\n", lines);
+
 	for (size_t i = 0; i < lines.size(); i++)
 	{
 		StringUtils::matchIdentifier(lines[i], identifier);
