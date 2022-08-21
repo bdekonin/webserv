@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/21 01:08:03 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/21 21:39:38 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,38 +42,6 @@ class Configuration
 		/* Destructor */
 		virtual ~Configuration()
 		{
-			// for (std::map<size_t, std::string>::iterator it = _error_page.begin(); it != _error_page.end(); it++)
-			// 	std::cout << it->first << " " << it->second << std::endl;
-
-
-			// if (this->_methods[0] == true || this->_methods[1] == true || this->_methods[2] == true)
-			// {
-			// 	std::cout << "GET: " << this->_methods[0] << std::endl;
-			// 	std::cout << "POST: " << this->_methods[1] << std::endl;
-			// 	std::cout << "DELETE: " << this->_methods[2] << std::endl;
-			// }
-
-			
-			// if (this->_return.size() > 0)
-			// 	std::cout << "Return: " << this->_return.begin()->first << " -> " << this->_return.begin()->second << std::endl;
-			
-			// if (this->_autoindex == true)
-			// {
-			// 	std::cout << "autoindex: " << this->_autoindex << std::endl;
-			// }
-			// if (this->_index.size() > 0)
-			// {
-			// 	std::cout << "index: ";
-			// 	for (size_t i = 0; i < this->_index.size(); i++)
-			// 		std::cout << this->_index[i] << " ";
-			// 	std::cout << std::endl;
-			// }
-
-			// if (this->_cgi.size() > 0)
-			// {
-			// 	for (std::map<std::string, std::string>::iterator it = _cgi.begin(); it != _cgi.end(); it++)
-			// 		std::cout << it->first << " " << it->second << std::endl;
-			// }
 		}
 
 		/* Copy constructor */
@@ -238,6 +206,72 @@ class Configuration
 
 			this->_cgi[v[0]] = v[1];
 		}
+		
+		// Getters
+		std::map<size_t, std::string> &get_error_page()
+		{
+			return this->_error_page;
+		}
+		const std::map<size_t, std::string> &get_error_page() const
+		{
+			return this->_error_page;
+		}
+		size_t get_client_max_body_size() 
+		{
+			return this->_client_max_body_size;
+		}
+		const size_t get_client_max_body_size() const
+		{
+			return this->_client_max_body_size;
+		}
+		bool get_methods(size_t request)
+		{
+			return this->_methods[request];
+		}
+		const bool get_methods(size_t request) const
+		{
+			return this->_methods[request];
+		}
+		std::map<size_t, std::string> &get_return() 
+		{
+			return this->_return;
+		}
+		const std::map<size_t, std::string> &get_return() const
+		{
+			return this->_return;
+		}
+		std::string &get_root()
+		{
+			return this->_root;
+		}
+		const std::string &get_root() const
+		{
+			return this->_root;
+		}
+		bool get_autoindex()
+		{
+			return this->_autoindex;
+		}
+		const bool get_autoindex() const
+		{
+			return this->_autoindex;
+		}
+		std::vector<std::string> &get_index()
+		{
+			return this->_index;
+		}
+		const std::vector<std::string> &get_index() const
+		{
+			return this->_index;
+		}
+		std::map<std::string, std::string> &get_cgi() 
+		{
+			return this->_cgi;
+		}
+		const std::map<std::string, std::string> &get_cgi() const
+		{
+			return this->_cgi;
+		}
 	public:
 		std::map<size_t, std::string>		_error_page; // <error code, path>
 		size_t								_client_max_body_size; // max size of body
@@ -259,5 +293,70 @@ class Configuration
 				throw std::runtime_error("config: forbidden characters in string");
 		}
 };
+
+std::ostream&	operator<<(std::ostream& out, const Configuration& c)
+{
+	{
+		out << "Error page: " << std::endl;
+		for (std::map<size_t, std::string>::const_iterator it = c._error_page.begin(); it != c._error_page.end(); it++)
+			out << "\t" << it->first << " " << it->second << std::endl;
+		if (c._error_page.size() == 0)
+			out << "\t" << "None" << std::endl;
+	}
+	{
+		out << "Client max body size:\n\t" << c._client_max_body_size << std::endl;
+	}
+	{
+		out << "Methods:\n";
+		if (c._methods[0] == true)
+			out << "\tGET\n";
+		if (c._methods[1] == true)
+			out << "\tPOST\n";
+		if (c._methods[2] == true)
+			out << "\tDELETE\n";
+		if (c._methods[0] == false && c._methods[1] == false && c._methods[2] == false)
+			out << "\tNone\n";
+	}
+	{
+		out << "Return:" << std::endl;
+		for (std::map<size_t, std::string>::const_iterator it = c._return.begin(); it != c._return.end(); it++)
+			out << "\t" << it->first << " " << it->second << std::endl;
+		if (c._return.size() == 0)
+			out << "\t" << "None" << std::endl;
+	}
+	{
+		if (c._root == "")
+			out << "Root:\n\tNone" << std::endl;
+		else
+			out << "Root:\n\t" << c._root << std::endl;
+	}
+	{
+		if (c._autoindex == true)
+			out << "Autoindex:\n\tTrue" << std::endl;
+		else
+			out << "Autoindex:\n\tFalse" << std::endl;
+	}
+	{
+		out << "Index:" << std::endl;
+		for (size_t i = 0; i < c._index.size(); i++)
+		{
+			if (i == 0)
+				out << "\t" << c._index[i];
+			else
+				out <<  " -> " << c._index[i];
+		}
+		if (c._index.size() == 0)
+			out << "\t" << "None";
+		out << std::endl;
+	}
+	{
+		out << "Cgi:" << std::endl;
+		for (std::map<std::string, std::string>::const_iterator it = c._cgi.begin(); it != c._cgi.end(); it++)
+			out << "\t" << it->first << " " << it->second << std::endl;
+		if (c._cgi.size() == 0)
+			out << "\t" << "None" << std::endl;
+	}
+	return out;
+}
 
 #endif // CONFIGURATION_HPP

@@ -1,0 +1,94 @@
+
+
+
+
+port:<host(ip):
+	:8000
+	:8080
+	:9005
+	:18000
+server names:
+	localhost
+Error page: 
+	None
+Client max body size:
+	0
+Methods:
+	GET
+	POST
+Return:
+	None
+Root:
+	None
+Autoindex:
+	False
+Index:
+	None
+Cgi:
+	None
+
+                    locations:                    
+__________________________________________________
+Path:
+	/
+Error page: 
+	None
+Client max body size:
+	0
+Methods:
+	None
+Return:
+	None
+Root:
+	www
+Autoindex:
+	False
+Index:
+	index.html
+Cgi:
+	None
+
+__________________________________________________
+__________________________________________________
+Path:
+	/redirect/
+Error page: 
+	None
+Client max body size:
+	0
+Methods:
+	None
+Return:
+	None
+Root:
+	www
+Autoindex:
+	False
+Index:
+	301_index.html
+Cgi:
+	None
+
+__________________________________________________
+__________________________________________________
+Path:
+	/test/
+Error page: 
+	None
+Client max body size:
+	0
+Methods:
+	None
+Return:
+	301 /redirect/
+Root:
+	None
+Autoindex:
+	False
+Index:
+	None
+Cgi:
+	None
+
+__________________________________________________
+
