@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:42:51 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/21 21:50:31 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/22 01:06:59 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,11 @@ class LocationConfiguration : public Configuration
 		}
 
 		// Methods
-		void setPath(std::string &s)
+		void set_path(std::string &s)
+		{
+			this->_path = s;
+		}
+		void set_path(std::string const &s)
 		{
 			this->_path = s;
 		}

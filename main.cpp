@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/21 23:58:54 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/22 01:24:55 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,23 @@ static size_t	getCurlyBraceMatch(const std::string& str, size_t curlyBraceOpen)
 			BraceSubString++;
 		else if (str[pos] == '}')
 			BraceSubString--;
+	}
+	return pos;
+}
+static size_t	getCurlyBraceMatch(const std::vector<std::string> &v, size_t curlyBraceOpen)
+{
+	size_t	pos = curlyBraceOpen;
+	int		BraceSubString = 1;
+
+	// v[pos].find('{') == std::string::npos
+
+	while (pos < v.size() && BraceSubString != 0)
+	{
+		if (v[pos].find('{') != std::string::npos)
+			BraceSubString++;
+		else if (v[pos].find('}') != std::string::npos)
+			BraceSubString--;
+		pos++;
 	}
 	return pos;
 }
@@ -158,7 +175,8 @@ std::vector<std::vector<std::string> > splitServer(const std::string &content)
 }
 #include "ServerConfiguration.hpp"
 
-void readblocks(std::vector<std::string> &block, Configuration &config)
+
+std::vector<std::string> readblocks(std::vector<std::string> &block, Configuration &config, ServerConfiguration &server)
 {
 	std::string identifier;
 	std::string value;
@@ -166,38 +184,69 @@ void readblocks(std::vector<std::string> &block, Configuration &config)
 
 	for (size_t i = 0; i < block.size(); i++)
 	{
+		std::cout << i << " " << block[i] << std::endl;
+	}
+	std::cout << std::endl;
 
+	for (size_t i = 0; i < block.size(); i++)
+	{
+		// std::cout << "\ti: " << i << " " << block[i] << std::endl;
+		
 		identifier = block[i].substr(0, block[i].find_first_of(whitespaces)); // gets identifier
 		temp = block[i].substr(block[i].find_first_of(whitespaces) + 1); // gets value with whitespaces
 		value = temp.substr(temp.find_first_not_of(whitespaces)); // removes front whitespaces
 
 		value = value.substr(0, value.find_last_not_of(whitespaces) + 1); // removes back whitespaces + 1 for ;. or location / and the {} of location
+				// print block
+		// for (size_t o = 0; o < block.size(); o++)
+		// {
+		// std::cout << "\to: " << o << " " << block[o] << std::endl;
 
+		// }
+
+		
 		if (identifier == "location")
 		{
 			size_t bracketOpen;
 			size_t bracketClose;
 			std::vector<std::string> copy; // a copy of the location block
 			
-			bracketOpen = i + 2;
-			bracketClose = i;
-			while (block[bracketClose].find('}') == std::string::npos)
-			{
-				bracketClose++;
-			}
-			i--;
-			copy = std::vector<std::string>(block.begin() + bracketOpen, block.begin() + bracketClose);
-			block.erase(block.begin() + bracketOpen - 2, block.begin() + bracketClose + 1);
-			LocationConfiguration location(value);
-			readblocks(copy, location);
+			// I is now at the location block
+			// i + 1 is {
 
+			bracketOpen = i + 1;
+			bracketClose = i;
+
+			bracketClose = getCurlyBraceMatch(block, bracketOpen + 1) - 1;
+
+			copy = std::vector<std::string>(block.begin() + bracketOpen + 1, block.begin() + bracketClose);
+			block.erase(block.begin() + bracketOpen - 1, block.begin() + bracketClose + 1);
+
+			// checks is the location is nested in another location. if yes it add the parent location to the front.
+			LocationConfiguration location(value);
+			try
+			{
+				std::string path = location.get_path();
+				
+				location = dynamic_cast<LocationConfiguration&>(config);
+
+				location.set_path(std::string(location.get_path() + path));
+			}
+			catch(const std::exception& e)
+			{
+				std::cerr << e.what() << '\n';
+			}
 			
+
+
+			readblocks(copy, location, server);
+			i = 0;
+
 			// maybe change to current configuration + new location
 			// so if location block dont have a value it will be the overwritten by the server block
-			ServerConfiguration server = dynamic_cast<ServerConfiguration&>(config);
-
-			
 			server._locations.push_back(location);
+			// std::cout << "\tContinueing now" << std::endl;
+			// i++;
 			continue;
 		}
 		if (identifier == "error_page")
@@ -233,9 +282,9 @@ void readblocks(std::vector<std::string> &block, Configuration &config)
 		else if (identifier == "client_max_body_size")
 			config.set_client_max_body_size(value);
 		else
-			throw std::runtime_error("config: unknown identifier");
-		// std::cout << std::setw(30) << "[" << identifier << "] : " << std::setw(30) << "[" << value << "]" << std::endl;
+			throw std::runtime_error("config: unknown identifier " + identifier);
 	}
+	return block;
 }
 
 int main(int argc, char **argv)
@@ -255,19 +304,19 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < blocks.size(); ++i)
 	{
-		for (int i = 0; i < blocks.size(); ++i)
-		{
-			// for (int j = 0; j < blocks[i].size(); ++j)
-			// {
-			// 	std::cout << j << " " << blocks[i][j] << std::endl;
-			// }
-			// std::cout << "\n\n\n";
-		}
-		readblocks(blocks[i], temp);
+		// for (int i = 0; i < blocks.size(); ++i)
+		// {
+		// 	for (int j = 0; j < blocks[i].size(); ++j)
+		// 	{
+		// 		std::cout << j << " " << blocks[i][j] << std::endl;
+		// 	}
+		// 	std::cout << "\n\n\n";
+		// }
+		readblocks(blocks[i], temp, temp);
 	}
 
 	// temp._locations
 	
-	// std::cout << temp << std::endl;
+	std::cout << temp << std::endl;
 	return 0;
 }
