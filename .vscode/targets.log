@@ -1,4 +1,6 @@
 make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+make: *** No rule to make target 'all'.  Stop.
+
 # GNU Make 4.2.1
 # Built for x86_64-pc-linux-gnu
 # Copyright (C) 1988-2016 Free Software Foundation, Inc.
@@ -6,7 +8,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sun Aug 21 19:01:38 2022
+# Make data base, printed on Mon Aug 22 11:37:03 2022
 
 # Variables
 
@@ -49,7 +51,7 @@ PATH = /home/bob/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-4d80ebb2-95d0-4d70-bb6b-ed59682124f5.sock
+VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-db222d98-b252-421e-951b-d5746efed0ee.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -71,7 +73,7 @@ LESSCLOSE = /usr/bin/lesspipe %s %s
 # environment
 LOGNAME = bob
 # environment
-APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
 # environment
 VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # automatic
@@ -136,8 +138,10 @@ LANG = C
 TERM = xterm-256color
 # environment
 WSL_DISTRO_NAME = Ubuntu
+# environment
+MOTD_SHOWN = update-motd
 # variable set hash-table stats:
-# Load=63/1024=6%, Rehash=0, Collisions=4/85=5%
+# Load=64/1024=6%, Rehash=0, Collisions=4/86=5%
 
 # Pattern-specific Variable Values
 
@@ -145,9 +149,9 @@ WSL_DISTRO_NAME = Ubuntu
 
 # Directories
 
-# . (device 47, inode 562949953990585): 13 files, no impossibilities.
+# . (device 47, inode 562949953990585): 15 files, no impossibilities.
 
-# 13 files, no impossibilities in 1 directories.
+# 15 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -197,14 +201,12 @@ GNUmakefile:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 21 / storage = 211 B / avg = 10 B
-# current buf: size = 8162 B / used = 211 B / count = 21 / avg = 10 B
+# strcache buffers: 1 (0) / strings = 23 / storage = 232 B / avg = 10 B
+# current buf: size = 8162 B / used = 232 B / count = 23 / avg = 10 B
 
-# strcache performance: lookups = 24 / hit rate = 12%
+# strcache performance: lookups = 26 / hit rate = 11%
 # hash-table stats:
-# Load=21/8192=0%, Rehash=0, Collisions=1/24=4%
-# Finished Make data base on Sun Aug 21 19:01:38 2022
+# Load=23/8192=0%, Rehash=0, Collisions=1/26=4%
+# Finished Make data base on Mon Aug 22 11:37:03 2022
 
  
-make: *** No rule to make target 'all'.  Stop.
-

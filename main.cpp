@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/22 01:24:55 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/22 22:53:24 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,6 +141,9 @@ std::vector<std::vector<std::string> > splitServer(const std::string &content)
 	size_t bracketClose = 0;
 	size_t length = 0;
 	std::vector<std::vector<std::string> > serverBlocks;
+
+	if (count(content, '{') != count(content, '}'))
+		throw std::runtime_error("Error: Brackets not closed");
 	
 	while (posBegin < content.length())
 	{
@@ -176,19 +179,14 @@ std::vector<std::vector<std::string> > splitServer(const std::string &content)
 #include "ServerConfiguration.hpp"
 
 
-std::vector<std::string> readblocks(std::vector<std::string> &block, Configuration &config, ServerConfiguration &server)
+size_t readblocks(std::vector<std::string> &block, Configuration &config, ServerConfiguration &server)
 {
 	std::string identifier;
 	std::string value;
 	std::string temp;
+	size_t i = 0;
 
-	for (size_t i = 0; i < block.size(); i++)
-	{
-		std::cout << i << " " << block[i] << std::endl;
-	}
-	std::cout << std::endl;
-
-	for (size_t i = 0; i < block.size(); i++)
+	for (; i < block.size(); i++)
 	{
 		// std::cout << "\ti: " << i << " " << block[i] << std::endl;
 		
@@ -197,12 +195,8 @@ std::vector<std::string> readblocks(std::vector<std::string> &block, Configurati
 		value = temp.substr(temp.find_first_not_of(whitespaces)); // removes front whitespaces
 
 		value = value.substr(0, value.find_last_not_of(whitespaces) + 1); // removes back whitespaces + 1 for ;. or location / and the {} of location
-				// print block
-		// for (size_t o = 0; o < block.size(); o++)
-		// {
-		// std::cout << "\to: " << o << " " << block[o] << std::endl;
 
-		// }
+		// std::cout << "\t\t i:" << i << " identifier: " << identifier << "\t value: " << value << std::endl;
 
 		
 		if (identifier == "location")
@@ -210,9 +204,6 @@ std::vector<std::string> readblocks(std::vector<std::string> &block, Configurati
 			size_t bracketOpen;
 			size_t bracketClose;
 			std::vector<std::string> copy; // a copy of the location block
-			
-			// I is now at the location block
-			// i + 1 is {
 
 			bracketOpen = i + 1;
 			bracketClose = i;
@@ -224,29 +215,37 @@ std::vector<std::string> readblocks(std::vector<std::string> &block, Configurati
 
 			// checks is the location is nested in another location. if yes it add the parent location to the front.
 			LocationConfiguration location(value);
+
 			try
 			{
 				std::string path = location.get_path();
-				
-				location = dynamic_cast<LocationConfiguration&>(config);
+				LocationConfiguration &tempLocation = dynamic_cast<LocationConfiguration&>(config);
 
-				location.set_path(std::string(location.get_path() + path));
+				location.set_path(std::string(tempLocation.get_path() + path));
+
+				// TODO Configure Syntax eg. location / + location /post = //post change to /post
+				// or change location A to /A or location /post + location TEST to /post/TEST and not /postTEST
 			}
-			catch(const std::exception& e)
+			catch(const std::bad_cast &e)
 			{
-				std::cerr << e.what() << '\n';
+				// std::cerr << e.what() << '\n';
 			}
+
+			// for (int o = 0; o < block.size(); o++)
+			// {
+			// 	std::cout << "NEW"<<i<<"\t: " << o << " " << block[o] << std::endl;
+			// }
+			// std::cout << std::endl;
 			
 
 
 			readblocks(copy, location, server);
-			i = 0;
+			i--;
+			// // std::cout << "i: " << i << std::endl;
 
-			// maybe change to current configuration + new location
-			// so if location block dont have a value it will be the overwritten by the server block
-			server._locations.push_back(location);
-			// std::cout << "\tContinueing now" << std::endl;
-			// i++;
+			// // maybe change to current configuration + new location
+			// // so if location block dont have a value it will be the overwritten by the server block
+			server.get_locations().push_back(location);
 			continue;
 		}
 		if (identifier == "error_page")
@@ -284,7 +283,7 @@ std::vector<std::string> readblocks(std::vector<std::string> &block, Configurati
 		else
 			throw std::runtime_error("config: unknown identifier " + identifier);
 	}
-	return block;
+	return i;
 }
 
 int main(int argc, char **argv)
@@ -301,22 +300,25 @@ int main(int argc, char **argv)
 	blocks = splitServer(filecontent);
 
 	ServerConfiguration temp; // change to list
+	std::vector<ServerConfiguration> servers;
 
 	for (int i = 0; i < blocks.size(); ++i)
 	{
-		// for (int i = 0; i < blocks.size(); ++i)
-		// {
-		// 	for (int j = 0; j < blocks[i].size(); ++j)
-		// 	{
-		// 		std::cout << j << " " << blocks[i][j] << std::endl;
-		// 	}
-		// 	std::cout << "\n\n\n";
-		// }
+		temp = ServerConfiguration();
+			// for (int j = 0; j < blocks[i].size(); ++j)
+			// {
+			// 	std::cout << i << " " << j << " " << blocks[i][j] << std::endl;
+			// }
+			// std::cout << "\n\n\n";
 		readblocks(blocks[i], temp, temp);
+		// std::cout << temp << std::endl;
+		servers.push_back(temp);
+		
 	}
-
-	// temp._locations
-	
-	std::cout << temp << std::endl;
+	for (int i = 0; i < servers.size(); i++)
+	{
+		std::cout << "\n\n\n\n\n                Server [" << i << "]" << std::endl;
+		std::cout << servers[i] << std::endl;
+	}
 	return 0;
 }

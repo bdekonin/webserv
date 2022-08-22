@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:42:51 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/22 01:06:59 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/22 22:35:47 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,6 @@
 # define LOCATIONCONFIGURATION_HPP
 
 # include "Configuration.hpp"
-// # include "ServerConfiguration.hpp"
-
 
 class LocationConfiguration : public Configuration
 {
@@ -32,7 +30,7 @@ class LocationConfiguration : public Configuration
 		/* Destructor */
 		virtual ~LocationConfiguration()
 		{
-			
+			this->clear();
 		}
 
 		/* Copy constructor */
@@ -64,6 +62,13 @@ class LocationConfiguration : public Configuration
 		}
 
 		// Methods
+		void clean()
+		{
+			Configuration::clear();
+			this->_path.clear();
+		}
+
+		// Setters
 		void set_path(std::string &s)
 		{
 			this->_path = s;
@@ -72,11 +77,13 @@ class LocationConfiguration : public Configuration
 		{
 			this->_path = s;
 		}
-		std::string &get_path()
+
+		// Getters
+		std::string			&get_path()
 		{
 			return (this->_path);
 		}
-		const std::string &get_path() const
+		const std::string	&get_path() const
 		{
 			return (this->_path);
 		}

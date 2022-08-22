@@ -6,21 +6,20 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/21 21:39:38 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/22 22:35:37 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONFIGURATION_HPP
 # define CONFIGURATION_HPP
 
-#include <iostream>
-
+# include <iostream>
 # include <string>
 # include <vector>
 # include <map>
 
-#define whitespaces " \v\t\n"
-#define forbidden_characters "\'\"|&;<>`$(){}[]*?#~"
+# define whitespaces " \v\t\n"
+# define forbidden_characters "\'\"|&;<>`$(){}[]*?#~"
 
 void	split(const std::string& str, const char* delims, std::vector<std::string>& out);
 size_t		count(std::string str, char c);
@@ -42,6 +41,7 @@ class Configuration
 		/* Destructor */
 		virtual ~Configuration()
 		{
+			this->clear();
 		}
 
 		/* Copy constructor */
@@ -106,6 +106,8 @@ class Configuration
 			std::vector<std::string> v;
 
 			this->remove_semicolen(s);
+
+			// std::cout << "s: " << s << std::endl;
 
 			split(s, whitespaces, v);
 			if (v.size() == 0)
@@ -208,71 +210,78 @@ class Configuration
 		}
 		
 		// Getters
-		std::map<size_t, std::string> &get_error_page()
+		std::map<size_t, std::string>				&get_error_page()
 		{
 			return this->_error_page;
 		}
-		const std::map<size_t, std::string> &get_error_page() const
+		const std::map<size_t, std::string> 		&get_error_page() const
 		{
 			return this->_error_page;
 		}
-		size_t get_client_max_body_size() 
+
+		size_t										get_client_max_body_size() 
 		{
 			return this->_client_max_body_size;
 		}
-		const size_t get_client_max_body_size() const
+		const size_t								get_client_max_body_size() const
 		{
 			return this->_client_max_body_size;
 		}
-		bool get_methods(size_t request)
+
+		bool										get_methods(size_t request)
 		{
 			return this->_methods[request];
 		}
-		const bool get_methods(size_t request) const
+		const bool									get_methods(size_t request) const
 		{
 			return this->_methods[request];
 		}
-		std::map<size_t, std::string> &get_return() 
+
+		std::map<size_t, std::string> 				&get_return() 
 		{
 			return this->_return;
 		}
-		const std::map<size_t, std::string> &get_return() const
+		const std::map<size_t, std::string> 		&get_return() const
 		{
 			return this->_return;
 		}
-		std::string &get_root()
+
+		std::string 								&get_root()
 		{
 			return this->_root;
 		}
-		const std::string &get_root() const
+		const std::string 							&get_root() const
 		{
 			return this->_root;
 		}
-		bool get_autoindex()
+
+		bool										get_autoindex()
 		{
 			return this->_autoindex;
 		}
-		const bool get_autoindex() const
+		const bool									get_autoindex() const
 		{
 			return this->_autoindex;
 		}
-		std::vector<std::string> &get_index()
+
+		std::vector<std::string> 					&get_index()
 		{
 			return this->_index;
 		}
-		const std::vector<std::string> &get_index() const
+		const std::vector<std::string> 				&get_index() const
 		{
 			return this->_index;
 		}
-		std::map<std::string, std::string> &get_cgi() 
+
+		std::map<std::string, std::string> 			&get_cgi() 
 		{
 			return this->_cgi;
 		}
-		const std::map<std::string, std::string> &get_cgi() const
+		const std::map<std::string, std::string>	&get_cgi() const
 		{
 			return this->_cgi;
 		}
-	public:
+	protected:
 		std::map<size_t, std::string>		_error_page; // <error code, path>
 		size_t								_client_max_body_size; // max size of body
 		bool								_methods[3]; // GET, POST, DELETE
@@ -298,62 +307,62 @@ std::ostream&	operator<<(std::ostream& out, const Configuration& c)
 {
 	{
 		out << "Error page: " << std::endl;
-		for (std::map<size_t, std::string>::const_iterator it = c._error_page.begin(); it != c._error_page.end(); it++)
+		for (std::map<size_t, std::string>::const_iterator it = c.get_error_page().begin(); it != c.get_error_page().end(); it++)
 			out << "\t" << it->first << " " << it->second << std::endl;
-		if (c._error_page.size() == 0)
+		if (c.get_error_page().size() == 0)
 			out << "\t" << "None" << std::endl;
 	}
 	{
-		out << "Client max body size:\n\t" << c._client_max_body_size << std::endl;
+		out << "Client max body size:\n\t" << c.get_client_max_body_size() << std::endl;
 	}
 	{
 		out << "Methods:\n";
-		if (c._methods[0] == true)
+		if (c.get_methods(0) == true)
 			out << "\tGET\n";
-		if (c._methods[1] == true)
+		if (c.get_methods(1) == true)
 			out << "\tPOST\n";
-		if (c._methods[2] == true)
+		if (c.get_methods(2) == true)
 			out << "\tDELETE\n";
-		if (c._methods[0] == false && c._methods[1] == false && c._methods[2] == false)
+		if (c.get_methods(0) == false && c.get_methods(1) == false && c.get_methods(2) == false)
 			out << "\tNone\n";
 	}
 	{
 		out << "Return:" << std::endl;
-		for (std::map<size_t, std::string>::const_iterator it = c._return.begin(); it != c._return.end(); it++)
+		for (std::map<size_t, std::string>::const_iterator it = c.get_return().begin(); it != c.get_return().end(); it++)
 			out << "\t" << it->first << " " << it->second << std::endl;
-		if (c._return.size() == 0)
+		if (c.get_return().size() == 0)
 			out << "\t" << "None" << std::endl;
 	}
 	{
-		if (c._root == "")
+		if (c.get_root() == "")
 			out << "Root:\n\tNone" << std::endl;
 		else
-			out << "Root:\n\t" << c._root << std::endl;
+			out << "Root:\n\t" << c.get_root() << std::endl;
 	}
 	{
-		if (c._autoindex == true)
+		if (c.get_autoindex() == true)
 			out << "Autoindex:\n\tTrue" << std::endl;
 		else
 			out << "Autoindex:\n\tFalse" << std::endl;
 	}
 	{
 		out << "Index:" << std::endl;
-		for (size_t i = 0; i < c._index.size(); i++)
+		for (size_t i = 0; i < c.get_index().size(); i++)
 		{
 			if (i == 0)
-				out << "\t" << c._index[i];
+				out << "\t" << c.get_index()[i];
 			else
-				out <<  " -> " << c._index[i];
+				out <<  " -> " << c.get_index()[i];
 		}
-		if (c._index.size() == 0)
+		if (c.get_index().size() == 0)
 			out << "\t" << "None";
 		out << std::endl;
 	}
 	{
 		out << "Cgi:" << std::endl;
-		for (std::map<std::string, std::string>::const_iterator it = c._cgi.begin(); it != c._cgi.end(); it++)
+		for (std::map<std::string, std::string>::const_iterator it = c.get_cgi().begin(); it != c.get_cgi().end(); it++)
 			out << "\t" << it->first << " " << it->second << std::endl;
-		if (c._cgi.size() == 0)
+		if (c.get_cgi().size() == 0)
 			out << "\t" << "None" << std::endl;
 	}
 	return out;
