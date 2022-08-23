@@ -6,12 +6,14 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/22 22:35:37 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/23 11:50:03 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONFIGURATION_HPP
 # define CONFIGURATION_HPP
+
+# include "utils.hpp"
 
 # include <iostream>
 # include <string>
@@ -22,7 +24,6 @@
 # define forbidden_characters "\'\"|&;<>`$(){}[]*?#~"
 
 void	split(const std::string& str, const char* delims, std::vector<std::string>& out);
-size_t		count(std::string str, char c);
 
 class Configuration
 {
@@ -89,6 +90,7 @@ class Configuration
 			this->remove_semicolen(s);
 
 			split(s, whitespaces, v);
+			
 			if (v.size() != 2)
 				throw std::runtime_error("config: error_page has invalid number of arguments");
 
@@ -303,7 +305,7 @@ class Configuration
 		}
 };
 
-std::ostream&	operator<<(std::ostream& out, const Configuration& c)
+inline std::ostream&	operator<<(std::ostream& out, const Configuration& c)
 {
 	{
 		out << "Error page: " << std::endl;

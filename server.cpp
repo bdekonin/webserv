@@ -37,7 +37,7 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	return (s3);
 }
 
-#define PORT 8080
+#define PORT 8081
 
 #define main_page "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 95\n\n<h1>Hello</h1><p>&nbsp;</p><p><a href='link_1'>Link 1</a></p><p><a href='link_2'>Link 2</a></p>"
 
@@ -96,11 +96,17 @@ int main(int argc, char const *argv[])
 
 		valread = recv( new_socket , buffer, 30000, 0);
 
+
+
         // parse request-line
         char temp[5][1000];
         std::string method, uri, version;
 
         sscanf(buffer, "%s %s %s", temp[0], temp[1], temp[2]);
+
+            std::ofstream out("request.txt");
+            out << buffer;
+            out.close();
 
         method = temp[0];
         uri = temp[1];
@@ -122,23 +128,6 @@ int main(int argc, char const *argv[])
 
                 free(response);
             }
-            else if (uri == "/favicon.ico")
-            {
-                // std::ifstream file;
-                // std::stringstream	buffer;
-
-                // file.open("/mnt/c/Users/Bob/Documents/webserv" + uri, std::ifstream::in);
-
-                // buffer << file.rdbuf();
-
-                // std::string str = favi + buffer.str();
-
-                // char *arr = strdup(str.c_str());
-
-                // send(new_socket , str.c_str() , strlen(favi) + buffer.str().size() , 0 );
-                // std::cout << str.substr(0, 100) << std::endl;
-                printf("Favicon sent");
-            }
             else
             {
                 std::ifstream file;
@@ -158,9 +147,6 @@ int main(int argc, char const *argv[])
 
                 temp.insert(temp.size(), std::to_string(buffer.str().size()));
                 temp.insert(temp.size(), "\n\n");
-                // temp.insert(temp.size(), buffer.str());
-                // char *response = strdup(temp.c_str());
-
                 std::vector<char> v;
 
                 v.insert(v.end(), temp.begin(), temp.end());
