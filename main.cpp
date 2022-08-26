@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/25 10:34:53 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/26 15:42:24 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,11 @@ int			openSocket(int port, const char *hostname = "")
 	// Bind the socket to a port.
 	ret = bind(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
 	if (ret < 0)
-		throw std::runtime_error("Failed to bind socket to port.");
+	{
+		std::cout << "Thowing exception\n";
+		throw std::logic_error("Failed to bind socket to port");
+	}
+		// throw std::exception("Failed to bind socket to port.");
 
 	// Set the socket to listen for incoming connections.
 	ret = listen(socketFD, 10);
@@ -79,13 +83,22 @@ int			openSocket(int port, const char *hostname = "")
 int main(int argc, char const *argv[])
 {
 	std::vector<ServerConfiguration> servers;
-	std::map<int, ServerConfiguration> server_map; // <port, 
-	std::map<int, ServerConfiguration>::iterator server_map_it; // <port,  
+	std::map<int, std::vector<ServerConfiguration> > server_map; // <port, 
+	std::map<int, std::vector<ServerConfiguration> >::iterator server_map_it; // <port,  
 	Parser parser(argv[1]);
 
 	servers = parser.init();
 
-	// misschien std::vector<std::map<int, ServerConfiguration> servers; // <server_fd, serverConfiguration> per server namelijk meerdere ports die open gaan.
+	// misschien std::vector<std::map<int, ServerConfiguration> servers; // <server_fd, serverConfiguration> per server namelijk meerdere ports die open gaan.'
+
+// 	int fd = openSocket(8080, "0.0.0.0");
+// 	int fd2 = openSocket(8081, "0.0.0.0");
+// 	std::cout << fd << std::endl;
+// 	std::cout << fd2 << std::endl;
+
+
+// close(fd);
+// close(fd2);
 
 	std::vector<std::pair<std::string, size_t> > ports;
 	std::cout << "server.size(): " << servers.size() << std::endl;
@@ -95,15 +108,68 @@ int main(int argc, char const *argv[])
 		std::cout << "Server " << i << " is ";
 		for (int j = 0; j < ports.size(); j++)
 		{
-			if (server_map.find(ports[j].second) != server_map.end())
-				std::cout << "already listening on port " << ports[j].second << std::endl;
-			else
-				server_map[openSocket(ports[j].second)] = servers[i];
-			std::cout << std::setw(13) << "[" << ports[j].first << ":" << ports[j].second << "] ";
+			std::cout << std::setw(13) << "[" << ports[j].first << " : " << ports[j].second << "] ";
+			try
+			{
+				// server_map[ports[j].second].push_back(servers[i]);
+				server_map[openSocket(ports[j].second)].push_back(servers[i]);
+			}
+			catch(const std::exception& e)
+			{
+				std::cout << "SDKJHAKSJDA\n";
+				std::cerr << e.what() << '\n';
+				struct sockaddr_in		sin;
+				for (server_map_it = server_map.begin(); server_map_it != server_map.end(); server_map_it++)
+				{
+					
+					socklen_t len = sizeof(sin);
+					if (getsockname(server_map_it->first, (struct sockaddr*)&sin, &len) == -1)
+						throw std::runtime_error("Failed to get socket name.");
+					std::cout << "Looking for port: " << ports[j].second << " and found " << ntohs(sin.sin_port) << std::endl;
+					if (ntohs(sin.sin_port) == ports[j].second)
+					{
+						std::cout << "Adding Port " << ntohs(sin.sin_port) << " To the back of server_map." << std::endl;
+						server_map[server_map_it->first].push_back(servers[i]);
+					}
+				}
+			}
+			// server_map_it = server_map.find(ports[j].second);
+			// bool found = false;
+			
+			// for (int foundI = 0; foundI < i; foundI++)
+			// {
+			// 	std::vector<std::string, size_t> foundPorts = servers[foundI].get_listen();
+			// 	if (std::find(foundPorts.begin(), foundPorts.end(), ports[j].second) == ports)
+			// 	{
+			// 		found = true;
+			// 		break;
+			// 	}
+			// }
+			// if (server_map_it != server_map.end())
+			// {
+			// 	std::cout << "already listening on port " << ports[j].second << std::endl;
+			// 	// server_map[ports[j].second].push_back(servers[i]);
+			// 	server_map_it.operator*().second.push_back(servers[i]);
+			// }
+			// else
+			// {
+			// 	std::vector <ServerConfiguration> v;
+			// 	v.push_back(servers[i]);
+			// 	server_map[openSocket(ports[j].second)] = v;
+			// }
 		}
 		std::cout << std::endl << std::endl;
 		ports.clear();
 	}
+	// print server_map;
+	for (server_map_it = server_map.begin(); server_map_it != server_map.end(); server_map_it++)
+	{
+		std::cout << "Server listening on fd " << server_map_it->first << std::endl;
+	}
+
+
+
+	exit(1);
 
 	
 		fd_set readfds, copy_readfds;
