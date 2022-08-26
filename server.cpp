@@ -37,7 +37,7 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	return (s3);
 }
 
-#define PORT 8081
+#define PORT 8080
 
 #define main_page "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 95\n\n<h1>Hello</h1><p>&nbsp;</p><p><a href='link_1'>Link 1</a></p><p><a href='link_2'>Link 2</a></p>"
 
@@ -54,7 +54,7 @@ int main(int argc, char const *argv[])
     char *hello = strdup("Hello from server");
     
     // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, SO_REUSEADDR)) == 0)
     {
         perror("In socket");
         exit(EXIT_FAILURE);
@@ -80,33 +80,24 @@ int main(int argc, char const *argv[])
     }
     while(1)
     {
-        printf("\n+++++++ Waiting for new connection ++++++++\n\n");
+        printf("\n+++++++ Waiting for new connection [%d] ++++++++\n\n", new_socket);
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
         {
             perror("In accept");
             exit(EXIT_FAILURE);
         }
         char buffer[30000] = {0};
-
         // inet_pton(AF_INET, "example.com", &(address.sin_addr));
-
-
-
-
-
 		valread = recv( new_socket , buffer, 30000, 0);
-
-
-
         // parse request-line
         char temp[5][1000];
         std::string method, uri, version;
 
         sscanf(buffer, "%s %s %s", temp[0], temp[1], temp[2]);
 
-            std::ofstream out("request.txt");
-            out << buffer;
-            out.close();
+            // std::ofstream out("request.txt");
+            // out << buffer;
+            // out.close();
 
         method = temp[0];
         uri = temp[1];
@@ -127,6 +118,12 @@ int main(int argc, char const *argv[])
                 printf("Main page sent");
 
                 free(response);
+            }
+            if (uri == "close")
+            {
+                close(server_fd);
+                close(new_socket);
+                exit(1);
             }
             else
             {
