@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/26 16:15:16 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 20:58:37 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/28 22:42:57 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,6 @@ class Server
 		Server(int socket, char *hostname, in_port_t port, ServerConfiguration const &config)
 		: _socket(socket), _hostname(hostname), _port(port)
 		{
-			std::cout << _socket << std::endl;
 			// this->_configuration = std::vector<ServerConfiguration>();
 			// this->push_back(config);
 			// this->_configuration.push_back(config);
@@ -43,8 +42,8 @@ class Server
 		virtual ~Server()
 		{
 			// free (this->_hostname);
-			this->_configuration.clear();
-			close(this->_socket); // TODO CHECK IF NESSECARY
+			// this->_configuration.clear();
+			// close(this->_socket); // TODO CHECK IF NESSECARY
 			// TODO FREE CONFIGATION???
 		}
 

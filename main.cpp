@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 20:58:56 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/28 23:14:07 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,12 +112,9 @@ int main(int argc, char const *argv[])
 	int s = 0;
 	char *h = NULL;
 	in_port_t p = 0;
-	// std::cout << "configs.size(): " << configs.size() << std::endl;
-	servers.clear();
 	for (size_t i = 0; i < configs.size(); i++)
 	{
 		ports = configs[i].get_listen();
-		// std::cout << "Server " << i << " is \n";
 		for (size_t j = 0; j < ports.size(); j++)
 		{
 			int index_of_server = 0;
@@ -125,26 +122,21 @@ int main(int argc, char const *argv[])
 			if (!has_port_occured(servers, ports[j].second, &index_of_server))
 			{
 				s = openSocket(ports[j].second);
-				// std::cout << __LINE__ << " socket: " << s << ":" << ports[j].second << std::endl;
 				VAR(s);
 				h = (char*)ports[j].first.c_str();
 				p = ports[j].second;
+				
 				servers.push_back(Server(s, h, p, configs[i]));
-				// std::cout << "opening socket on client " << ports[j].second << ":" << s << " to server " << i << std::endl;
 			}
 			else
 			{
-			// 	servers[index_of_server].push_back(configs[i]);
-				std::cout << "Port " << ports[j].second << " already in use.\n";
+				servers[index_of_server].push_back(configs[i]);
+				// std::cout << "Port " << ports[j].second << " already in use.\n";
 			}
-			// std::cout << "Server " << i << " is " << openSocket(ports[j].second) << std::endl;
-			// std::cout << std::setw(13) << "[" << ports[j].first << " : " << ports[j].second << "]\n";
 			index_of_server = 0;
 		}
-		// std::cout << std::endl << std::endl;
 		ports.clear();
 	}
-	// std::cout << "server.size(): " << servers.size() << std::endl;
 	std::cout << std::endl;
 
 
@@ -161,9 +153,8 @@ int main(int argc, char const *argv[])
 		for (size_t i = 0; i < servers.size(); i++)
 		{
 			std::cout << "port " << servers[i].get_port() << " has fd: " << servers[i].get_socket() << std::endl;
-			// FD_SET(servers[i].get_socket(), &readfds); // adds fd to set
+			FD_SET(servers[i].get_socket(), &readfds); // adds fd to set
 		}
-	exit(1);
 		copy_readfds = readfds;
 
 		if (select(FD_SETSIZE, &copy_readfds, NULL, NULL, NULL) < 0)
@@ -173,11 +164,11 @@ int main(int argc, char const *argv[])
 		{
 			if (FD_ISSET(i, &copy_readfds))
 			{
-				std::cout << "incoming traffic on: " << i << std::endl;
-				for (size_t j = 0; j < servers.size(); i++)
-				{
+				std::cout << "incoming traffic on: " << std::endl;
+				VAR(i);
+				VAR(servers[i].get_port());
+				for (size_t j = 0; j < servers.size(); j++)
 					close(servers[i].get_socket());
-				}
 				exit(1);
 			}
 		}
