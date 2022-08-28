@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/26 15:42:24 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/28 20:44:03 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,138 +38,117 @@
 
 #include <arpa/inet.h>
 
+static int ooo = 0;
+
 int			openSocket(int port, const char *hostname = "")
 {
-	struct sockaddr_in		serverAddress;
-	int						ret;
+	struct sockaddr_in		sock_struct;
 	int						socketFD;
 
 	socketFD = socket(AF_INET, SOCK_STREAM, 0);
 	if (socketFD < 0)
-		throw std::runtime_error("Failed to create socket.");
-	int options = 1;
-	ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));
-	if (socketFD < 0)
-		throw std::runtime_error("Failed to set socket options.");
+		throw std::runtime_error("socket: failed to create socket.");
+	// ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));
+	// if (socketFD < 0)
+	// 	throw std::runtime_error("error");
 
-	// Initialize the address struct that bind will use.
-	bzero(&serverAddress, sizeof(serverAddress));
-	serverAddress.sin_family = AF_INET;
+	bzero(&sock_struct, sizeof(sock_struct));
+	sock_struct.sin_family = AF_INET;
 	if (hostname == "")
-		serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+		sock_struct.sin_addr.s_addr = htonl(INADDR_ANY);
 	else
-		serverAddress.sin_addr.s_addr = inet_addr(hostname);
-	// serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
-	serverAddress.sin_port = htons(port);
+		sock_struct.sin_addr.s_addr = inet_addr(hostname);
+	sock_struct.sin_port = htons(port);
 
-	// Bind the socket to a port.
-	ret = bind(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
-	if (ret < 0)
-	{
-		std::cout << "Thowing exception\n";
-		throw std::logic_error("Failed to bind socket to port");
-	}
-		// throw std::exception("Failed to bind socket to port.");
-
-	// Set the socket to listen for incoming connections.
-	ret = listen(socketFD, 10);
-	if (ret < 0)
-		throw std::runtime_error("Failed to make socket listen to incoming connections.");
+	if (bind(socketFD, (struct sockaddr*)&sock_struct, sizeof(sock_struct)) < 0)
+		throw std::runtime_error("bind: Failed to bind.");
+	if (listen(socketFD, 10) < 0)
+		throw std::runtime_error("listen: failed to listen.");
 
 	return socketFD;
 }
 
+#include "inc/Server.hpp"
+
+
+bool has_port_occured(std::vector<Server> &s, int port, int *index)
+{
+	bool occured = false;
+
+	for (int i = 0; i < s.size(); i++)
+	{
+		if (s[i].get_port() == port)
+		{
+			if (index != NULL)
+				*index = i;
+			occured = true;
+			break;
+		}
+	}
+
+	return occured;
+}
+
+
+					// int s = openSocket(ports[j].second);
+					// std::cout << "socket: " << s << ":" << ports[j].second << std::endl;
+					// char *h = (char*)ports[j].first.c_str();
+					// in_port_t p = ports[j].second;
+					// servers.push_back(Server(s, h, p, configs[i]));
+					// std::cout << "opening socket on client " << ports[j].second << " to server " << server_i << std::endl;
+					// break;
+
+#define getString(n) #n
+#define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
 
 int main(int argc, char const *argv[])
 {
-	std::vector<ServerConfiguration> servers;
-	std::map<int, std::vector<ServerConfiguration> > server_map; // <port, 
-	std::map<int, std::vector<ServerConfiguration> >::iterator server_map_it; // <port,  
+	std::vector<ServerConfiguration> configs;
+	std::vector<Server> servers;
 	Parser parser(argv[1]);
 
-	servers = parser.init();
-
-	// misschien std::vector<std::map<int, ServerConfiguration> servers; // <server_fd, serverConfiguration> per server namelijk meerdere ports die open gaan.'
-
-// 	int fd = openSocket(8080, "0.0.0.0");
-// 	int fd2 = openSocket(8081, "0.0.0.0");
-// 	std::cout << fd << std::endl;
-// 	std::cout << fd2 << std::endl;
-
-
-// close(fd);
-// close(fd2);
+	configs = parser.init();
 
 	std::vector<std::pair<std::string, size_t> > ports;
-	std::cout << "server.size(): " << servers.size() << std::endl;
-	for (int i = 0; i < servers.size(); i++)
+	int s = 0;
+	char *h = NULL;
+	in_port_t p = 0;
+	// std::cout << "configs.size(): " << configs.size() << std::endl;
+	servers.clear();
+	for (int i = 0; i < configs.size(); i++)
 	{
-		ports = servers[i].get_listen();
-		std::cout << "Server " << i << " is ";
+		ports = configs[i].get_listen();
+		// std::cout << "Server " << i << " is \n";
 		for (int j = 0; j < ports.size(); j++)
 		{
-			std::cout << std::setw(13) << "[" << ports[j].first << " : " << ports[j].second << "] ";
-			try
+			int index_of_server = 0;
+
+			if (!has_port_occured(servers, ports[j].second, &index_of_server))
 			{
-				// server_map[ports[j].second].push_back(servers[i]);
-				server_map[openSocket(ports[j].second)].push_back(servers[i]);
+				s = openSocket(ports[j].second);
+				// std::cout << __LINE__ << " socket: " << s << ":" << ports[j].second << std::endl;
+				VAR(s);
+				h = (char*)ports[j].first.c_str();
+				p = ports[j].second;
+				servers.push_back(Server(s, h, p, configs[i]));
+				// std::cout << "opening socket on client " << ports[j].second << ":" << s << " to server " << i << std::endl;
 			}
-			catch(const std::exception& e)
+			else
 			{
-				std::cout << "SDKJHAKSJDA\n";
-				std::cerr << e.what() << '\n';
-				struct sockaddr_in		sin;
-				for (server_map_it = server_map.begin(); server_map_it != server_map.end(); server_map_it++)
-				{
-					
-					socklen_t len = sizeof(sin);
-					if (getsockname(server_map_it->first, (struct sockaddr*)&sin, &len) == -1)
-						throw std::runtime_error("Failed to get socket name.");
-					std::cout << "Looking for port: " << ports[j].second << " and found " << ntohs(sin.sin_port) << std::endl;
-					if (ntohs(sin.sin_port) == ports[j].second)
-					{
-						std::cout << "Adding Port " << ntohs(sin.sin_port) << " To the back of server_map." << std::endl;
-						server_map[server_map_it->first].push_back(servers[i]);
-					}
-				}
+			// 	servers[index_of_server].push_back(configs[i]);
+				std::cout << "Port " << ports[j].second << " already in use.\n";
 			}
-			// server_map_it = server_map.find(ports[j].second);
-			// bool found = false;
-			
-			// for (int foundI = 0; foundI < i; foundI++)
-			// {
-			// 	std::vector<std::string, size_t> foundPorts = servers[foundI].get_listen();
-			// 	if (std::find(foundPorts.begin(), foundPorts.end(), ports[j].second) == ports)
-			// 	{
-			// 		found = true;
-			// 		break;
-			// 	}
-			// }
-			// if (server_map_it != server_map.end())
-			// {
-			// 	std::cout << "already listening on port " << ports[j].second << std::endl;
-			// 	// server_map[ports[j].second].push_back(servers[i]);
-			// 	server_map_it.operator*().second.push_back(servers[i]);
-			// }
-			// else
-			// {
-			// 	std::vector <ServerConfiguration> v;
-			// 	v.push_back(servers[i]);
-			// 	server_map[openSocket(ports[j].second)] = v;
-			// }
+			// std::cout << "Server " << i << " is " << openSocket(ports[j].second) << std::endl;
+			// std::cout << std::setw(13) << "[" << ports[j].first << " : " << ports[j].second << "]\n";
+			index_of_server = 0;
 		}
-		std::cout << std::endl << std::endl;
+		// std::cout << std::endl << std::endl;
 		ports.clear();
 	}
-	// print server_map;
-	for (server_map_it = server_map.begin(); server_map_it != server_map.end(); server_map_it++)
-	{
-		std::cout << "Server listening on fd " << server_map_it->first << std::endl;
-	}
+	// std::cout << "server.size(): " << servers.size() << std::endl;
+	std::cout << std::endl;
 
 
-
-	exit(1);
 
 	
 		fd_set readfds, copy_readfds;
@@ -180,12 +159,12 @@ int main(int argc, char const *argv[])
 
 		
 		// print server_map
-		int i = 0;
-		for (server_map_it = server_map.begin(); server_map_it != server_map.end(); server_map_it++, i++)
+		for (int i = 0; i < servers.size(); i++)
 		{
-			std::cout << "Server " << std::distance(server_map.begin(), server_map_it) << " has fd: " << server_map_it->first << std::endl;
-			FD_SET(server_map_it->first, &readfds); // adds fd to set
+			std::cout << "port " << servers[i].get_port() << " has fd: " << servers[i].get_socket() << std::endl;
+			// FD_SET(servers[i].get_socket(), &readfds); // adds fd to set
 		}
+	exit(1);
 		copy_readfds = readfds;
 
 		if (select(FD_SETSIZE, &copy_readfds, NULL, NULL, NULL) < 0)
@@ -196,9 +175,9 @@ int main(int argc, char const *argv[])
 			if (FD_ISSET(i, &copy_readfds))
 			{
 				std::cout << "incoming traffic on: " << i << std::endl;
-				for (server_map_it = server_map.begin(); server_map_it != server_map.end(); server_map_it++)
+				for (int i = 0; i < servers.size(); i++)
 				{
-					close(server_map_it->first);
+					close(servers[i].get_socket());
 				}
 				exit(1);
 			}
