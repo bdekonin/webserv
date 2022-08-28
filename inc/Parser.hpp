@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/23 11:31:20 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/28 20:59:57 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ class Parser
 			
 			this->_get_content();
 			blocks = this->splitServer(this->_filecontent);
-			for (int i = 0; i < blocks.size(); i++)
+			for (size_t i = 0; i < blocks.size(); i++)
 			{
 				temp_server = ServerConfiguration();
 				this->parse_block(blocks[i], temp_server, temp_server);

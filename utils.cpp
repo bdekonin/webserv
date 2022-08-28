@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/23 11:43:14 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/28 21:10:06 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ void	split(const std::string& str, const char* delims, std::vector<std::string>&
 	size_t	posEnd;
 	size_t  posDelim;
 	size_t	braceOpen;
-	size_t	braceClose;
+	size_t	braceClose = 0;
 	size_t	subLength;
 
 	while (posBegin < str.length())
@@ -86,6 +86,7 @@ void	split(const std::string& str, const char* delims, std::vector<std::string>&
 			if (sub.find_first_not_of(whitespaces) != std::string::npos)
 				out.push_back(sub);
 		}
+		(void)braceClose;
 		posBegin = posEnd + 1;
 	}
 }

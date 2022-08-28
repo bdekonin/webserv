@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 20:44:03 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/28 20:58:56 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,6 @@
 
 #include <arpa/inet.h>
 
-static int ooo = 0;
-
 int			openSocket(int port, const char *hostname = "")
 {
 	struct sockaddr_in		sock_struct;
@@ -54,7 +52,7 @@ int			openSocket(int port, const char *hostname = "")
 
 	bzero(&sock_struct, sizeof(sock_struct));
 	sock_struct.sin_family = AF_INET;
-	if (hostname == "")
+	if (strcmp(hostname, "") == 0)
 		sock_struct.sin_addr.s_addr = htonl(INADDR_ANY);
 	else
 		sock_struct.sin_addr.s_addr = inet_addr(hostname);
@@ -75,7 +73,7 @@ bool has_port_occured(std::vector<Server> &s, int port, int *index)
 {
 	bool occured = false;
 
-	for (int i = 0; i < s.size(); i++)
+	for (size_t i = 0; i < s.size(); i++)
 	{
 		if (s[i].get_port() == port)
 		{
@@ -103,6 +101,7 @@ bool has_port_occured(std::vector<Server> &s, int port, int *index)
 
 int main(int argc, char const *argv[])
 {
+	(void)argc;
 	std::vector<ServerConfiguration> configs;
 	std::vector<Server> servers;
 	Parser parser(argv[1]);
@@ -115,11 +114,11 @@ int main(int argc, char const *argv[])
 	in_port_t p = 0;
 	// std::cout << "configs.size(): " << configs.size() << std::endl;
 	servers.clear();
-	for (int i = 0; i < configs.size(); i++)
+	for (size_t i = 0; i < configs.size(); i++)
 	{
 		ports = configs[i].get_listen();
 		// std::cout << "Server " << i << " is \n";
-		for (int j = 0; j < ports.size(); j++)
+		for (size_t j = 0; j < ports.size(); j++)
 		{
 			int index_of_server = 0;
 
@@ -159,7 +158,7 @@ int main(int argc, char const *argv[])
 
 		
 		// print server_map
-		for (int i = 0; i < servers.size(); i++)
+		for (size_t i = 0; i < servers.size(); i++)
 		{
 			std::cout << "port " << servers[i].get_port() << " has fd: " << servers[i].get_socket() << std::endl;
 			// FD_SET(servers[i].get_socket(), &readfds); // adds fd to set
@@ -170,12 +169,12 @@ int main(int argc, char const *argv[])
 		if (select(FD_SETSIZE, &copy_readfds, NULL, NULL, NULL) < 0)
 			throw std::runtime_error("Failed to select.");
 
-		for (int i = 0; i<FD_SETSIZE; i++)
+		for (size_t i = 0; i<FD_SETSIZE; i++)
 		{
 			if (FD_ISSET(i, &copy_readfds))
 			{
 				std::cout << "incoming traffic on: " << i << std::endl;
-				for (int i = 0; i < servers.size(); i++)
+				for (size_t j = 0; j < servers.size(); i++)
 				{
 					close(servers[i].get_socket());
 				}

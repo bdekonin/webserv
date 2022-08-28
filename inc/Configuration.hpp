@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/23 11:50:03 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/28 20:56:58 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,7 @@ class Configuration
 		}
 		void set_client_max_body_size(std::string &s)
 		{
-			
+			(void)s;
 		}
 		void set_methods(std::string &s)
 		{
@@ -225,7 +225,7 @@ class Configuration
 		{
 			return this->_client_max_body_size;
 		}
-		const size_t								get_client_max_body_size() const
+		size_t								get_client_max_body_size() const
 		{
 			return this->_client_max_body_size;
 		}
@@ -234,7 +234,7 @@ class Configuration
 		{
 			return this->_methods[request];
 		}
-		const bool									get_methods(size_t request) const
+		bool									get_methods(size_t request) const
 		{
 			return this->_methods[request];
 		}
@@ -261,7 +261,7 @@ class Configuration
 		{
 			return this->_autoindex;
 		}
-		const bool									get_autoindex() const
+		bool									get_autoindex() const
 		{
 			return this->_autoindex;
 		}

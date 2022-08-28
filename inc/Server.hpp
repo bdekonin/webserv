@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/26 16:15:16 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 20:40:15 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/28 20:58:37 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ class Server
 			// this->_configuration = std::vector<ServerConfiguration>();
 			// this->push_back(config);
 			// this->_configuration.push_back(config);
+			(void)config;
 		}
 		
 		/* Destructor */
@@ -121,7 +122,7 @@ std::ostream&	operator<<(std::ostream& out, const Server& c)
 {
 	out << c.get_socket() << "\t" << c.get_hostname() << ":" << c.get_port() << std::endl;
 	out << "Configurations: " << c.get_configurations().size() << std::endl;
-	for (int i = 0; i < c.get_configurations().size(); i++)
+	for (size_t i = 0; i < c.get_configurations().size(); i++)
 	{
 		out << "\t" << i + 1 << " - " << c.get_configurations()[i].get_server_names()[0] << std::endl;
 	}
