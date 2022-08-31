@@ -6,3 +6,6 @@ https://stackoverflow.com/questions/39314086/what-does-it-mean-to-bind-a-socket-
 
 TUTS
 https://beej.us/guide/bgnet/html/
+
+CLIENTS FD AFTER SELECT()
+https://stackoverflow.com/questions/3444729/using-accept-and-select-at-the-same-time

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 23:14:07 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/08/31 16:35:36 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,15 @@ bool has_port_occured(std::vector<Server> &s, int port, int *index)
 	return occured;
 }
 
+Server &find_server(std::vector<Server> &s, int socketFD)
+{
+	for (size_t i = 0; i < s.size(); i++)
+	{
+		if (s[i].get_socket() == socketFD)
+			return s[i];
+	}
+}
+
 
 					// int s = openSocket(ports[j].second);
 					// std::cout << "socket: " << s << ":" << ports[j].second << std::endl;
@@ -147,30 +156,73 @@ int main(int argc, char const *argv[])
 		FD_ZERO(&readfds);
 		
 
+			for (size_t i = 0; i < servers.size(); i++)
+			{
+				std::cout << "port " << servers[i].get_port() << " has fd: " << servers[i].get_socket() << std::endl;
+				// FD_SET(servers[i].get_socket(), &readfds); // adds fd to set
+			}
 
+
+
+			
 		
 		// print server_map
-		for (size_t i = 0; i < servers.size(); i++)
+		// std::vector<
+		for (int counter = 0; counter < 100; counter++)
 		{
-			std::cout << "port " << servers[i].get_port() << " has fd: " << servers[i].get_socket() << std::endl;
-			FD_SET(servers[i].get_socket(), &readfds); // adds fd to set
-		}
-		copy_readfds = readfds;
-
-		if (select(FD_SETSIZE, &copy_readfds, NULL, NULL, NULL) < 0)
-			throw std::runtime_error("Failed to select.");
-
-		for (size_t i = 0; i<FD_SETSIZE; i++)
-		{
-			if (FD_ISSET(i, &copy_readfds))
+			for (size_t i = 0; i < servers.size(); i++)
 			{
-				std::cout << "incoming traffic on: " << std::endl;
-				VAR(i);
-				VAR(servers[i].get_port());
-				for (size_t j = 0; j < servers.size(); j++)
-					close(servers[i].get_socket());
-				exit(1);
+				// std::cout << "port " << servers[i].get_port() << " has fd: " << servers[i].get_socket() << std::endl;
+				FD_SET(servers[i].get_socket(), &readfds); // adds fd to set
+			}			
+			copy_readfds = readfds;
+
+			std::cout << "Server waiting for connections..." << std::endl;
+			if (select(FD_SETSIZE, &copy_readfds, NULL, NULL, NULL) < 0)
+				throw std::runtime_error("Failed to select.");
+
+			for (size_t i = 0; i<FD_SETSIZE; i++)
+			{
+				if (FD_ISSET(i, &copy_readfds))
+				{
+					std::cout << "incoming traffic on: " << std::endl;
+
+					struct sockaddr_in	clientAddress;
+					int					addressSize = sizeof(struct sockaddr_in);
+					
+					int client_fd = accept(i, (struct sockaddr*)&clientAddress, (socklen_t*)&addressSize);
+
+					char	buffer[4096 + 1];
+					int		bytesRead;
+
+					// Read from the socket. If we read 0 bytes, the connection was
+					// closed by the client.
+					bzero(buffer, 4096 + 1);
+					std::cout << "reading from socket: " << client_fd << std::endl;
+					bytesRead = recv(client_fd, buffer, 4096, 0);
+					VAR(bytesRead);
+					VAR(find_server(servers, client_fd).get_port());
+					if (bytesRead == 0)
+					{
+						close(client_fd);
+						std::cout << "Client closed fd\n";
+					}
+					
+					// VAR(i);
+					// VAR(client_fd);
+
+					char *response = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 14\n\n<h1>Hello</h1>";
+
+					send(client_fd , response , strlen(response) , 0 );
+
+
+					FD_CLR(i, &readfds);
+					FD_ZERO(&readfds);
+					FD_ZERO(&copy_readfds);
+				}
 			}
 		}
+		for (size_t j = 0; j < servers.size(); j++)
+			close(servers[j].get_socket());
 	return 0;
 }
