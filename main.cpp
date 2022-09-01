@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/31 16:35:36 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/01 20:56:32 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <fcntl.h>
 
 # include <iostream>
 # include <iomanip>
@@ -38,6 +39,22 @@
 
 #include <arpa/inet.h>
 
+#include "inc/Server.hpp"
+#include "inc/Job.hpp"
+
+#define getString(n) #n
+#define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
+
+
+char* replace_char(char* str, char find, char replace){
+    char *current_pos = strchr(str,find);
+    while (current_pos) {
+        *current_pos = replace;
+        current_pos = strchr(current_pos,find);
+    }
+    return str;
+}
+
 int			openSocket(int port, const char *hostname = "")
 {
 	struct sockaddr_in		sock_struct;
@@ -46,7 +63,9 @@ int			openSocket(int port, const char *hostname = "")
 	socketFD = socket(AF_INET, SOCK_STREAM, 0);
 	if (socketFD < 0)
 		throw std::runtime_error("socket: failed to create socket.");
-	// ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));
+	// ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));SO_REUSEADDR
+	int options = 1;
+	setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options));
 	// if (socketFD < 0)
 	// 	throw std::runtime_error("error");
 
@@ -66,53 +85,38 @@ int			openSocket(int port, const char *hostname = "")
 	return socketFD;
 }
 
-#include "inc/Server.hpp"
-
-
-bool has_port_occured(std::vector<Server> &s, int port, int *index)
+void add_job_to_queue(std::vector<Job*> &queue, Job *job)
 {
-	bool occured = false;
-
-	for (size_t i = 0; i < s.size(); i++)
-	{
-		if (s[i].get_port() == port)
-		{
-			if (index != NULL)
-				*index = i;
-			occured = true;
-			break;
-		}
-	}
-
-	return occured;
+	queue.push_back(job);
 }
 
-Server &find_server(std::vector<Server> &s, int socketFD)
+void create_job_and_add_to_queue(std::vector<Job*> &queue, int type, int fd, Server *server, void *client)
 {
-	for (size_t i = 0; i < s.size(); i++)
-	{
-		if (s[i].get_socket() == socketFD)
-			return s[i];
-	}
+	Job *job = new Job(type, fd, server, client);
+	add_job_to_queue(queue, job);
 }
 
-
-					// int s = openSocket(ports[j].second);
-					// std::cout << "socket: " << s << ":" << ports[j].second << std::endl;
-					// char *h = (char*)ports[j].first.c_str();
-					// in_port_t p = ports[j].second;
-					// servers.push_back(Server(s, h, p, configs[i]));
-					// std::cout << "opening socket on client " << ports[j].second << " to server " << server_i << std::endl;
-					// break;
-
-#define getString(n) #n
-#define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
+int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
+{
+	std::cout << job->fd << " WAIT_FOR_CONNECTION" << std::endl;
+	struct sockaddr_in client_address;
+	int address_size = sizeof(struct sockaddr_in);
+	VAR(job->fd);
+	int client_fd = accept(job->fd, (struct sockaddr*)&client_address, (socklen_t*)&address_size);
+	if (client_fd < 0)
+		throw std::runtime_error("accept: failed to accept.");
+	fcntl(client_fd, F_SETFL, O_NONBLOCK);
+	jobs[client_fd] = Job(CLIENT_READ, client_fd, NULL, NULL);
+	
+	FD_SET(client_fd, set);
+	return (client_fd);
+}
 
 int main(int argc, char const *argv[])
 {
 	(void)argc;
 	std::vector<ServerConfiguration> configs;
-	std::vector<Server> servers;
+	std::map<int, Server> servers;
 	Parser parser(argv[1]);
 
 	configs = parser.init();
@@ -126,103 +130,121 @@ int main(int argc, char const *argv[])
 		ports = configs[i].get_listen();
 		for (size_t j = 0; j < ports.size(); j++)
 		{
-			int index_of_server = 0;
-
-			if (!has_port_occured(servers, ports[j].second, &index_of_server))
+			std::map<int, Server>::iterator it = servers.find(ports[j].second);
+			if (it == servers.end())
 			{
 				s = openSocket(ports[j].second);
 				VAR(s);
 				h = (char*)ports[j].first.c_str();
 				p = ports[j].second;
-				
-				servers.push_back(Server(s, h, p, configs[i]));
+
+				servers[ports[j].second] = Server(s, h, p, configs[i]);
 			}
 			else
-			{
-				servers[index_of_server].push_back(configs[i]);
-				// std::cout << "Port " << ports[j].second << " already in use.\n";
-			}
-			index_of_server = 0;
+				it->second.push_back(configs[i]);
 		}
 		ports.clear();
 	}
-	std::cout << std::endl;
 
-
+	std::map<int, Job> jobs;
+	Job *job;
+	fd_set read_fds, write_fds;
+	
+	// ZERO THE FD SET
+	FD_ZERO(&read_fds);
+	FD_ZERO(&write_fds);
 
 	
-		fd_set readfds, copy_readfds;
-		
-		FD_ZERO(&readfds);
-		
 
-			for (size_t i = 0; i < servers.size(); i++)
-			{
-				std::cout << "port " << servers[i].get_port() << " has fd: " << servers[i].get_socket() << std::endl;
-				// FD_SET(servers[i].get_socket(), &readfds); // adds fd to set
-			}
+	for (auto it = servers.begin(); it != servers.end(); it++)
+	{
+		std::cout << "server " << it->second.get_port() << " has " << it->second.get_configurations().size() << " configurations" << std::endl;
+		int fd = it->second.get_socket();
+		jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
+		FD_SET(fd, &read_fds);
+	}
+	// if (select(FD_SETSIZE, &copy_readfds, NULL, NULL, NULL) < 0)
+	// 	throw std::runtime_error("select: failed to select.");
 
-
-
-			
-		
-		// print server_map
-		// std::vector<
-		for (int counter = 0; counter < 100; counter++)
+	while (true)
+	{
+		fd_set copy_readfds = read_fds;
+		fd_set copy_writefds = write_fds;
+		std::cout << "select" << std::endl;
+		if (select(FD_SETSIZE, &copy_readfds, &copy_writefds, NULL, NULL) < 0)
+			throw std::runtime_error("select: failed to select.");
+		for (int i = 0; i < 20; i++)
 		{
-			for (size_t i = 0; i < servers.size(); i++)
+			if (FD_ISSET(i, &copy_readfds))
 			{
-				// std::cout << "port " << servers[i].get_port() << " has fd: " << servers[i].get_socket() << std::endl;
-				FD_SET(servers[i].get_socket(), &readfds); // adds fd to set
-			}			
-			copy_readfds = readfds;
-
-			std::cout << "Server waiting for connections..." << std::endl;
-			if (select(FD_SETSIZE, &copy_readfds, NULL, NULL, NULL) < 0)
-				throw std::runtime_error("Failed to select.");
-
-			for (size_t i = 0; i<FD_SETSIZE; i++)
-			{
-				if (FD_ISSET(i, &copy_readfds))
+				job = &jobs[i];
+				std::cout << "job " << i << " is " << "started" << std::endl;
+				if (job->type == WAIT_FOR_CONNECTION)
 				{
-					std::cout << "incoming traffic on: " << std::endl;
+					accept_connection(job, jobs, &read_fds);
+				}
+				else if (job->type == CLIENT_READ)
+				{
+					std::cout << job->fd << " CLIENT_READ" << std::endl;
+						char	buffer[4096 + 1];
+						int		bytesRead;
+						bzero(buffer, 4096 + 1);
+						bytesRead = recv(job->fd, buffer, 4096, 0);
+						if (bytesRead <= 0)
+						{
+							close(job->fd);
+							jobs.erase(job->fd);
+							std::cout << "Client " << job->fd << " disconnected." << std::endl;
+							FD_CLR(job->fd, &read_fds);
+							FD_CLR(job->fd, &write_fds);
+							// exit(1);
+							continue;
+						}
 
-					struct sockaddr_in	clientAddress;
-					int					addressSize = sizeof(struct sockaddr_in);
-					
-					int client_fd = accept(i, (struct sockaddr*)&clientAddress, (socklen_t*)&addressSize);
+						char temp[5][1000];
+						std::string method, uri, version;
+						sscanf(buffer, "%s %s %s", temp[0], temp[1], temp[2]);
 
-					char	buffer[4096 + 1];
-					int		bytesRead;
+						method = temp[0];
+						uri = temp[1];
+						version = temp[2];
 
-					// Read from the socket. If we read 0 bytes, the connection was
-					// closed by the client.
-					bzero(buffer, 4096 + 1);
-					std::cout << "reading from socket: " << client_fd << std::endl;
-					bytesRead = recv(client_fd, buffer, 4096, 0);
-					VAR(bytesRead);
-					VAR(find_server(servers, client_fd).get_port());
-					if (bytesRead == 0)
-					{
-						close(client_fd);
-						std::cout << "Client closed fd\n";
-					}
-					
-					// VAR(i);
-					// VAR(client_fd);
-
-					char *response = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 14\n\n<h1>Hello</h1>";
-
-					send(client_fd , response , strlen(response) , 0 );
-
-
-					FD_CLR(i, &readfds);
-					FD_ZERO(&readfds);
-					FD_ZERO(&copy_readfds);
+						// print vars
+						printf("[%d] method: (%s) uri: (%s) version: (%s)\n", job->fd, temp[0], temp[1], temp[2]);
+						job->type = CLIENT_RESPONSE;
+						
+						FD_SET(i, &copy_writefds);
 				}
 			}
 		}
-		for (size_t j = 0; j < servers.size(); j++)
-			close(servers[j].get_socket());
+		std::cout << "----------------------" << std::endl;
+		for (int i = 0; i < 20; i++)
+		{
+			job = &jobs[i];
+			if (FD_ISSET(i, &copy_writefds))
+			{
+				if (job->type == CLIENT_RESPONSE)
+				{
+					std::cout << job->fd << " CLIENT_RESPONSE" << std::endl;
+					char *response = strdup("HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 15\n\n<h1>Hello</h1>");
+					
+					ssize_t bytes = send(job->fd, response,  strlen(response) + 1, 0);
+					std::cout << "bytes sent: " << bytes << std::endl;
+					jobs[job->fd].type = CLIENT_READ;
+					free(response);
+				}
+			}
+		}
+	}
+
+	std::cout << std::endl;
+
+	for (auto it = jobs.begin(); it != jobs.end(); it++)
+	{
+		std::cout << "Closing " << it->second.fd <<  std::endl;
+		close(it->second.fd);
+	}
+
 	return 0;
 }
+
