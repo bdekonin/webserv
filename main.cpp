@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/04 21:36:59 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/04 21:52:35 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,13 +142,10 @@ int main(int argc, char const *argv[])
 			}
 			else
 			{
-				std::cout << "Adding location to server on port " << ports[j].second << std::endl;
-				it->second._configuration.push_back(configs[i]);
-			}
+				it->second.push_back(configs[i]);
 		}
 		ports.clear();
 	}
-
 
 	std::map<int, Job> jobs;
 	Job *job;
@@ -160,13 +157,13 @@ int main(int argc, char const *argv[])
 
 	for (auto it = servers.begin(); it != servers.end(); it++)
 	{
-		std::cout << " server " << it->second.get_port() << " has " << it->second.get_configurations().size() << " configurations" << std::endl;
+		std::cout << "server " << it->second.get_port() << " has " << it->second.get_configurations().size() << " configurations" << std::endl;
 		int fd = it->second.get_socket();
 		jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
 		FD_SET(fd, &read_fds);
 	}
-	exit(1);
 
+	exit(1);
 	for (auto it = jobs.begin(); it != jobs.end(); it++)
 	{
 		std::cout << it->second.server << std::endl;
