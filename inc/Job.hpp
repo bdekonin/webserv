@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/31 20:48:17 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/04 20:11:44 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define JOB_HPP
 
 # include "Server.hpp"
+# include "Request.hpp"
 
 # define WAIT_FOR_CONNECTION 0 // READ | EVEN
 
@@ -42,6 +43,8 @@ class Job
 		/* Destructor */
 		virtual ~Job()
 		{
+			// if (this->request)
+			// 	delete request;
 		}
 
 		/* Copy constructor */
@@ -75,6 +78,7 @@ class Job
 		int				fd;
 		Server			*server;
 		void			*client; // TODO: change to client class
+		Request			*request;
 		void			*cgi;// TODO change to CGI Object
 };
 

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/26 16:15:16 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 22:42:57 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/04 21:35:07 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,7 @@ class Server
 			return this->_configuration[index];
 		}
 		
-	private:
+	public:
 		int									_socket; // Server socket
 		char *								_hostname; // Hostname to listen on
 		in_port_t							_port; // Port to listen on
@@ -124,6 +124,17 @@ std::ostream&	operator<<(std::ostream& out, const Server& c)
 	for (size_t i = 0; i < c.get_configurations().size(); i++)
 	{
 		out << "\t" << i + 1 << " - " << c.get_configurations()[i].get_server_names()[0] << std::endl;
+	}
+	return out;
+}
+
+std::ostream&	operator<<(std::ostream& out, const Server *c)
+{
+	out << c->get_socket() << "\t" << c->get_hostname() << ":" << c->get_port() << std::endl;
+	out << "Configurations: " << c->get_configurations().size() << std::endl;
+	for (size_t i = 0; i < c->get_configurations().size(); i++)
+	{
+		out << "\t" << i + 1 << " - " << c->get_configurations()[i].get_server_names()[0] << std::endl;
 	}
 	return out;
 }

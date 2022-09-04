@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/01 20:56:32 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/04 21:36:59 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@
 
 #include "inc/Server.hpp"
 #include "inc/Job.hpp"
+#include "inc/Request.hpp"
 
 #define getString(n) #n
 #define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
@@ -106,7 +107,7 @@ int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
 	if (client_fd < 0)
 		throw std::runtime_error("accept: failed to accept.");
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
-	jobs[client_fd] = Job(CLIENT_READ, client_fd, NULL, NULL);
+	jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, NULL);
 	
 	FD_SET(client_fd, set);
 	return (client_fd);
@@ -116,7 +117,7 @@ int main(int argc, char const *argv[])
 {
 	(void)argc;
 	std::vector<ServerConfiguration> configs;
-	std::map<int, Server> servers;
+	std::map<int, Server> servers; // port, server
 	Parser parser(argv[1]);
 
 	configs = parser.init();
@@ -133,18 +134,21 @@ int main(int argc, char const *argv[])
 			std::map<int, Server>::iterator it = servers.find(ports[j].second);
 			if (it == servers.end())
 			{
+				std::cout << "Creating server on port " << ports[j].second << std::endl;
 				s = openSocket(ports[j].second);
-				VAR(s);
 				h = (char*)ports[j].first.c_str();
 				p = ports[j].second;
-
 				servers[ports[j].second] = Server(s, h, p, configs[i]);
 			}
 			else
-				it->second.push_back(configs[i]);
+			{
+				std::cout << "Adding location to server on port " << ports[j].second << std::endl;
+				it->second._configuration.push_back(configs[i]);
+			}
 		}
 		ports.clear();
 	}
+
 
 	std::map<int, Job> jobs;
 	Job *job;
@@ -154,17 +158,19 @@ int main(int argc, char const *argv[])
 	FD_ZERO(&read_fds);
 	FD_ZERO(&write_fds);
 
-	
-
 	for (auto it = servers.begin(); it != servers.end(); it++)
 	{
-		std::cout << "server " << it->second.get_port() << " has " << it->second.get_configurations().size() << " configurations" << std::endl;
+		std::cout << " server " << it->second.get_port() << " has " << it->second.get_configurations().size() << " configurations" << std::endl;
 		int fd = it->second.get_socket();
 		jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
 		FD_SET(fd, &read_fds);
 	}
-	// if (select(FD_SETSIZE, &copy_readfds, NULL, NULL, NULL) < 0)
-	// 	throw std::runtime_error("select: failed to select.");
+	exit(1);
+
+	for (auto it = jobs.begin(); it != jobs.end(); it++)
+	{
+		std::cout << it->second.server << std::endl;
+	}
 
 	while (true)
 	{
@@ -193,26 +199,25 @@ int main(int argc, char const *argv[])
 						if (bytesRead <= 0)
 						{
 							close(job->fd);
-							jobs.erase(job->fd);
 							std::cout << "Client " << job->fd << " disconnected." << std::endl;
 							FD_CLR(job->fd, &read_fds);
 							FD_CLR(job->fd, &write_fds);
+							jobs.erase(job->fd);
 							// exit(1);
 							continue;
 						}
 
-						char temp[5][1000];
-						std::string method, uri, version;
-						sscanf(buffer, "%s %s %s", temp[0], temp[1], temp[2]);
+						std::string request(buffer);
 
-						method = temp[0];
-						uri = temp[1];
-						version = temp[2];
+						// write to file
+						std::ofstream file;
+						file.open("request.txt");
+						file << request;
+						file.close();
 
-						// print vars
-						printf("[%d] method: (%s) uri: (%s) version: (%s)\n", job->fd, temp[0], temp[1], temp[2]);
+						job->request = new Request(request); // TODO check how to free correctly
+
 						job->type = CLIENT_RESPONSE;
-						
 						FD_SET(i, &copy_writefds);
 				}
 			}
@@ -226,8 +231,15 @@ int main(int argc, char const *argv[])
 				if (job->type == CLIENT_RESPONSE)
 				{
 					std::cout << job->fd << " CLIENT_RESPONSE" << std::endl;
-					char *response = strdup("HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 15\n\n<h1>Hello</h1>");
+					std::string string = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 15\n\n<h1>Hello</h1>";
 					
+					char *response = strdup(string.c_str());
+
+					std::cout << "\t" << job->request->_method << " " << job->request->_uri << " " << job->request->_version << std::endl;
+					
+					// get correct server configuration;
+					std::cout << job->server << std::endl;
+							
 					ssize_t bytes = send(job->fd, response,  strlen(response) + 1, 0);
 					std::cout << "bytes sent: " << bytes << std::endl;
 					jobs[job->fd].type = CLIENT_READ;

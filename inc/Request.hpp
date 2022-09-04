@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/23 17:44:03 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/04 20:10:39 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,14 +27,49 @@
 **
 */
 
+# include "utils.hpp"
+
 class Request
 {
 	public:
 		/* Constructor  */
-		Request();
+		Request()
+		{
+		}
+		Request(std::string &buffer)
+		{
+			this->setup(buffer);
+		}
+
+		// Setup
+
+		void setup(std::string &buffer)
+		{
+			std::vector<std::string> lines;
+			split(buffer, "\r\n", lines);
+			
+			std::cout << buffer << std::endl;
+
+						
+			for (int i = 1; i < lines.size(); i++)
+				this->set_header(lines[i]);
+
+			// for (auto it = this->_headers_map.begin(); it != this->_headers_map.end(); it++)
+			// {
+			// 	std::cout << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
+			// }
+
+			std::vector<std::string> request_line;
+			split(lines[0], " ", request_line);
+			this->_method = request_line[0];
+			this->_uri = request_line[1];
+			this->_version = request_line[2];
+		}
 
 		/* Destructor */
-		virtual ~Request();
+		virtual ~Request()
+		{
+		}
 
 		/* Copy constructor */
 		Request(const Request&);
@@ -58,24 +93,15 @@ class Request
 			for (size_t i = 0; i < identifier.length(); i++)
 				identifier[i] = std::tolower(identifier[i]);
 			
-			value = header.substr(pos, + 2);
+			value = header.substr(pos + 1);
 			this->_headers_map[identifier] = value;
-			std::cout << "Header: " << identifier << " Value: " << value << std::endl;
 		}
-	private:
-	// List of Headers in vector
-		std::vector<std::string, std::string>	_headers;
+	public:
 		std::map<std::string, std::string> _headers_map;
 
-		
-	// Request-Line
-		std::string _method; // GET POST DELETE
-		std::string _request_uri; // /index.html
-		std::string _http_version; // HTTP/1.1
-
-	// Request-Header
-		std::string _host; // The domain name of the server
-		std::string _accept; // The media type/types acceptable
+		std::string _method;
+		std::string _uri;
+		std::string _version;
 };
 
 #endif // REQUEST_HPP
