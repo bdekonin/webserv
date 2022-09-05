@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 21:00:52 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/05 12:11:41 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,9 +155,9 @@ class ServerConfiguration : public Configuration
 			return this->_locations;
 		}
 	private:
-		std::vector<std::pair<std::string, size_t> > _ports;
-		std::vector<std::string>			_names; // server names
-		std::vector<LocationConfiguration> 	_locations; // location path, location config
+		std::vector<std::pair<std::string, size_t> > 	_ports;
+		std::vector<std::string>						_names; // server names
+		std::vector<LocationConfiguration> 				_locations; // location path, location config
 };
 
 std::ostream&	operator<<(std::ostream& out, const ServerConfiguration& c)
