@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/26 16:15:16 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/04 21:52:24 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/05 11:20:26 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ class Server
 		{
 			return this->_hostname;
 		}
-		const std::vector<ServerConfiguration> get_configurations() const
+		const std::vector<ServerConfiguration> &get_configurations() const
 		{
 			return this->_configuration;
 		}

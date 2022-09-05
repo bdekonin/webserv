@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/04 20:10:39 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/05 13:34:40 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ class Request
 			std::vector<std::string> lines;
 			split(buffer, "\r\n", lines);
 			
-			std::cout << buffer << std::endl;
+			// std::cout << buffer << std::endl;
 
 						
 			for (int i = 1; i < lines.size(); i++)
@@ -92,8 +92,14 @@ class Request
 			identifier = header.substr(0, pos);
 			for (size_t i = 0; i < identifier.length(); i++)
 				identifier[i] = std::tolower(identifier[i]);
+
 			
 			value = header.substr(pos + 1);
+			
+			identifier = ft_strtrim(identifier, whitespaces);
+			value = ft_strtrim(value, whitespaces);
+
+			// std::cout << "[" << identifier << "]\t[" << value << "]\n";
 			this->_headers_map[identifier] = value;
 		}
 	public:

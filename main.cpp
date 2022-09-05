@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/04 21:52:35 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/05 14:44:12 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@
 
 #define getString(n) #n
 #define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
-
+#define PRINT(var) std::cout << var << std::endl
 
 char* replace_char(char* str, char find, char replace){
     char *current_pos = strchr(str,find);
@@ -99,7 +99,7 @@ void create_job_and_add_to_queue(std::vector<Job*> &queue, int type, int fd, Ser
 
 int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
 {
-	std::cout << job->fd << " WAIT_FOR_CONNECTION" << std::endl;
+	std::cout << job->fd << " Accepting Connection" << std::endl;
 	struct sockaddr_in client_address;
 	int address_size = sizeof(struct sockaddr_in);
 	VAR(job->fd);
@@ -122,6 +122,8 @@ int main(int argc, char const *argv[])
 
 	configs = parser.init();
 
+	std::cout << configs.size() << std::endl;
+
 	std::vector<std::pair<std::string, size_t> > ports;
 	int s = 0;
 	char *h = NULL;
@@ -143,6 +145,7 @@ int main(int argc, char const *argv[])
 			else
 			{
 				it->second.push_back(configs[i]);
+			}
 		}
 		ports.clear();
 	}
@@ -163,32 +166,24 @@ int main(int argc, char const *argv[])
 		FD_SET(fd, &read_fds);
 	}
 
-	exit(1);
-	for (auto it = jobs.begin(); it != jobs.end(); it++)
-	{
-		std::cout << it->second.server << std::endl;
-	}
-
 	while (true)
 	{
 		fd_set copy_readfds = read_fds;
 		fd_set copy_writefds = write_fds;
-		std::cout << "select" << std::endl;
+		PRINT("Waiting on Select");
 		if (select(FD_SETSIZE, &copy_readfds, &copy_writefds, NULL, NULL) < 0)
 			throw std::runtime_error("select: failed to select.");
-		for (int i = 0; i < 20; i++)
+		PRINT("Done with Select");
+		for (int loop_job_counter = 0; loop_job_counter < jobs.size(); loop_job_counter++)
 		{
-			if (FD_ISSET(i, &copy_readfds))
+			if (FD_ISSET(loop_job_counter, &copy_readfds))
 			{
-				job = &jobs[i];
-				std::cout << "job " << i << " is " << "started" << std::endl;
+				job = &jobs[loop_job_counter];
 				if (job->type == WAIT_FOR_CONNECTION)
-				{
 					accept_connection(job, jobs, &read_fds);
-				}
 				else if (job->type == CLIENT_READ)
 				{
-					std::cout << job->fd << " CLIENT_READ" << std::endl;
+						std::cout << job->fd << " Reading request Client\n";
 						char	buffer[4096 + 1];
 						int		bytesRead;
 						bzero(buffer, 4096 + 1);
@@ -200,50 +195,70 @@ int main(int argc, char const *argv[])
 							FD_CLR(job->fd, &read_fds);
 							FD_CLR(job->fd, &write_fds);
 							jobs.erase(job->fd);
-							// exit(1);
 							continue;
 						}
 
 						std::string request(buffer);
 
-						// write to file
-						std::ofstream file;
-						file.open("request.txt");
-						file << request;
-						file.close();
-
 						job->request = new Request(request); // TODO check how to free correctly
 
 						job->type = CLIENT_RESPONSE;
-						FD_SET(i, &copy_writefds);
+						FD_SET(loop_job_counter, &copy_writefds);
 				}
 			}
 		}
-		std::cout << "----------------------" << std::endl;
-		for (int i = 0; i < 20; i++)
+		for (int loop_job_counter = 0; loop_job_counter < jobs.size(); loop_job_counter++)
 		{
-			job = &jobs[i];
-			if (FD_ISSET(i, &copy_writefds))
+			job = &jobs[loop_job_counter];
+			if (FD_ISSET(loop_job_counter, &copy_writefds))
 			{
 				if (job->type == CLIENT_RESPONSE)
 				{
+					std::cout << job->fd << " Responding to Client\n";
 					std::cout << job->fd << " CLIENT_RESPONSE" << std::endl;
-					std::string string = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 15\n\n<h1>Hello</h1>";
-					
-					char *response = strdup(string.c_str());
+					std::string string = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: ";
 
-					std::cout << "\t" << job->request->_method << " " << job->request->_uri << " " << job->request->_version << std::endl;
+					std::vector<ServerConfiguration> configs_of_job = job->server->get_configurations();
+
+					std::string host_header = job->request->_headers_map["host"];
+					int pos = host_header.find(":");
+
+					// Find Correct Server to be used
+					std::vector<std::string> server_names;
+					ServerConfiguration *config_by_request;
+					for (int k = 0; k < configs_of_job.size(); k++)
+					{
+						server_names = configs_of_job[k].get_server_names();
+						for (int j = 0; j < server_names.size(); j++)
+						{
+							if (host_header.substr(0, pos) == server_names[j])
+								config_by_request = &configs_of_job[k];
+						}
+					}
+
+					// Create good response
+
 					
-					// get correct server configuration;
-					std::cout << job->server << std::endl;
-							
+					std::string content = "\n\n";
+
+					std::ifstream file("/Users/bdekonin/Documents/webserv/parallel_commands");
+					std::string tempString;
+					while (std::getline(file, tempString))
+						content.append(tempString);
+					file.close();
+					
+					// content.append("Hallo Bobbie\n");
+					string.append(std::to_string(content.size()));
+					string.append(content);
+
+					char *response = strdup(string.c_str());
 					ssize_t bytes = send(job->fd, response,  strlen(response) + 1, 0);
-					std::cout << "bytes sent: " << bytes << std::endl;
 					jobs[job->fd].type = CLIENT_READ;
 					free(response);
 				}
 			}
 		}
+		std::cout << std::endl;
 	}
 
 	std::cout << std::endl;
@@ -256,4 +271,3 @@ int main(int argc, char const *argv[])
 
 	return 0;
 }
-
