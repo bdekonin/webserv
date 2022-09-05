@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 14:44:12 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/05 15:05:08 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,17 +86,6 @@ int			openSocket(int port, const char *hostname = "")
 	return socketFD;
 }
 
-void add_job_to_queue(std::vector<Job*> &queue, Job *job)
-{
-	queue.push_back(job);
-}
-
-void create_job_and_add_to_queue(std::vector<Job*> &queue, int type, int fd, Server *server, void *client)
-{
-	Job *job = new Job(type, fd, server, client);
-	add_job_to_queue(queue, job);
-}
-
 int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
 {
 	std::cout << job->fd << " Accepting Connection" << std::endl;
@@ -106,8 +95,10 @@ int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
 	int client_fd = accept(job->fd, (struct sockaddr*)&client_address, (socklen_t*)&address_size);
 	if (client_fd < 0)
 		throw std::runtime_error("accept: failed to accept.");
+
+	User user(client_fd, &client_address);
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
-	jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, NULL);
+	jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, &user);
 	
 	FD_SET(client_fd, set);
 	return (client_fd);

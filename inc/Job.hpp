@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/04 20:11:44 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/05 15:04:42 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include "Server.hpp"
 # include "Request.hpp"
+# include "User.hpp"
 
 # define WAIT_FOR_CONNECTION 0 // READ | EVEN
 
@@ -35,8 +36,8 @@ class Job
 		Job()
 		{
 		}
-		Job(int type, int fd, Server *server, void *client)
-		: type(type), fd(fd), server(server), client(client), cgi(NULL)
+		Job(int type, int fd, Server *server, User *user)
+		: type(type), fd(fd), server(server), user(user), cgi(NULL)
 		{
 		}
 
@@ -59,7 +60,7 @@ class Job
 			this->type = e.type;
 			this->fd = e.fd;
 			this->server = e.server;
-			this->client = e.client;
+			this->user = e.user;
 			this->cgi = e.cgi;
 			return *this;
 		}
@@ -77,7 +78,7 @@ class Job
 		int				type;
 		int				fd;
 		Server			*server;
-		void			*client; // TODO: change to client class
+		User			*user; // TODO: change to client class | SAME AS CLIENT
 		Request			*request;
 		void			*cgi;// TODO change to CGI Object
 };
