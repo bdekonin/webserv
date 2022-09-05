@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 21:10:06 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/05 11:38:00 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,4 +89,58 @@ void	split(const std::string& str, const char* delims, std::vector<std::string>&
 		(void)braceClose;
 		posBegin = posEnd + 1;
 	}
+}
+
+static int		trim_left(std::string &s1, char *set)
+{
+	int i;
+	int j;
+
+	i = 0;
+	while (s1[i])
+	{
+		j = 0;
+		while (s1[i] != set[j] && set[j])
+			j++;
+		if (!set[j])
+			break ;
+		i++;
+	}
+	return (i);
+}
+
+static int		trim_right(std::string &s1, char *set)
+{
+	int i;
+	int j;
+
+	i = s1.size() - 1;
+	while (i >= 0)
+	{
+		j = 0;
+		while (s1[i] != set[j] && set[j])
+			j++;
+		if (!set[j])
+			break ;
+		i--;
+	}
+	return (i);
+}
+
+std::string		ft_strtrim(std::string &s1, char *set)
+{
+	std::string	str;
+	int		left;
+	int		right;
+
+	if (s1.size() == 0)
+		return (std::string(""));
+	if (!set)
+		return (std::string(s1));
+	left = trim_left(s1, set);
+	right = trim_right(s1, set);
+	if (right - left + 1 < 0)
+		return (std::string(""));
+	str = s1.substr(left, right - left + 1);
+	return (str);
 }
