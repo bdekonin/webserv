@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 14:46:37 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 15:01:02 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/05 18:09:11 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ class User
 			this->_fd = e._fd;
 			this->_request = e._request;
 			this->_address_info = e._address_info;
+			return *this;
 		}
 
 		// Methods

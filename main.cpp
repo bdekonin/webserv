@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 15:05:08 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/05 22:00:22 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@
 #include "inc/Server.hpp"
 #include "inc/Job.hpp"
 #include "inc/Request.hpp"
+#include "inc/Response.hpp"
 
 #define getString(n) #n
 #define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
@@ -207,7 +208,7 @@ int main(int argc, char const *argv[])
 				{
 					std::cout << job->fd << " Responding to Client\n";
 					std::cout << job->fd << " CLIENT_RESPONSE" << std::endl;
-					std::string string = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: ";
+					std::string string = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 6\n\nHello";
 
 					std::vector<ServerConfiguration> configs_of_job = job->server->get_configurations();
 
@@ -228,24 +229,32 @@ int main(int argc, char const *argv[])
 					}
 
 					// Create good response
-
+					Response res = Response();
+					res.set_status_code(200);
 					
-					std::string content = "\n\n";
+					res.set_header("Content-Type", "text/html");
+					res.set_header("Server", "Webserv (Luke & Bob) 1.0");
 
-					std::ifstream file("/Users/bdekonin/Documents/webserv/parallel_commands");
-					std::string tempString;
-					while (std::getline(file, tempString))
-						content.append(tempString);
-					file.close();
+					std::ifstream file("request.txt");
+					std::ostringstream ss;
+					ss << file.rdbuf();
+					const std::string& s = ss.str();
 					
-					// content.append("Hallo Bobbie\n");
-					string.append(std::to_string(content.size()));
-					string.append(content);
+					res.set_body(s);
+					res.set_body("\n\n\n\n");
+					res.set_body(std::to_string(job->fd));
 
-					char *response = strdup(string.c_str());
-					ssize_t bytes = send(job->fd, response,  strlen(response) + 1, 0);
+					res.set_header("Content-Length", std::to_string(res._body.size()));
+
+					std::vector<char> response = res.build_response();
+
+					char *response_char = reinterpret_cast<char*> (&response[0]);
+
+					std::cout << response_char << std::endl;
+					
+
+					ssize_t bytes = send(job->fd, response_char,  response.size() + 1, 0);
 					jobs[job->fd].type = CLIENT_READ;
-					free(response);
 				}
 			}
 		}
