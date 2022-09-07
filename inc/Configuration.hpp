@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 20:56:58 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/07 21:37:41 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,11 @@
 # include <vector>
 # include <map>
 
+
 # define whitespaces " \v\t\n"
 # define forbidden_characters "\'\"|&;<>`$(){}[]*?#~"
+
+class ServerConfiguration;
 
 void	split(const std::string& str, const char* delims, std::vector<std::string>& out);
 
@@ -82,6 +85,68 @@ class Configuration
 			this->_cgi.clear();
 		}
 
+		void combine_two_locations(const Configuration &src) // copying <src> to *this | src is locationblock
+		{
+			if (this->get_error_page() != src.get_error_page()) // not empty
+			{
+				std::map<size_t, std::string> temp = this->_error_page;
+				temp.insert(src.get_error_page().begin(), src.get_error_page().end());
+
+				this->_error_page = temp;
+			}
+
+			if (this->get_client_max_body_size() != src.get_client_max_body_size())
+				this->_client_max_body_size = src.get_client_max_body_size();
+
+			if (this->get_methods(0) != src.get_methods(0))
+				this->_methods[0] = src.get_methods(0);
+
+			if (this->get_methods(1) != src.get_methods(1))
+				this->_methods[1] = src.get_methods(1);
+
+			if (this->get_methods(2) != src.get_methods(2))
+				this->_methods[2] = src.get_methods(2);
+
+			if (this->get_return() != src.get_return()) // not empty
+			{
+				std::map<size_t, std::string> temp = this->_return;
+				temp.insert(src.get_return().begin(), src.get_return().end());
+
+				this->_return = temp;
+			}
+			if (this->get_root() != src.get_root())
+				this->_root = src.get_root();
+
+			if (this->get_autoindex() != src.get_autoindex())
+				this->_autoindex = src.get_autoindex();
+
+			if (this->get_index() != src.get_index())
+				this->_index = src.get_index(); // TODO MISSCHIEN SAMENVOEGEN IPV OVERSCHRIJDEN MET =
+
+			if (this->get_cgi() != src.get_cgi())
+			{
+				std::map<std::string, std::string> temp = this->_cgi;
+				temp.insert(src.get_cgi().begin(), src.get_cgi().end());
+
+				this->_cgi = temp;
+			}
+		}
+
+		bool is_method_allowed(std::string &method)
+		{
+			int i = 0;
+
+			std::cout << "method: [" << method << "]" << std::endl;
+
+			if (method == "GET")
+				return (this->_methods[0]);
+			else if (method == "POST")
+				return (this->_methods[1]);
+			else if (method == "DELETE")
+				return (this->_methods[2]);
+			else
+				return false;
+		}
 		// Setters
 		void set_error_page(std::string &s)
 		{

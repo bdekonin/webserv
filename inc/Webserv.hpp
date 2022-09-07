@@ -166,6 +166,7 @@ class Webserv
 					s.replace(pos, 1, "<br>");
 			}
 			
+
 			res.set_body(s);
 			res.set_body("\n\n\n\n");
 			res.set_body(std::to_string(job->fd));
@@ -177,10 +178,57 @@ class Webserv
 
 			// std::cout << response_char << std::endl; // TODO remove. THIS IS FOR PRINTING IN TERMINAL
 
+			this->handle_connection(job, job->request, config);
 
 			ssize_t bytes = send(job->fd, response_char,  response.size() + 1, 0);
 			this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
 		}
+		/* Handle Connection */
+		void handle_connection(Job *job, Request *request, ServerConfiguration &server_config)
+		{
+			std::string &uri = request->_uri;
+			Configuration config;
+
+			config = this->create_correct_configfile(request, server_config); // the good
+
+			std::cout << config << std::endl;
+
+			// Check if method is allowed;
+			if (config.is_method_allowed(request->_method) == false)
+			{
+				std::cout << "Method not allowed" << std::endl;
+				return ;
+			}
+		}
+		Configuration create_correct_configfile(Request *request, ServerConfiguration &config)
+		{
+			Configuration correct_config = Configuration(config);
+			LocationConfiguration *location;
+
+			// TODO Putting a / at the end if there is not a slash (/) Makes sense??
+
+			location = config.get_location_by_uri(request->_uri);
+			if (location == nullptr) // No Location matches the uri. Use default ServerConfiguration
+				return (correct_config);
+			correct_config.combine_two_locations(*location);
+
+			return (correct_config);
+		}
+
+		void get(Job *job, Request &request, ServerConfiguration &config)
+		{
+			std::cout << "GET" << std::endl;
+		}
+		void post(Job *job, Request &request, ServerConfiguration &config)
+		{
+			std::cout << "POST" << std::endl;
+		}
+		void put(Job *job, Request &request, ServerConfiguration &config)
+		{
+			std::cout << "PUT" << std::endl;
+		}
+
+
 		/* Accept a New Client */
 		int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
 		{
