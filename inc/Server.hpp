@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/26 16:15:16 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 11:20:26 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/07 17:32:03 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,10 @@ class Server
 		{
 			return this->_hostname;
 		}
+		std::vector<ServerConfiguration> &get_configurations()
+		{
+			return this->_configuration;
+		}
 		const std::vector<ServerConfiguration> &get_configurations() const
 		{
 			return this->_configuration;
@@ -119,22 +123,29 @@ class Server
 
 std::ostream&	operator<<(std::ostream& out, const Server& c)
 {
-	out << c.get_socket() << "\t" << c.get_hostname() << ":" << c.get_port() << std::endl;
-	out << "Configurations: " << c.get_configurations().size() << std::endl;
+	out << "Socket: " << c.get_socket() << "\t(hostname:port): [" << c.get_hostname() << ":" << c.get_port() << "]" << std::endl;
+	out << "Locations: " << c.get_configurations().size() << std::endl;
 	for (size_t i = 0; i < c.get_configurations().size(); i++)
 	{
-		out << "\t" << i + 1 << " - " << c.get_configurations()[i].get_server_names()[0] << std::endl;
+		for (size_t loc_i = 0; loc_i < c.get_configurations()[i].get_locations().size(); loc_i++)
+		{
+			out << loc_i + 1 << " - " << c.get_configurations()[i].get_locations()[loc_i] << std::endl << std::endl;
+		}
 	}
 	return out;
 }
 
 std::ostream&	operator<<(std::ostream& out, const Server *c)
 {
-	out << c->get_socket() << "\t" << c->get_hostname() << ":" << c->get_port() << std::endl;
-	out << "Configurations: " << c->get_configurations().size() << std::endl;
+	// out << c->get_socket() << "\t" << c->get_hostname() << ":" << c->get_port() << std::endl;
+	out << "Socket: " << c->get_socket() << "\t(hostname:port): [" << c->get_hostname() << ":" << c->get_port() << "]" << std::endl;
+	out << "Locations: " << c->get_configurations().size() << std::endl;
 	for (size_t i = 0; i < c->get_configurations().size(); i++)
 	{
-		out << "\t" << i + 1 << " - " << c->get_configurations()[i].get_server_names()[0] << std::endl;
+		for (size_t loc_i = 0; loc_i < c->get_configurations()[i].get_locations().size(); loc_i++)
+		{
+			out << loc_i + 1 << " - " << c->get_configurations()[i].get_locations()[loc_i] << std::endl << std::endl;
+		}
 	}
 	return out;
 }

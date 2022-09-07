@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 13:34:40 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/07 17:08:52 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,9 @@ class Request
 	public:
 		/* Constructor  */
 		Request()
+		: _method(""), _uri(""), _version("")
 		{
+			this->_headers_map = std::map<std::string, std::string>();
 		}
 		Request(std::string &buffer)
 		{
@@ -47,8 +49,6 @@ class Request
 		{
 			std::vector<std::string> lines;
 			split(buffer, "\r\n", lines);
-			
-			// std::cout << buffer << std::endl;
 
 						
 			for (int i = 1; i < lines.size(); i++)
@@ -64,6 +64,11 @@ class Request
 			this->_method = request_line[0];
 			this->_uri = request_line[1];
 			this->_version = request_line[2];
+
+			std::cout << "lines[0]: " << lines[0] <<std::endl;
+			std::cout << "Method: " << this->_method << std::endl;
+			std::cout << "URI: " << this->_uri << std::endl;
+			std::cout << "Version: " << this->_version << std::endl;
 		}
 
 		/* Destructor */
@@ -72,10 +77,24 @@ class Request
 		}
 
 		/* Copy constructor */
-		Request(const Request&);
+		Request(const Request *e)
+		{
+			*this = e;
+		}
 
 		/* Operation overload = */
-		Request& operator = (const Request& e);
+		Request& operator = (const Request *e)
+		{
+			// std::cout << "Request operator = called" << std::endl;
+			// std::cout << "e._headers_map.size(): " << e._headers_map.size() << std::endl;
+			// this->_headers_map.clear();
+			// this->_headers_map.insert(e._headers_map.begin(), e._headers_map.end());
+			this->_method = e->_method;
+			this->_uri = e->_uri;
+			this->_version = e->_version;
+
+			return *this;
+		}
 
 		// Methods
 		void set_header(std::string const &header)
@@ -109,5 +128,24 @@ class Request
 		std::string _uri;
 		std::string _version;
 };
+
+std::ostream&	operator<<(std::ostream& out, const Request &c)
+{
+	out << c._method << " " << c._uri << " " << c._version << std::endl;
+	// for (auto it = c._headers_map.begin(); it != c._headers_map.end(); it++)
+	// {
+	// 	out << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
+	// }
+	return out;
+}
+std::ostream&	operator<<(std::ostream& out, const Request *c)
+{
+	out << c->_method << " " << c->_uri << " " << c->_version << std::endl;
+	for (auto it = c->_headers_map.begin(); it != c->_headers_map.end(); it++)
+	{
+		out << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
+	}
+	return out;
+}
 
 #endif // REQUEST_HPP

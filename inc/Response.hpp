@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 21:52:22 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/06 15:28:08 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,12 @@ class RespondCodes
 		/* Constructor  */
 		RespondCodes()
 		{
-			response_codes[500] = "Internal Server Error";
 			response_codes[200] = "OK";
+			response_codes[401] = "Unauthorized";
+			response_codes[400] = "Bad Request";
+			response_codes[404] = "Not Found";
+			response_codes[403] = "Forbidden";
+			response_codes[500] = "Internal Server Error";
 		}
 
 		/* Destructor */

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 12:11:41 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/07 15:23:30 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,8 +192,6 @@ std::ostream&	operator<<(std::ostream& out, const ServerConfiguration& c)
 		else
 			out << "locations:\n\tNone" << std::endl;
 	}
-
-	
 	return (out);
 }
 

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 14:46:37 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 18:09:11 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/07 14:02:47 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,11 @@ class User
 	public:
 		/* Constructor  */
 		User()
-		: _fd(-1), _request(Request())
+		: _fd(-1), _request(nullptr)
 		{
 		}
 		User(int socketFD, struct sockaddr_in *address_info)
-		: _fd(socketFD), _address_info(address_info), _request(Request())
+		: _fd(socketFD), _address_info(address_info)
 		{
 			
 		}
@@ -44,7 +44,7 @@ class User
 		User& operator = (const User& e)
 		{
 			this->_fd = e._fd;
-			this->_request = e._request;
+			// this->_request = e._request;
 			this->_address_info = e._address_info;
 			return *this;
 		}
@@ -54,7 +54,7 @@ class User
 		{
 			this->_fd = fd;
 		}
-		void set_request(Request request)
+		void set_request(Request *request)
 		{
 			this->_request = request;
 		}
@@ -67,7 +67,7 @@ class User
 		{
 			return this->_fd;
 		}
-		Request				&get_request()
+		Request				*get_request()
 		{
 			return this->_request;
 		}
@@ -78,10 +78,23 @@ class User
 
 	private:
 		int		_fd;
-		Request _request;
+		Request *_request;
 
 		struct sockaddr_in *_address_info;
-		
 };
+
+std::ostream&	operator<<(std::ostream& out, User &c)
+{
+	out << "Fd:\n" << c.get_fd() << std::endl;
+
+	return out;
+}
+std::ostream&	operator<<(std::ostream& out, User *c)
+{
+	out << "Fd:\n" << c->get_fd() << std::endl;
+	// out << "Request:\n" << c->get_request() << std::endl;
+
+	return out;
+}
 
 #endif // USER_HPP

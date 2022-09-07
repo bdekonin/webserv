@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 15:04:42 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/07 14:03:50 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,16 @@
 
 # define CGI_WRITE 5 // WRITE | ODD
 # define CGI_READ 6 // READ | EVEN
+
+char *g_define_names[7] { // TODO REMOVE LATER MAYBE
+	"WAIT_FOR_CONNECTION",
+	"CLIENT_RESPONSE",
+	"CLIENT_READ",
+	"FILE_WRITE",
+	"FILE_READ",
+	"CGI_WRITE",
+	"CGI_READ"
+};
 
 
 class Job
@@ -82,5 +92,26 @@ class Job
 		Request			*request;
 		void			*cgi;// TODO change to CGI Object
 };
+
+std::ostream&	operator<<(std::ostream& out, const Job &c)
+{
+	out << "Job: " << g_define_names[c.type] << " | " << c.fd << std::endl;
+
+	out << "Server:\n" << c.server << std::endl;
+	out << "User:\n" << c.user << std::endl;
+
+	return out;
+}
+std::ostream&	operator<<(std::ostream& out, const Job *c)
+{
+	out << "Job:\nType: " << g_define_names[c->type] << "\nFD: " << c->fd << std::endl << std::endl;
+
+	// out << "Server:\n\t" << c->server << std::endl;
+	out << "User:\n" << c->user << std::endl;
+	out << "request:\n" << c->request << std::endl;
+	
+
+	return out;
+}
 
 #endif // JOB_HPP
