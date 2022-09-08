@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/07 17:38:41 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/08 21:21:47 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,15 +48,6 @@
 #define getString(n) #n
 #define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
 #define PRINT(var) std::cout << var << std::endl
-
-char* replace_char(char* str, char find, char replace){
-    char *current_pos = strchr(str,find);
-    while (current_pos) {
-        *current_pos = replace;
-        current_pos = strchr(current_pos,find);
-    }
-    return str;
-}
 
 int main(int argc, char const *argv[])
 {

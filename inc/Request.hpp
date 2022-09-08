@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/07 17:08:52 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/08 21:51:59 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,10 +65,10 @@ class Request
 			this->_uri = request_line[1];
 			this->_version = request_line[2];
 
-			std::cout << "lines[0]: " << lines[0] <<std::endl;
-			std::cout << "Method: " << this->_method << std::endl;
-			std::cout << "URI: " << this->_uri << std::endl;
-			std::cout << "Version: " << this->_version << std::endl;
+			// std::cout << "lines[0]: " << lines[0] <<std::endl;
+			// std::cout << "Method: " << this->_method << std::endl;
+			// std::cout << "URI: " << this->_uri << std::endl;
+			// std::cout << "Version: " << this->_version << std::endl;
 		}
 
 		/* Destructor */

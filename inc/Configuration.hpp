@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/07 21:37:41 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/08 21:20:55 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,8 @@ class Configuration
 			this->_autoindex = src._autoindex;
 			this->_index = src._index;
 			this->_cgi = src._cgi;
+
+			this->_isSet = src._isSet;
 			return *this;
 		}
 
@@ -83,53 +85,122 @@ class Configuration
 			this->_autoindex = false;
 			this->_index.clear();
 			this->_cgi.clear();
+
+			this->_isSet.clear();
 		}
 
-		void combine_two_locations(const Configuration &src) // copying <src> to *this | src is locationblock
+		void combine_two_locations(Configuration &src) // copying <src> to *this | src is locationblock
 		{
-			if (this->get_error_page() != src.get_error_page()) // not empty
-			{
+						// if (this->get_error_page() != src.get_error_page()) // not empty
+			// if (this->_isSet["error_page"] == false && src._isSet["error_page"] == true)
+			// {
 				std::map<size_t, std::string> temp = this->_error_page;
 				temp.insert(src.get_error_page().begin(), src.get_error_page().end());
 
 				this->_error_page = temp;
-			}
+			// }
 
-			if (this->get_client_max_body_size() != src.get_client_max_body_size())
+			if (this->_isSet["get_client_max_body_size"] == false)
 				this->_client_max_body_size = src.get_client_max_body_size();
 
-			if (this->get_methods(0) != src.get_methods(0))
+			// if (this->get_methods(0) != src.get_methods(0)))
+			if (this->_isSet["methods"] == false)
 				this->_methods[0] = src.get_methods(0);
 
-			if (this->get_methods(1) != src.get_methods(1))
+			// if (this->get_methods(1) != src.get_methods(1))
+			if (this->_isSet["methods"] == false)
 				this->_methods[1] = src.get_methods(1);
 
-			if (this->get_methods(2) != src.get_methods(2))
+			// if (this->get_methods(2) != src.get_methods(2))
+			if (this->_isSet["methods"] == false)
 				this->_methods[2] = src.get_methods(2);
 
-			if (this->get_return() != src.get_return()) // not empty
-			{
-				std::map<size_t, std::string> temp = this->_return;
-				temp.insert(src.get_return().begin(), src.get_return().end());
+			// if (this->get_return() != src.get_return()) // not empty
+			// if (this->_isSet["return"] == false && src._isSet["return"] == true)
+			// {
+				std::map<size_t, std::string> temp_ = this->_return;
+				temp_.insert(src.get_return().begin(), src.get_return().end());
 
-				this->_return = temp;
-			}
-			if (this->get_root() != src.get_root())
+				this->_return = temp_;
+			// }
+			
+			// if (this->get_root() != src.get_root())
+			if (this->_isSet["root"] == false)
 				this->_root = src.get_root();
 
-			if (this->get_autoindex() != src.get_autoindex())
+			// if (this->get_autoindex() != src.get_autoindex())
+			if (this->_isSet["autoindex"] == false)
 				this->_autoindex = src.get_autoindex();
 
-			if (this->get_index() != src.get_index())
+			// if (this->get_index() != src.get_index())
+			if (this->_isSet["index"] == false )
 				this->_index = src.get_index(); // TODO MISSCHIEN SAMENVOEGEN IPV OVERSCHRIJDEN MET =
 
-			if (this->get_cgi() != src.get_cgi())
-			{
-				std::map<std::string, std::string> temp = this->_cgi;
-				temp.insert(src.get_cgi().begin(), src.get_cgi().end());
+			// if (this->get_cgi() != src.get_cgi())
+			// if (this->_isSet["cgi"] == false)
+			// {
+			// 	std::map<std::string, std::string> temp = this->_cgi;
+			// 	temp.insert(src.get_cgi().begin(), src.get_cgi().end());
 
-				this->_cgi = temp;
-			}
+			// 	this->_cgi = temp;
+			// }
+			
+
+
+
+			// // if (this->get_error_page() != src.get_error_page()) // not empty
+			// // if (this->_isSet["error_page"] == false && src._isSet["error_page"] == true)
+			// // {
+			// 	std::map<size_t, std::string> temp = this->_error_page;
+			// 	temp.insert(src.get_error_page().begin(), src.get_error_page().end());
+
+			// 	this->_error_page = temp;
+			// // }
+
+			// if (this->_isSet["get_client_max_body_size"] == false && src._isSet["get_client_max_body_size"] == true)
+			// 	this->_client_max_body_size = src.get_client_max_body_size();
+
+			// // if (this->get_methods(0) != src.get_methods(0)))
+			// if (this->_isSet["methods"] == false && src._isSet["methods"] == true)
+			// 	this->_methods[0] = src.get_methods(0);
+
+			// // if (this->get_methods(1) != src.get_methods(1))
+			// if (this->_isSet["methods"] == false && src._isSet["methods"] == true)
+			// 	this->_methods[1] = src.get_methods(1);
+
+			// // if (this->get_methods(2) != src.get_methods(2))
+			// if (this->_isSet["methods"] == false && src._isSet["methods"] == true)
+			// 	this->_methods[2] = src.get_methods(2);
+
+			// // if (this->get_return() != src.get_return()) // not empty
+			// // if (this->_isSet["return"] == false && src._isSet["return"] == true)
+			// // {
+			// 	std::map<size_t, std::string> temp_ = this->_return;
+			// 	temp_.insert(src.get_return().begin(), src.get_return().end());
+
+			// 	this->_return = temp_;
+			// // }
+			
+			// // if (this->get_root() != src.get_root())
+			// if (this->_isSet["root"] == false && src._isSet["root"] == true)
+			// 	this->_root = src.get_root();
+
+			// // if (this->get_autoindex() != src.get_autoindex())
+			// if (this->_isSet["autoindex"] == false && src._isSet["autoindex"] == true)
+			// 	this->_autoindex = src.get_autoindex();
+
+			// // if (this->get_index() != src.get_index())
+			// if (this->_isSet["index"] == false && src._isSet["index"] == true)
+			// 	this->_index = src.get_index(); // TODO MISSCHIEN SAMENVOEGEN IPV OVERSCHRIJDEN MET =
+
+			// // if (this->get_cgi() != src.get_cgi())
+			// if (this->_isSet["cgi"] == false && src._isSet["cgi"] == true)
+			// {
+			// 	std::map<std::string, std::string> temp = this->_cgi;
+			// 	temp.insert(src.get_cgi().begin(), src.get_cgi().end());
+
+			// 	this->_cgi = temp;
+			// }
 		}
 
 		bool is_method_allowed(std::string &method)
@@ -147,6 +218,7 @@ class Configuration
 			else
 				return false;
 		}
+		
 		// Setters
 		void set_error_page(std::string &s)
 		{
@@ -163,10 +235,12 @@ class Configuration
 			this->has_forbidden_charachters(v[1]);
 
 			this->_error_page[std::stoi(v[0])] = v[1];
+			this->_isSet["error_page"] = true;
 		}
 		void set_client_max_body_size(std::string &s)
 		{
 			(void)s;
+			this->_isSet["client_max_body_size"] = true;
 		}
 		void set_methods(std::string &s)
 		{
@@ -196,6 +270,7 @@ class Configuration
 				else
 					throw std::runtime_error("config: methods has a forbidden argument");
 			}
+			this->_isSet["methods"] = true;
 		}
 		void set_return(std::string &s)
 		{
@@ -212,6 +287,7 @@ class Configuration
 			this->has_forbidden_charachters(v[1]);
 			
 			this->_return[std::stoi(v[0])] = v[1];
+			this->_isSet["return"] = true;
 		}
 		void set_root(std::string &s)
 		{
@@ -225,6 +301,7 @@ class Configuration
 			this->has_forbidden_charachters(v[0]);
 
 			this->_root = v[0];
+			this->_isSet["root"] = true;
 		}
 		void set_autoindex(std::string &s)
 		{
@@ -243,6 +320,7 @@ class Configuration
 				this->_autoindex = false;
 			else
 				throw std::runtime_error("config: autoindex has invalid argument");
+			this->_isSet["autoindex"] = true;
 		}
 		void set_index(std::string &s)
 		{
@@ -258,6 +336,7 @@ class Configuration
 				this->has_forbidden_charachters(v[i]);
 				this->_index.push_back(v[i]);
 			}
+			this->_isSet["index"] = true;
 		}
 		void set_cgi(std::string &s)
 		{
@@ -274,6 +353,7 @@ class Configuration
 			this->has_forbidden_charachters(v[1]);
 
 			this->_cgi[v[0]] = v[1];
+			this->_isSet["cgi"] = true;
 		}
 		
 		// Getters
@@ -358,6 +438,10 @@ class Configuration
 		std::vector<std::string>			_index; // order of index files
 		std::map<std::string, std::string>	_cgi; // path to cgi
 
+		// isSet booleans
+		// list of bool
+		std::map<std::string, bool>					_isSet;
+
 		void remove_semicolen(std::string &s) // removes the semicolen at the end if it is still there
 		{
 			if (s[s.length() - 1] == ';')
@@ -367,6 +451,16 @@ class Configuration
 		{
 			if (s.find_first_of(forbidden_characters) != std::string::npos)
 				throw std::runtime_error("config: forbidden characters in string");
+		}
+
+		void copy_if_has_value(std::string &s, Configuration &src)
+		{
+			if (this->_isSet[s] == true)
+				return ;
+
+			// This == True
+
+			// if (src._isSet[s] == true)
 		}
 };
 

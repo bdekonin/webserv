@@ -121,10 +121,9 @@ class Webserv
 				this->jobs.erase(job->fd);
 				return (0);
 			}
+			// is Chunked? if so, read until 0\r
 
 			std::string request(buffer);
-
-
 			job->request = new Request(request); // TODO check how to free correctly
 			// job->user->set_request(job->request); // TODO This segfaults if you access the request
 
@@ -304,7 +303,7 @@ class Webserv
 				throw std::runtime_error("socket: failed to create socket.");
 			// ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));SO_REUSEADDR
 			int options = 1;
-			setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options));
+			// setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options));
 			// if (socketFD < 0)
 			// 	throw std::runtime_error("error");
 
