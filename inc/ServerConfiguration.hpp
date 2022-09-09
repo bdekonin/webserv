@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/07 18:13:12 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/09 20:44:41 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -195,7 +195,6 @@ std::ostream&	operator<<(std::ostream& out, const ServerConfiguration& c)
 			for (size_t i = 0; i < c.get_locations().size(); i++)
 			{
 				out << c.get_locations()[i];
-				// if (i != c._locations.size() - 1)
 				out << "--------------------------------------------------" << std::endl;
 			}
 		}

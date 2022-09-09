@@ -21,3 +21,10 @@ MANDATORY RESPONSE HEADERS
 https://stackoverflow.com/questions/4726515/what-http-response-headers-are-required
 
 https://42born2code.slack.com/archives/CMX2R5JSW/p1659447682637979
+
+
+http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page:~:text=These%20directives%20are%20inherited%20from%20the%20previous%20configuration%20level%20if%20and%20only%20if%20there%20are%20no%20error_page%20directives%20defined%20on%20the%20current%20level.
+
+These directives are inherited from the previous configuration level if and only if there are no error_page directives defined on the current level.
+
+error_page

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/08/28 20:59:57 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/09 20:55:43 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,8 +162,11 @@ class Parser
 					{
 						std::string path = location.get_path();
 						LocationConfiguration &tempLocation = dynamic_cast<LocationConfiguration&>(config);
-
-						location.set_path(std::string(tempLocation.get_path() + path));
+						
+						if (path[0] == '/')
+							location.set_path(tempLocation.get_path() + path.substr(1));
+						else
+							location.set_path(std::string(tempLocation.get_path() + path));
 
 						// TODO Configure Syntax eg. location / + location /post = //post change to /post
 						// or change location A to /A or location /post + location TEST to /post/TEST and not /postTEST
@@ -174,6 +177,9 @@ class Parser
 					}
 
 					parse_block(copy, location, server);
+
+					location.combine_two_locations(config); // TODO combines the location with the parent location
+
 					i--;
 					
 					// // TODO maybe change to current configuration + new location

@@ -35,7 +35,7 @@ class Webserv
 	public:
 		/* Constructor  */
 		Webserv(std::vector<ServerConfiguration> &configs)
-		: configs(configs)
+		: configs(configs), _max_fd(0)
 		{
 			
 		}
@@ -68,7 +68,8 @@ class Webserv
 			{
 				fd_set copy_readfds = this->read_fds;
 				fd_set copy_writefds = this->write_fds;
-				if (select(FD_SETSIZE, &copy_readfds, &copy_writefds, NULL, NULL) < 0)
+				std::cout << "_max_fd: " << this->_max_fd << std::endl;
+				if (select((int)this->_max_fd + 1, &copy_readfds, &copy_writefds, NULL, NULL) < 0)
 					throw std::runtime_error("select: failed to select.");
 				for (int loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
 				{
@@ -94,7 +95,6 @@ class Webserv
 							this->client_response(job);
 					}
 				}
-				std::cout << std::endl;
 			}
 		}
 	public:
@@ -104,10 +104,12 @@ class Webserv
 		fd_set								read_fds;	// List of all file descriptors that are ready to read.
 		fd_set								write_fds;	// List of all file descriptors that are ready to write.
 
+	private:
+		size_t _max_fd;
 		/* User Types Handling */
 		int client_read(Job *job, size_t loop_job_counter, fd_set *copy_writefds)
 		{
-			std::cout << job->fd << " Reading request Client\n";
+			// std::cout << job->fd << " Reading request Client\n";
 			char	buffer[4096 + 1];
 			int		bytesRead;
 			bzero(buffer, 4096 + 1);
@@ -133,9 +135,8 @@ class Webserv
 		}
 		void client_response(Job *job)
 		{
-			std::cout << job->fd << " Responding to Client\n";
-			std::cout << job->fd << " CLIENT_RESPONSE" << std::endl;
-			std::string string = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 6\n\nHello";
+			// std::cout << job->fd << " Responding to Client\n";
+			// std::string string = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 6\n\nHello";
 
 			std::vector<ServerConfiguration> configs_of_job = job->server->get_configurations();
 
@@ -154,7 +155,10 @@ class Webserv
 
 			std::ifstream file("request.txt");
 			std::ostringstream ss;
-			ss << config;
+			for (int  i = 0; i < config.get_locations().size(); i++)
+			{
+				ss << config.get_locations()[i] << std::endl << std::endl << std::endl;
+			}
 			std::string s = ss.str();
 
 
@@ -188,30 +192,40 @@ class Webserv
 			std::string &uri = request->_uri;
 			Configuration config;
 
-			config = this->create_correct_configfile(request, server_config); // the good
+			try
+			{
+				config = this->create_correct_configfile(request, server_config); // the good
+			}
+			catch(const std::exception& e)
+			{
+				config = server_config;
+			}
 
-			std::cout << config << std::endl;
+			// std::cout << config << std::endl;
 
 			// Check if method is allowed;
-			if (config.is_method_allowed(request->_method) == false)
-			{
-				std::cout << "Method not allowed" << std::endl;
-				return ;
-			}
+			// if (config.is_method_allowed(request->_method) == false)
+			// {
+			// 	std::cout << "Method not allowed" << std::endl;
+			// 	return ;
+			// }
 		}
 		Configuration create_correct_configfile(Request *request, ServerConfiguration &config)
 		{
-			Configuration correct_config = Configuration(config);
 			LocationConfiguration *location;
 
 			// TODO Putting a / at the end if there is not a slash (/) Makes sense??
 
 			location = config.get_location_by_uri(request->_uri);
-			if (location == nullptr) // No Location matches the uri. Use default ServerConfiguration
-				return (correct_config);
-			correct_config.combine_two_locations(*location);
+			if (location == nullptr)
+			{
+				std::string string_with_slash = request->_uri + "/";
 
-			return (correct_config);
+				location = config.get_location_by_uri(string_with_slash); //  TODO MOET DIT???? zodat /redirect ook werkt en niet alleen /redirect/
+				if (location == nullptr)
+					throw std::runtime_error("Location block not found.");
+			}
+			return (*location);
 		}
 
 		void get(Job *job, Request &request, ServerConfiguration &config)
@@ -231,7 +245,6 @@ class Webserv
 		/* Accept a New Client */
 		int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
 		{
-			std::cout << job->fd << " Accepting Connection" << std::endl;
 			struct sockaddr_in client_address;
 			int address_size = sizeof(struct sockaddr_in);
 			int client_fd = accept(job->fd, (struct sockaddr*)&client_address, (socklen_t*)&address_size);
@@ -241,6 +254,10 @@ class Webserv
 			User user(client_fd, &client_address);
 			fcntl(client_fd, F_SETFL, O_NONBLOCK);
 			jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, &user);
+			std::cout << job->fd << " Accepting Connection: " << client_fd << std::endl;
+
+			if (client_fd > this->_max_fd)
+				this->_max_fd = client_fd;
 			
 			FD_SET(client_fd, set);
 			return (client_fd);
@@ -262,6 +279,8 @@ class Webserv
 				fd = it->second.get_socket();
 				this->jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
 				FD_SET(fd, &this->read_fds);
+				if (fd > this->_max_fd)
+					this->_max_fd = fd;
 			}
 		}
 
@@ -303,7 +322,7 @@ class Webserv
 				throw std::runtime_error("socket: failed to create socket.");
 			// ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));SO_REUSEADDR
 			int options = 1;
-			// setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options));
+			setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options));
 			// if (socketFD < 0)
 			// 	throw std::runtime_error("error");
 

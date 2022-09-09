@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/06 15:28:08 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/09 18:34:09 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ class RespondCodes
 			response_codes[404] = "Not Found";
 			response_codes[403] = "Forbidden";
 			response_codes[500] = "Internal Server Error";
+			response_codes[413] = "Request Entity Too Large";
 		}
 
 		/* Destructor */
