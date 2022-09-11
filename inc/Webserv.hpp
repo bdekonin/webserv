@@ -30,6 +30,10 @@
 # include "Response.hpp" // Class that handles a response.
 
 
+#define getString(n) #n
+#define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
+#define PRINT(var) std::cout << var << std::endl
+
 class Webserv
 {
 	public:
@@ -80,7 +84,7 @@ class Webserv
 							accept_connection(job, this->jobs, &this->read_fds);
 						else if (job->type == CLIENT_READ)
 						{
-							if (this->client_read(job, loop_job_counter, &copy_writefds) == 0)
+							if (this->client_read_request(job, loop_job_counter, &copy_writefds) == 0)
 								continue;
 						}
 						// else other job->type
@@ -92,7 +96,7 @@ class Webserv
 					if (FD_ISSET(loop_job_counter, &copy_writefds))
 					{
 						if (job->type == CLIENT_RESPONSE)
-							this->client_response(job);
+							this->client_send_response(job);
 					}
 				}
 			}
@@ -107,7 +111,7 @@ class Webserv
 	private:
 		size_t _max_fd;
 		/* User Types Handling */
-		int client_read(Job *job, size_t loop_job_counter, fd_set *copy_writefds)
+		int client_read_request(Job *job, size_t loop_job_counter, fd_set *copy_writefds)
 		{
 			// std::cout << job->fd << " Reading request Client\n";
 			char	buffer[4096 + 1];
@@ -123,7 +127,7 @@ class Webserv
 				this->jobs.erase(job->fd);
 				return (0);
 			}
-			// is Chunked? if so, read until 0\r
+			// TODO is Chunked? if so, read until 0\r
 
 			std::string request(buffer);
 			job->request = new Request(request); // TODO check how to free correctly
@@ -133,64 +137,13 @@ class Webserv
 			FD_SET(loop_job_counter, copy_writefds);
 			return (1);
 		}
-		void client_response(Job *job)
+		
+		void client_send_response(Job *job)
 		{
-			// std::cout << job->fd << " Responding to Client\n";
-			// std::string string = "HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length: 6\n\nHello";
-
-			std::vector<ServerConfiguration> configs_of_job = job->server->get_configurations();
-
-			// Find Correct Server to be used
-			ServerConfiguration &config = configs_of_job[0];
-			config = this->get_correct_server_configuration(job);
-
-			// Config = correct server configuration
-
-			// Create good response
-			Response res = Response();
-			res.set_status_code(200);
-			
-			res.set_header("Content-Type", "text/html");
-			res.set_header("Server", "Webserv (Luke & Bob) 1.0");
-
-			std::ifstream file("request.txt");
-			std::ostringstream ss;
-			for (int  i = 0; i < config.get_locations().size(); i++)
-			{
-				ss << config.get_locations()[i] << std::endl << std::endl << std::endl;
-			}
-			std::string s = ss.str();
-
-
-			/* If host is curl then do not do <br> */
-			if (job->request->_headers_map["user-agent"].find("curl") == std::string::npos)
-			{
-				for (int pos = s.find('\n'); pos != std::string::npos; pos = s.find('\n'))
-					s.replace(pos, 1, "<br>");
-			}
-			
-
-			res.set_body(s);
-			res.set_body("\n\n\n\n");
-			res.set_body(std::to_string(job->fd));
-
-			res.set_header("Content-Length", std::to_string(res._body.size()));
-
-			std::vector<char> response = res.build_response();
-			char *response_char = reinterpret_cast<char*> (&response[0]);
-
-			// std::cout << response_char << std::endl; // TODO remove. THIS IS FOR PRINTING IN TERMINAL
-
-			this->handle_connection(job, job->request, config);
-
-			ssize_t bytes = send(job->fd, response_char,  response.size() + 1, 0);
-			this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
-		}
-		/* Handle Connection */
-		void handle_connection(Job *job, Request *request, ServerConfiguration &server_config)
-		{
-			std::string &uri = request->_uri;
-			Configuration config;
+			Request *request = job->request;
+			ServerConfiguration &server_config = job->server->get_configurations()[0];
+			Configuration &config = this->get_correct_server_configuration(job);
+			Response response;
 
 			try
 			{
@@ -201,16 +154,48 @@ class Webserv
 				config = server_config;
 			}
 
-			// std::cout << config << std::endl;
+			if (this->method_handling(request, config) == 405)
+			{
+				response = job->do_405_response(config);
+			}
+			else if (config.get_return().size() != 0) // redirect
+			{
+				response = job->do_3xx_response(config);
+			}
+			else // not redirect
+			{
+				response.set_status_code(200);
+				
+				response.set_header("Content-Type", "text/html");
+				response.set_header("Server", "Webserv (Luke & Bob) 1.0");
 
-			// Check if method is allowed;
-			// if (config.is_method_allowed(request->_method) == false)
-			// {
-			// 	std::cout << "Method not allowed" << std::endl;
-			// 	return ;
-			// }
+				std::ostringstream ss;
+				for (int  i = 0; i < server_config.get_locations().size(); i++)
+				{
+					ss << server_config.get_locations()[i] << std::endl << std::endl << std::endl;
+				}
+				
+				std::string s = ss.str();
+
+				/* If host is curl then do not do <br> */
+				if (job->request->_headers_map["user-agent"].find("curl") == std::string::npos)
+				{
+					for (int pos = s.find('\n'); pos != std::string::npos; pos = s.find('\n'))
+						s.replace(pos, 1, "<br>");
+				}
+				response.set_body(s);
+				response.set_header("Content-Length", std::to_string(response._body.size()));
+			}
+			std::vector<char> vec_response = response.build_response();
+			char *response_char = reinterpret_cast<char*> (&vec_response[0]);
+
+
+			ssize_t bytes = send(job->fd, response_char,  vec_response.size() + 1, 0);
+			this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
 		}
-		Configuration create_correct_configfile(Request *request, ServerConfiguration &config)
+
+		/* Handle Connection */
+		Configuration	create_correct_configfile(Request *request, ServerConfiguration &config)
 		{
 			LocationConfiguration *location;
 
@@ -227,7 +212,15 @@ class Webserv
 			}
 			return (*location);
 		}
+		size_t			method_handling(Request *request, Configuration &config)
+		{
+			if (config.is_method_allowed(request->_method) == false)
+				return (405);
+			return (200); // 200 OK
+		}
 
+
+		/* Methods */
 		void get(Job *job, Request &request, ServerConfiguration &config)
 		{
 			std::cout << "GET" << std::endl;
@@ -240,7 +233,6 @@ class Webserv
 		{
 			std::cout << "PUT" << std::endl;
 		}
-
 
 		/* Accept a New Client */
 		int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)

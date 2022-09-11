@@ -6,11 +6,15 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/05 11:38:00 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/11 19:46:40 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "inc/utils.hpp"
+
+
+
+
 
 size_t		count(std::string str, char c)
 {

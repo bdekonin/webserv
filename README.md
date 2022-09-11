@@ -28,3 +28,5 @@ http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page:~:text=These%
 These directives are inherited from the previous configuration level if and only if there are no error_page directives defined on the current level.
 
 error_page
+
+https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html

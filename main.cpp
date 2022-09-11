@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/08 21:21:47 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/10 11:48:26 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,10 +44,6 @@
 #include "inc/Job.hpp"
 #include "inc/Request.hpp"
 #include "inc/Response.hpp"
-
-#define getString(n) #n
-#define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
-#define PRINT(var) std::cout << var << std::endl
 
 int main(int argc, char const *argv[])
 {

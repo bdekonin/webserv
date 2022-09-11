@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/09 21:02:31 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/10 10:32:28 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,9 @@ class Configuration
 		: _error_page(), _client_max_body_size(0), _return(), _root(""), _index(), _cgi()
 		{
 			
-			this->_methods[0] = false; // ??
-			this->_methods[1] = false; // ??
-			this->_methods[2] = false; // ??
+			this->_methods[0] = true; // ??
+			this->_methods[1] = true; // ??
+			this->_methods[2] = true; // ??
 			this->_autoindex = false;
 		}
 
@@ -106,7 +106,7 @@ class Configuration
 			else if (method == "DELETE")
 				return (this->_methods[2]);
 			else
-				return false;
+				return false; // only GET POST DELETE
 		}
 		
 		// Setters
@@ -152,11 +152,11 @@ class Configuration
 					v[i][j] = std::toupper(v[i][j]);
 
 				if (v[i] == "GET")
-					this->_methods[0] = true;
+					this->_methods[0] = false;
 				else if (v[i] == "POST")
-					this->_methods[1] = true;
+					this->_methods[1] = false;
 				else if (v[i] == "DELETE")
-					this->_methods[2] = true;
+					this->_methods[2] = false;
 				else
 					throw std::runtime_error("config: methods has a forbidden argument");
 			}
@@ -374,7 +374,7 @@ inline std::ostream&	operator<<(std::ostream& out, const Configuration& c)
 			out << "\tPOST\n";
 		if (c.get_methods(2) == true)
 			out << "\tDELETE\n";
-		if (c.get_methods(0) == false && c.get_methods(1) == false && c.get_methods(2) == false)
+		if (c.get_methods(0) == true && c.get_methods(1) == true && c.get_methods(2) == true)
 			out << "\tNone\n";
 	}
 	{
