@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/11 20:10:48 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/13 11:39:04 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,25 +29,16 @@
 # define CGI_WRITE 5 // WRITE | ODD
 # define CGI_READ 6 // READ | EVEN
 
-char *g_define_names[7] { // TODO REMOVE LATER MAYBE
-	"WAIT_FOR_CONNECTION",
-	"CLIENT_RESPONSE",
-	"CLIENT_READ",
-	"FILE_WRITE",
-	"FILE_READ",
-	"CGI_WRITE",
-	"CGI_READ"
-};
-
 class Job
 {
 	public:
 		/* Constructor  */
 		Job()
+		: request(Request())
 		{
 		}
 		Job(int type, int fd, Server *server, User *user)
-		: type(type), fd(fd), server(server), user(user), cgi(NULL)
+		: type(type), fd(fd), server(server), user(user), request(Request()), cgi(NULL)
 		{
 		}
 
@@ -89,7 +80,7 @@ class Job
 		int				fd;
 		Server			*server;
 		User			*user; // TODO: change to client class | SAME AS CLIENT
-		Request			*request;
+		Request			request;
 		void			*cgi;// TODO change to CGI Object
 
 		Response do_3xx_response(Configuration &config)
@@ -131,7 +122,7 @@ class Job
 			response.set_header("Content-Length", std::to_string(response._body.size()));
 			return response;
 		}
-		Response do_404_response(Configuration &config)
+		Response do_404_response()
 		{
 			Response response;
 			std::string allowed_methods;
@@ -151,7 +142,22 @@ class Job
 
 std::ostream&	operator<<(std::ostream& out, const Job &c)
 {
-	out << "Job: " << g_define_names[c.type] << " | " << c.fd << std::endl;
+	if (c.type == 0)
+		out << "Job:\nType: " << "WAIT_FOR_CONNECTION" << "\nFD: " << c.fd << std::endl << std::endl;
+	else if (c.type == 1)
+		out << "Job:\nType: " << "CLIENT_RESPONSE" << "\nFD: " << c.fd << std::endl << std::endl;
+	else if (c.type == 2)
+		out << "Job:\nType: " << "CLIENT_READ" << "\nFD: " << c.fd << std::endl << std::endl;
+	else if (c.type == 3)
+		out << "Job:\nType: " << "FILE_WRITE" << "\nFD: " << c.fd << std::endl << std::endl;
+	else if (c.type == 4)
+		out << "Job:\nType: " << "FILE_READ" << "\nFD: " << c.fd << std::endl << std::endl;
+	else if (c.type == 5)
+		out << "Job:\nType: " << "CGI_WRITE" << "\nFD: " << c.fd << std::endl << std::endl;
+	else if (c.type == 6)
+		out << "Job:\nType: " << "CGI_READ" << "\nFD: " << c.fd << std::endl << std::endl;
+	else
+		out << "Job:\nType: " << "UNKNOWN" << "\nFD: " << c.fd << std::endl << std::endl;
 
 	out << "Server:\n" << c.server << std::endl;
 	out << "User:\n" << c.user << std::endl;
@@ -160,8 +166,23 @@ std::ostream&	operator<<(std::ostream& out, const Job &c)
 }
 std::ostream&	operator<<(std::ostream& out, const Job *c)
 {
-	out << "Job:\nType: " << g_define_names[c->type] << "\nFD: " << c->fd << std::endl << std::endl;
-
+	if (c->type == 0)
+		out << "Job:\nType: " << "WAIT_FOR_CONNECTION" << "\nFD: " << c->fd << std::endl << std::endl;
+	else if (c->type == 1)
+		out << "Job:\nType: " << "CLIENT_RESPONSE" << "\nFD: " << c->fd << std::endl << std::endl;
+	else if (c->type == 2)
+		out << "Job:\nType: " << "CLIENT_READ" << "\nFD: " << c->fd << std::endl << std::endl;
+	else if (c->type == 3)
+		out << "Job:\nType: " << "FILE_WRITE" << "\nFD: " << c->fd << std::endl << std::endl;
+	else if (c->type == 4)
+		out << "Job:\nType: " << "FILE_READ" << "\nFD: " << c->fd << std::endl << std::endl;
+	else if (c->type == 5)
+		out << "Job:\nType: " << "CGI_WRITE" << "\nFD: " << c->fd << std::endl << std::endl;
+	else if (c->type == 6)
+		out << "Job:\nType: " << "CGI_READ" << "\nFD: " << c->fd << std::endl << std::endl;
+	else
+		out << "Job:\nType: " << "UNKNOWN" << "\nFD: " << c->fd << std::endl << std::endl;
+		
 	// out << "Server:\n\t" << c->server << std::endl;
 	out << "User:\n" << c->user << std::endl;
 	out << "request:\n" << c->request << std::endl;

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/08 21:51:59 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/13 11:44:13 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,25 +50,14 @@ class Request
 			std::vector<std::string> lines;
 			split(buffer, "\r\n", lines);
 
-						
-			for (int i = 1; i < lines.size(); i++)
+			for (size_t i = 1; i < lines.size(); i++)
 				this->set_header(lines[i]);
-
-			// for (auto it = this->_headers_map.begin(); it != this->_headers_map.end(); it++)
-			// {
-			// 	std::cout << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
-			// }
 
 			std::vector<std::string> request_line;
 			split(lines[0], " ", request_line);
 			this->_method = request_line[0];
 			this->_uri = request_line[1];
 			this->_version = request_line[2];
-
-			// std::cout << "lines[0]: " << lines[0] <<std::endl;
-			// std::cout << "Method: " << this->_method << std::endl;
-			// std::cout << "URI: " << this->_uri << std::endl;
-			// std::cout << "Version: " << this->_version << std::endl;
 		}
 
 		/* Destructor */
@@ -85,10 +74,6 @@ class Request
 		/* Operation overload = */
 		Request& operator = (const Request *e)
 		{
-			// std::cout << "Request operator = called" << std::endl;
-			// std::cout << "e._headers_map.size(): " << e._headers_map.size() << std::endl;
-			// this->_headers_map.clear();
-			// this->_headers_map.insert(e._headers_map.begin(), e._headers_map.end());
 			this->_method = e->_method;
 			this->_uri = e->_uri;
 			this->_version = e->_version;
@@ -114,8 +99,8 @@ class Request
 
 			
 			value = header.substr(pos + 1);
-			
-			identifier = ft_strtrim(identifier, whitespaces);
+
+			identifier = ft_strtrim(identifier, whitespaces); // TODO WHITESPACES
 			value = ft_strtrim(value, whitespaces);
 
 			// std::cout << "[" << identifier << "]\t[" << value << "]\n";
@@ -141,7 +126,7 @@ std::ostream&	operator<<(std::ostream& out, const Request &c)
 std::ostream&	operator<<(std::ostream& out, const Request *c)
 {
 	out << c->_method << " " << c->_uri << " " << c->_version << std::endl;
-	for (auto it = c->_headers_map.begin(); it != c->_headers_map.end(); it++)
+	for (std::map<std::string, std::string>::const_iterator it = c->_headers_map.begin(); it != c->_headers_map.end(); it++)
 	{
 		out << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
 	}

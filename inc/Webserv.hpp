@@ -75,7 +75,7 @@ class Webserv
 				std::cout << "_max_fd: " << this->_max_fd << std::endl;
 				if (select((int)this->_max_fd + 1, &copy_readfds, &copy_writefds, NULL, NULL) < 0)
 					throw std::runtime_error("select: failed to select.");
-				for (int loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
+				for (size_t loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
 				{
 					if (FD_ISSET(loop_job_counter, &copy_readfds))
 					{
@@ -90,7 +90,7 @@ class Webserv
 						// else other job->type
 					}
 				}
-				for (int loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
+				for (size_t loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
 				{
 					job = &this->jobs[loop_job_counter];
 					if (FD_ISSET(loop_job_counter, &copy_writefds))
@@ -130,8 +130,7 @@ class Webserv
 			// TODO is Chunked? if so, read until 0\r
 
 			std::string request(buffer);
-			job->request = new Request(request); // TODO check how to free correctly
-			// job->user->set_request(job->request); // TODO This segfaults if you access the request
+			job->request = Request(request); // TODO check how to free correctly
 
 			job->type = CLIENT_RESPONSE;
 			FD_SET(loop_job_counter, copy_writefds);
@@ -140,7 +139,7 @@ class Webserv
 		
 		void client_send_response(Job *job)
 		{
-			Request *request = job->request;
+			Request &request = job->request;
 			ServerConfiguration &server_config = job->server->get_configurations()[0];
 			Configuration &config = this->get_correct_server_configuration(job);
 			Response response;
@@ -170,7 +169,7 @@ class Webserv
 				response.set_header("Server", "Webserv (Luke & Bob) 1.0");
 
 				std::ostringstream ss;
-				for (int  i = 0; i < server_config.get_locations().size(); i++)
+				for (size_t  i = 0; i < server_config.get_locations().size(); i++)
 				{
 					ss << server_config.get_locations()[i] << std::endl << std::endl << std::endl;
 				}
@@ -178,9 +177,9 @@ class Webserv
 				std::string s = ss.str();
 
 				/* If host is curl then do not do <br> */
-				if (job->request->_headers_map["user-agent"].find("curl") == std::string::npos)
+				if (job->request._headers_map["user-agent"].find("curl") == std::string::npos)
 				{
-					for (int pos = s.find('\n'); pos != std::string::npos; pos = s.find('\n'))
+					for (size_t pos = s.find('\n'); pos != std::string::npos; pos = s.find('\n'))
 						s.replace(pos, 1, "<br>");
 				}
 				response.set_body(s);
@@ -191,20 +190,21 @@ class Webserv
 
 
 			ssize_t bytes = send(job->fd, response_char,  vec_response.size() + 1, 0);
+			(void)bytes;
 			this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
 		}
 
 		/* Handle Connection */
-		Configuration	create_correct_configfile(Request *request, ServerConfiguration &config)
+		Configuration	create_correct_configfile(Request &request, ServerConfiguration &config)
 		{
 			LocationConfiguration *location;
 
 			// TODO Putting a / at the end if there is not a slash (/) Makes sense??
 
-			location = config.get_location_by_uri(request->_uri);
+			location = config.get_location_by_uri(request._uri);
 			if (location == nullptr)
 			{
-				std::string string_with_slash = request->_uri + "/";
+				std::string string_with_slash = request._uri + "/";
 
 				location = config.get_location_by_uri(string_with_slash); //  TODO MOET DIT???? zodat /redirect ook werkt en niet alleen /redirect/
 				if (location == nullptr)
@@ -212,9 +212,9 @@ class Webserv
 			}
 			return (*location);
 		}
-		size_t			method_handling(Request *request, Configuration &config)
+		size_t			method_handling(Request &request, Configuration &config)
 		{
-			if (config.is_method_allowed(request->_method) == false)
+			if (config.is_method_allowed(request._method) == false)
 				return (405);
 			return (200); // 200 OK
 		}
@@ -224,14 +224,23 @@ class Webserv
 		void get(Job *job, Request &request, ServerConfiguration &config)
 		{
 			std::cout << "GET" << std::endl;
+			(void)job;
+			(void)request;
+			(void)config;
 		}
 		void post(Job *job, Request &request, ServerConfiguration &config)
 		{
 			std::cout << "POST" << std::endl;
+			(void)job;
+			(void)request;
+			(void)config;
 		}
 		void put(Job *job, Request &request, ServerConfiguration &config)
 		{
 			std::cout << "PUT" << std::endl;
+			(void)job;
+			(void)request;
+			(void)config;
 		}
 
 		/* Accept a New Client */
@@ -239,7 +248,7 @@ class Webserv
 		{
 			struct sockaddr_in client_address;
 			int address_size = sizeof(struct sockaddr_in);
-			int client_fd = accept(job->fd, (struct sockaddr*)&client_address, (socklen_t*)&address_size);
+			size_t client_fd = accept(job->fd, (struct sockaddr*)&client_address, (socklen_t*)&address_size);
 			if (client_fd < 0)
 				throw std::runtime_error("accept: failed to accept.");
 
@@ -259,7 +268,7 @@ class Webserv
 		void	setFdSets()
 		{
 			std::map<int, Server>::iterator it;
-			int fd;
+			size_t fd;
 			
 			// Zeroing the fd_sets.
 			FD_ZERO(&this->read_fds);
@@ -348,13 +357,13 @@ class Webserv
 			ServerConfiguration &default_server = job_configs[0]; // correct server of the job
 
 
-			host_header = job->request->_headers_map["host"];
+			host_header = job->request._headers_map["host"];
 			pos = host_header.find(":");
 
-			for (int k = 0; k < job_configs.size(); k++)
+			for (size_t k = 0; k < job_configs.size(); k++)
 			{
 				server_names = job_configs[k].get_server_names();
-				for (int j = 0; j < server_names.size(); j++)
+				for (size_t j = 0; j < server_names.size(); j++)
 				{
 					if (host_header.substr(0, pos) == server_names[j])
 						default_server = job_configs[k];

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/10 10:32:28 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/13 11:33:34 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,8 +97,6 @@ class Configuration
 
 		bool is_method_allowed(std::string &method)
 		{
-			int i = 0;
-
 			if (method == "GET")
 				return (this->_methods[0]);
 			else if (method == "POST")
@@ -341,16 +339,6 @@ class Configuration
 		{
 			if (s.find_first_of(forbidden_characters) != std::string::npos)
 				throw std::runtime_error("config: forbidden characters in string");
-		}
-
-		void copy_if_has_value(std::string &s, Configuration &src)
-		{
-			if (this->_isSet[s] == true)
-				return ;
-
-			// This == True
-
-			// if (src._isSet[s] == true)
 		}
 };
 

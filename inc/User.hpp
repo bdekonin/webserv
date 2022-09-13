@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 14:46:37 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/07 14:02:47 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/13 11:34:09 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ class User
 	public:
 		/* Constructor  */
 		User()
-		: _fd(-1), _request(nullptr)
+		: _fd(-1)
 		{
 		}
 		User(int socketFD, struct sockaddr_in *address_info)
@@ -54,10 +54,6 @@ class User
 		{
 			this->_fd = fd;
 		}
-		void set_request(Request *request)
-		{
-			this->_request = request;
-		}
 		void set_address_info(struct sockaddr_in *address_info)
 		{
 			this->_address_info = address_info;
@@ -67,10 +63,6 @@ class User
 		{
 			return this->_fd;
 		}
-		Request				*get_request()
-		{
-			return this->_request;
-		}
 		struct sockaddr_in *get_address()
 		{
 			return this->_address_info;
@@ -78,7 +70,6 @@ class User
 
 	private:
 		int		_fd;
-		Request *_request;
 
 		struct sockaddr_in *_address_info;
 };
@@ -92,8 +83,6 @@ std::ostream&	operator<<(std::ostream& out, User &c)
 std::ostream&	operator<<(std::ostream& out, User *c)
 {
 	out << "Fd:\n" << c->get_fd() << std::endl;
-	// out << "Request:\n" << c->get_request() << std::endl;
-
 	return out;
 }
 

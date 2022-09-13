@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/11 19:46:40 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/13 12:26:57 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ void	split(const std::string& str, const char* delims, std::vector<std::string>&
 	}
 }
 
-static int		trim_left(std::string &s1, char *set)
+static int		trim_left(std::string &s1, const char *set)
 {
 	int i;
 	int j;
@@ -113,7 +113,7 @@ static int		trim_left(std::string &s1, char *set)
 	return (i);
 }
 
-static int		trim_right(std::string &s1, char *set)
+static int		trim_right(std::string &s1, const char *set)
 {
 	int i;
 	int j;
@@ -131,7 +131,7 @@ static int		trim_right(std::string &s1, char *set)
 	return (i);
 }
 
-std::string		ft_strtrim(std::string &s1, char *set)
+std::string		ft_strtrim(std::string &s1, const char *set)
 {
 	std::string	str;
 	int		left;

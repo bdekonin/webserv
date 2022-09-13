@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/10 18:52:01 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/13 11:40:25 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,7 +197,7 @@ class Response
 		}
 		void build_headers() // uses headers_map to append to vector
 		{
-			for (auto it = this->_headers_map.begin(); it != this->_headers_map.end(); it++)
+			for (std::map<std::string, std::string>::const_iterator it = this->_headers_map.begin(); it != this->_headers_map.end(); it++)
 			{
 				this->_insert_chars_to_vector(this->_headers, it->first);
 				this->_insert_chars_to_vector(this->_headers, ": ");

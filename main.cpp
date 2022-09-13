@@ -6,19 +6,15 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/10 11:48:26 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/13 12:27:46 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 
-# include "inc/Configuration.hpp" // Base Class
-# include "inc/ServerConfiguration.hpp" // Derived from Configuration
-# include "inc/LocationConfiguration.hpp" // Derived from Configuration
 
 #include <string.h>
 
-# include "inc/Parser.hpp"
 
 #include <stdio.h>
 #include <sys/socket.h>
@@ -38,12 +34,17 @@
 # include <vector>
 
 #include <arpa/inet.h>
-#include "inc/Webserv.hpp"
 
-#include "inc/Server.hpp"
-#include "inc/Job.hpp"
-#include "inc/Request.hpp"
-#include "inc/Response.hpp"
+# include "inc/Configuration.hpp" // Base Class
+# include "inc/ServerConfiguration.hpp" // Derived from Configuration
+# include "inc/LocationConfiguration.hpp" // Derived from Configuration
+# include "inc/Webserv.hpp"
+# include "inc/Parser.hpp"
+
+# include "inc/Server.hpp"
+# include "inc/Job.hpp"
+# include "inc/Request.hpp"
+# include "inc/Response.hpp"
 
 int main(int argc, char const *argv[])
 {
@@ -58,7 +59,7 @@ int main(int argc, char const *argv[])
 	server.setupServers();
 
 	server.run();
-	for (auto it = server.jobs.begin(); it != server.jobs.end(); it++)
+	for (std::map<int, Job>::const_iterator it = server.jobs.begin(); it != server.jobs.end(); it++)
 	{
 		std::cout << "Closing " << it->second.fd <<  std::endl;
 		close(it->second.fd);

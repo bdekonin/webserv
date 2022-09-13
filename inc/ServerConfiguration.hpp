@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/09 20:44:41 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/13 11:43:28 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ class ServerConfiguration : public Configuration
 		
 		LocationConfiguration *get_location_by_uri(std::string &string)
 		{
-			for (int i = 0; i < this->_locations.size(); i++)
+			for (size_t i = 0; i < this->_locations.size(); i++)
 			{
 				if (this->_locations[i].get_path() == string)
 					return &this->_locations[i];
