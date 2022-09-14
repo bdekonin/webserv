@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/14 19:38:09 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/14 16:07:52 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,15 +157,13 @@ class Response
 		}
 
 	public:
-		void set_3xx_response(Configuration &config, std::string uri) /* Redirections */
+		void set_3xx_response(Configuration &config) /* Redirections */
 		{
 			std::map<size_t, std::string> map = config.get_return();
 
 			this->set_status_code(map.begin()->first);
 			this->set_header("Location", map.begin()->second);
 			this->set_header("Server", "Webserv (Luke & Bob) 1.0");
-
-			this->set_content_length();
 		}
 		void set_403_response(Configuration &config) /* Forbidden */
 		{

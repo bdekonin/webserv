@@ -9,7 +9,8 @@
 
 NAME        := webserv
 CC         := c++
-FLAGS    := -Wall -Wextra -Werror -std=c++98
+# FLAGS    := -Wall -Wextra -Werror -std=c++98
+FLAGS    := -g
  
 ################################################################################
 #                                 PROGRAM'S SRCS                               #
@@ -43,7 +44,7 @@ ${NAME}:	${OBJS}
 
 all:		${NAME}
 
-test: all
+test: re
 		@echo "$(GREEN)Running tests...${CLR_RMV}"
 		@./${NAME} config/redirecttest_config.conf
 

@@ -6,15 +6,22 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/13 12:26:57 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/13 16:24:37 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "inc/utils.hpp"
 
-
-
-
+void to_upper(std::string &str)
+{
+	for (size_t i = 0; i < str.size(); i++)
+		str[i] = toupper(str[i]);
+}
+void to_lower(std::string &str)
+{
+	for (size_t i = 0; i < str.size(); i++)
+		str[i] = tolower(str[i]);
+}
 
 size_t		count(std::string str, char c)
 {

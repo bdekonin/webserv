@@ -32,7 +32,7 @@
 
 
 #define getString(n) #n
-#define VAR(var) std::cerr << std::boolalpha << __FILE__ ":"<< __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
+#define VAR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
 #define PRINT(var) std::cout << var << std::endl
 
 class Webserv
@@ -148,8 +148,6 @@ class Webserv
 				config = server_config;
 			}
 
-			job->correct_config = &config;
-
 			/* set file read */
 			if (request._method == "GET" && config.is_method_allowed("GET") == true)
 			{
@@ -177,16 +175,22 @@ class Webserv
 
 		void file_read(Job *job, fd_set *copy_writefds)
 		{
+			// check if uri is a file or directory
+			// add root infront of uri
+			// if file, read file
+			// if directory && autoindex, list directory
+			// else directory, read directory based on index order
+			// if not found, set 404 response else auto index
+
 			char type; // is file or directory
-			Configuration &config = *job->correct_config;
+			int fd; // file descriptor)
+			Configuration &config = this->get_correct_server_configuration(job);
 
 			type = job->get_path_options(config.get_root());
 
-			if (config.get_return().size() != 0)
-			{
-				job->set_3xx_response(config);
-			}
-			else if (type == '0') // NOT FOUND
+			VAR(type);
+
+			if (type == '0') // NOT FOUND
 			{
 				job->get_response().set_404_response(config);
 			}
@@ -274,8 +278,6 @@ class Webserv
 			LocationConfiguration *location;
 
 			// TODO Putting a / at the end if there is not a slash (/) Makes sense??
-
-
 
 			location = config.get_location_by_uri(request._uri);
 			if (location == nullptr)

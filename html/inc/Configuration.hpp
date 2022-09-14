@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/14 18:48:09 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/14 18:47:23 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -370,7 +370,7 @@ inline std::ostream&	operator<<(std::ostream& out, const Configuration& c)
 			out << "\tPOST\n";
 		if (c.get_methods(2) == true)
 			out << "\tDELETE\n";
-		if (c.get_methods(0) == false && c.get_methods(1) == false && c.get_methods(2) == false)
+		if (c.get_methods(0) == true && c.get_methods(1) == true && c.get_methods(2) == true)
 			out << "\tNone\n";
 	}
 	{
