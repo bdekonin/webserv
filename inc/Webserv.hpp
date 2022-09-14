@@ -137,18 +137,17 @@ class Webserv
 
 			job->request = request;
 
-			ServerConfiguration &server_config = job->server->get_configurations()[0];
-			Configuration &config = this->get_correct_server_configuration(job);
-			try
-			{
-				config = this->create_correct_configfile(request, server_config); // the good
-			}
-			catch(const std::exception& e)
+			ServerConfiguration server_config = this->get_correct_server_configuration(job);
+			Configuration config;
+			
+			size_t ret = this->create_correct_configfile(request, server_config, config);
+			if (ret == 1) // no location found
 			{
 				config = server_config;
 			}
 
-			job->correct_config = &config;
+
+			job->correct_config = config;
 
 			/* set file read */
 			if (request._method == "GET" && config.is_method_allowed("GET") == true)
@@ -178,9 +177,11 @@ class Webserv
 		void file_read(Job *job, fd_set *copy_writefds)
 		{
 			char type; // is file or directory
-			Configuration &config = *job->correct_config;
+			Configuration &config = job->correct_config;
 
 			type = job->get_path_options(config.get_root());
+
+
 
 			if (config.get_return().size() != 0)
 			{
@@ -262,6 +263,7 @@ class Webserv
 			}
 
 			job->clear();
+			this->jobs[job->fd].clear();
 			this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
 		}
 
@@ -269,7 +271,7 @@ class Webserv
 
 
 		/* Handle Connection */
-		Configuration	create_correct_configfile(Request &request, ServerConfiguration &config)
+		int	create_correct_configfile(Request &request, ServerConfiguration &config, Configuration &ConfigToChange)
 		{
 			LocationConfiguration *location;
 
@@ -284,9 +286,11 @@ class Webserv
 
 				location = config.get_location_by_uri(string_with_slash); //  TODO MOET DIT???? zodat /redirect ook werkt en niet alleen /redirect/
 				if (location == nullptr)
-					throw std::runtime_error("Location block not found.");
+					return (1);
 			}
-			return (*location);
+
+			ConfigToChange = *location;
+			return (0);
 		}
 		size_t			method_handling(Request &request, Configuration &config)
 		{

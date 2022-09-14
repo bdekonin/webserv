@@ -48,6 +48,10 @@ test: re
 		@echo "$(GREEN)Running tests...${CLR_RMV}"
 		@./${NAME} config/redirecttest_config.conf
 
+default: re
+		@echo "$(GREEN)Running tests...${CLR_RMV}"
+		@./${NAME} config/default_configfile.conf
+
 bonus:		all
 
 clean:

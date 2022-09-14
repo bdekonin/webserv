@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/14 20:03:56 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/14 21:12:07 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,11 +39,11 @@ class Job
 	public:
 		/* Constructor  */
 		Job()
-		: request(Request()), response(Response()), correct_config(nullptr)
+		: request(Request()), response(Response()), correct_config(Configuration())
 		{
 		}
 		Job(int type, int fd, Server *server, User *user)
-		: type(type), fd(fd), server(server), user(user), request(Request()), response(Response()), cgi(NULL), correct_config(nullptr)
+		: type(type), fd(fd), server(server), user(user), request(Request()), response(Response()), cgi(NULL), correct_config(Configuration())
 		{
 		}
 
@@ -93,7 +93,7 @@ class Job
 		{
 			this->request.clear();
 			this->response.clear();
-			this->correct_config = nullptr;
+			this->correct_config = Configuration();
 		}
 
 	public:
@@ -105,7 +105,7 @@ class Job
 		Response		response;
 		void			*cgi;// TODO change to CGI Object
 
-		Configuration *correct_config;
+		Configuration correct_config;
 
 		void set_3xx_response(Configuration &config)
 		{
@@ -137,8 +137,6 @@ class Job
 			struct stat	sb;
 			int			ret;
 			int			returnstat;
-
-			VARR(path);
 
 			ret = stat(path.c_str(), &sb);
 			if (ret < 0)
