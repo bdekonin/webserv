@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/09 20:55:43 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/19 17:29:20 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@ class Parser
 			}
 			return (servers);
 		}
+
 	private:
 		std::string			_filename;
 		std::string			_filecontent;

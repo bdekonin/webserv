@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/14 20:44:13 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/14 21:58:47 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,11 @@
 
 # include "Configuration.hpp"
 # include "LocationConfiguration.hpp"
+
+#define getString(n) #n
+#define VARR(var) std::cerr << std::boolalpha << __FILE__ ":"<< __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
+#define PRINT(var) std::cout << var << std::endl
+
 
 class ServerConfiguration : public Configuration
 {
@@ -127,39 +132,42 @@ class ServerConfiguration : public Configuration
 			}
 		}
 		
-		LocationConfiguration *get_location_by_uri(std::string &string)
+		LocationConfiguration *get_location_by_uri(std::string &uri)
 		{
 			std::string locations_path;
-			size_t location_counter = 0;
-			size_t string_counter = 0;
+			size_t location_counter;
+			size_t uri_counter;
 			for (size_t i = 0; i < this->_locations.size(); i++)
 			{
+				uri_counter = 0;
+				location_counter = 0;
 				locations_path = this->_locations[i].get_path();
 
-				if (string[0] != '/')
-					string = "/" + string;
+				if (uri[0] != '/')
+					uri = "/" + uri;
 
+				// [/tijdelijk/index.html] uri
+				// [/tijdelijk/] locpath
 
-				// [/tijdelijk/index.html]
-				// [/tijdelijk/]
+				for (size_t i = 0; i < uri.size(); i++)
+					if (uri[i] == '/')
+						uri_counter++;
+				for (size_t i = 0; i < locations_path.size(); i++)
+					if (locations_path[i] == '/')
+						location_counter++;
 
-				// for (int i = 0; i < locations_path.size(); i++)
-				// 	if (locations_path[i] == '/')
-				// 		location_counter++;
-
-				// for (int i = 0; i < string.size(); i++)
-				// 	if (string[i] == '/')
-				// 		string_counter++;
-
-				// if (location_counter == string_counter)
-				// {
-					
-				// }
-
-				
-					
-				if (locations_path == string)
-					return &this->_locations[i];
+				if (uri.find(locations_path) != std::string::npos)
+				{
+					if (locations_path.size() == 1 && uri.size() > 1)
+						;
+					else if (uri_counter == location_counter)
+					{
+						std::cout << "Found location: " << locations_path << std::endl;
+						return &this->_locations[i];
+					}
+				}
+				// if (locations_path == uri)
+				// 	return &this->_locations[i];
 			}
 			return nullptr;
 		}

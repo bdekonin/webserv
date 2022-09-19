@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:26:24 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/14 16:09:55 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/19 16:03:12 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,9 @@
 # include <vector>
 # include <map>
 # include "Configuration.hpp"
+# include <time.h>
 
+std::string create_autoindex_line(const std::string &path, const char *name, const struct timespec ts, const unsigned long bytes, bool is_file);
 
 void to_upper(std::string &str);
 void to_lower(std::string &str);

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/14 17:54:15 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/19 13:21:35 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@
 */
 
 # include "utils.hpp"
+# include "Job.hpp"
 
 class Request
 {
@@ -65,8 +66,8 @@ class Request
 
 			this->_method = request_line[0];
 			this->_uri = request_line[1];
-			// if (this->_uri[0] == '/') // ?????
-			// 	this->_uri = this->_uri.substr(1);
+
+			this->_unedited_uri = this->_uri;
 
 			this->_version = request_line[2];
 		}
@@ -88,6 +89,8 @@ class Request
 			this->_method = e->_method;
 			this->_uri = e->_uri;
 			this->_version = e->_version;
+
+			this->_unedited_uri = e->get_unedited_uri();
 
 			return *this;
 		}
@@ -123,6 +126,12 @@ class Request
 			this->_uri = "";
 			this->_version = "";
 			this->_headers_map.clear();
+
+			this->_unedited_uri = "";
+		}
+		const std::string &get_unedited_uri() const
+		{
+			return this->_unedited_uri;
 		}
 	public:
 		std::map<std::string, std::string> _headers_map;
@@ -130,6 +139,9 @@ class Request
 		std::string _method;
 		std::string _uri;
 		std::string _version;
+
+	private:
+		std::string _unedited_uri; // uri unedited
 };
 
 std::ostream&	operator<<(std::ostream& out, const Request &c)

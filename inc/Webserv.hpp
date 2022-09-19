@@ -29,6 +29,8 @@
 # include "Server.hpp" // Class that handles a server.
 # include "Request.hpp" // Class that handles a request.
 # include "Response.hpp" // Class that handles a response.
+# include "utils.hpp"
+# include <dirent.h>
 
 
 #define getString(n) #n
@@ -118,6 +120,7 @@ class Webserv
 		/* User Types Handling */
 		int client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
 		{
+			std::string ConfigToChange_path = "";
 			// std::cout << job->fd << " Reading request Client\n";
 			char	buffer[4096 + 1];
 			int		bytesRead;
@@ -133,34 +136,21 @@ class Webserv
 				return (0);
 			}
 			// TODO is Chunked? if so, read until 0\r
-			Request request(buffer);
-
-			job->request = request;
-
-			ServerConfiguration server_config = this->get_correct_server_configuration(job);
-			Configuration config;
-			
-			size_t ret = this->create_correct_configfile(request, server_config, config);
-			if (ret == 1) // no location found
-			{
-				config = server_config;
-			}
-
-
-			job->correct_config = config;
+			job->request = Request(buffer);
+			this->create_correct_configfile(job->request, this->get_correct_server_configuration(job), job->correct_config, ConfigToChange_path);
 
 			/* set file read */
-			if (request._method == "GET" && config.is_method_allowed("GET") == true)
+			if (job->request._method == "GET" && job->correct_config.is_method_allowed("GET") == true)
 			{
 				loop_job_counter--;
 				job->type = FILE_READ; // MOET FILE_READ ZIJN
 			}
-			else if (request._method == "POST" && config.is_method_allowed("POST") == true)
+			else if (job->request._method == "POST" && job->correct_config.is_method_allowed("POST") == true)
 			{
 				// *loop_job_counter--;
 				job->type = FILE_WRITE;
 			}
-			else if (request._method == "DELETE" && config.is_method_allowed("DELETE") == true)
+			else if (job->request._method == "DELETE" && job->correct_config.is_method_allowed("DELETE") == true)
 			{
 				// *loop_job_counter--;
 				job->type = FILE_WRITE;
@@ -168,9 +158,12 @@ class Webserv
 			else
 			{
 				// *loop_job_counter--;
-				job->set_405_response(config);
+				job->set_405_response(job->correct_config);
 				job->set_client_response(copy_writefds);
 			}
+
+			/* Parse Request */
+			job->parse_request(ConfigToChange_path);
 			return (0);
 		}
 
@@ -179,11 +172,19 @@ class Webserv
 			char type; // is file or directory
 			Configuration &config = job->correct_config;
 
-			type = job->get_path_options(config.get_root());
+			type = job->get_path_options();
+
+			if (type == 'D')
+				if (job->get_request()._uri[job->get_request()._uri.size() - 1] != '/')
+					job->get_request()._uri += "/";
 
 
+			VAR(job->get_request()._uri);
+			VAR(type);
+			
+			// type = '0';
 
-			if (config.get_return().size() != 0)
+			if (job->get_response().get_status_code() != 0)
 			{
 				job->set_3xx_response(config);
 			}
@@ -197,45 +198,57 @@ class Webserv
 			}
 			else if (type == 'F') // FILE
 			{
-				std::string &uri = job->get_request()._uri;
-				std::string extension = uri.substr(uri.find_last_of(".") + 1);
-
-				if (extension == uri)
-					extension = "";
-				
-				if (extension != "") // file has extension
-				{
-					if (config.get_cgi().find(extension) != config.get_cgi().end())
-					{
-						// DO CGI STUFF
-						job->get_response().set_405_response(config); // TESTING
-						job->set_client_response(copy_writefds);
-						return ;
-					}
-				}
-				std::string path = config.get_root() + job->get_request()._uri;
-				std::ifstream in(path, std::ios::in);
-				if (!in)
-					job->get_response().set_500_response(config); // TODO check which error
-
-
-				job->get_response().set_status_code(200);
-				job->get_response().set_default_headers(extension);
-
-				std::stringstream contents;
-				contents << in.rdbuf();
-				in.close();
-				job->get_response().set_body(contents.str());
-
-				job->get_response().set_content_length();
-				// job->set_client_response(copy_writefds);
+				job->handle_file(copy_writefds, config);
 			}
 			else if (type == 'D') // DIRECTORY
 			{
+				DIR *dir;
+				struct dirent *diread;
+				std::vector<char *> files;
+				std::string name;
+				struct stat sb;
+
+				std::string body = "";
+
+				// if (true)
+				if (config.get_autoindex() == true)
+				{
+					if ((dir = opendir(job->get_request()._uri.c_str())) != nullptr)
+					{
+						while ((diread = readdir(dir)) != nullptr)
+						{
+							name.append(job->get_request()._uri);
+							name.append(diread->d_name);
+
+							if (lstat(name.c_str(), &sb) == -1)
+							{
+								perror("lstat");
+								exit(EXIT_FAILURE);
+							}
+							job->get_response().set_status_code(200);
+							job->get_response().set_default_headers("html");
+
+							// VAR(job->get_request().get_unedited_uri() + diread->d_name);
+							
+							body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctim, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
+							name.clear();
+						}
+						closedir(dir);
+					}
+					else
+					{
+						// TODO ERROR
+					}
+					job->get_response().set_body(body);
+					job->get_response().set_content_length();
+				}
+				else
+				{
+					job->get_response().set_405_response(config); // TESTING
+				}
 				// Check AUTOINDEX
 				// else check order of index
 				// else 404
-				job->get_response().set_405_response(config); // TESTING
 			}
 			else // ERROR
 			{
@@ -271,7 +284,7 @@ class Webserv
 
 
 		/* Handle Connection */
-		int	create_correct_configfile(Request &request, ServerConfiguration &config, Configuration &ConfigToChange)
+		int	create_correct_configfile(Request &request, ServerConfiguration &config, Configuration &ConfigToChange, std::string &ConfigToChange_path)
 		{
 			LocationConfiguration *location;
 
@@ -286,10 +299,15 @@ class Webserv
 
 				location = config.get_location_by_uri(string_with_slash); //  TODO MOET DIT???? zodat /redirect ook werkt en niet alleen /redirect/
 				if (location == nullptr)
+				{
+					/* No Location Block found: use default config */
+					ConfigToChange = config;
+					ConfigToChange_path = "";
 					return (1);
+				}
 			}
-
 			ConfigToChange = *location;
+			ConfigToChange_path = location->get_path();
 			return (0);
 		}
 		size_t			method_handling(Request &request, Configuration &config)

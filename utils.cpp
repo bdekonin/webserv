@@ -6,11 +6,40 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/13 16:24:37 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/19 18:09:45 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "inc/utils.hpp"
+
+// std::string create_autoindex_line(std::string &path, char *name, struct timespec ts, unsigned long bytes)
+std::string create_autoindex_line(const std::string &path, const char *name, const struct timespec ts, const unsigned long bytes, bool is_file)
+{
+	std::string line = "<a href=\"PATH\">NAME</a>\t\t\t\tDATE               BYTES";
+	std::string date = "";
+	char buff[100];
+
+	// strftime(buff, 100, "%Y-%m-%d %H:%M:%S", gmtime(&ts.tv_sec));
+	strftime(buff, 100, "%d-%b-%Y %H:%M:%S", gmtime(&ts.tv_sec));
+
+	if (is_file == false)
+		line.replace(line.find("PATH"), 4, path + "/");
+	else
+		line.replace(line.find("PATH"), 4, path);
+
+	if (is_file == false)
+		line.replace(line.find("NAME"), 4, std::string(name) + "/");
+	else
+		line.replace(line.find("NAME"), 4, name);
+
+	
+	
+	// line.replace(line.find("NAME"), 4, name);
+	line.replace(line.find("DATE"), 4, buff);
+	line.replace(line.find("BYTES"), 5, std::to_string(bytes));
+
+	return (line);
+}
 
 void to_upper(std::string &str)
 {

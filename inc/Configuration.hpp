@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/14 18:48:09 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/19 17:31:08 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,6 +165,10 @@ class Configuration
 			}
 			this->_isSet["methods"] = true;
 		}
+		void set_methods(size_t i, bool b)
+		{
+			this->_methods[i] = b;
+		}
 		void set_return(std::string &s)
 		{
 			std::vector<std::string> v;
@@ -251,7 +255,7 @@ class Configuration
 			this->_cgi[v[0]] = v[1];
 			this->_isSet["cgi"] = true;
 		}
-		
+
 		// Getters
 		std::map<size_t, std::string>				&get_error_page()
 		{
@@ -266,7 +270,7 @@ class Configuration
 		{
 			return this->_client_max_body_size;
 		}
-		size_t								get_client_max_body_size() const
+		size_t										get_client_max_body_size() const
 		{
 			return this->_client_max_body_size;
 		}
@@ -275,7 +279,7 @@ class Configuration
 		{
 			return this->_methods[request];
 		}
-		bool									get_methods(size_t request) const
+		bool										get_methods(size_t request) const
 		{
 			return this->_methods[request];
 		}
@@ -324,6 +328,8 @@ class Configuration
 		{
 			return this->_cgi;
 		}
+		
+		std::map<std::string, bool>					_isSet;
 	protected:
 		std::map<size_t, std::string>		_error_page; // <error code, path>
 		size_t								_client_max_body_size; // max size of body
@@ -336,7 +342,6 @@ class Configuration
 
 		// isSet booleans
 		// list of bool
-		std::map<std::string, bool>					_isSet;
 
 		void remove_semicolen(std::string &s) // removes the semicolen at the end if it is still there
 		{

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/14 21:12:07 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/19 15:53:02 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,60 @@ class Job
 			this->correct_config = Configuration();
 		}
 
+		void parse_request(std::string &ConfigToChange_path)
+		{
+			// VAR(this->request._uri);
+			// VAR(ConfigToChange_path);
+
+			if (this->correct_config.get_return().size() != 0)
+			{
+				// this->set_3xx_response(this->correct_config);
+				this->get_response().set_status_code(this->correct_config.get_return().begin()->first);
+			}
+			else
+			{
+				std::string path = this->request._uri;
+				path.replace(path.find(ConfigToChange_path), ConfigToChange_path.size(), ConfigToChange_path);
+				this->request._uri = this->correct_config.get_root() + path;
+				VARR(this->request._uri);
+			}
+		}
+
+		void handle_file(fd_set *copy_writefds, Configuration &config)
+		{
+			std::string &uri = this->get_request()._uri;
+			std::string extension = uri.substr(uri.find_last_of(".") + 1);
+
+			if (extension == uri)
+				extension = "";
+			
+			if (extension != "") // file has extension
+			{
+				if (config.get_cgi().find(extension) != config.get_cgi().end())
+				{
+					// DO CGI STUFF
+					this->get_response().set_405_response(config); // TESTING
+					this->set_client_response(copy_writefds);
+					return ;
+				}
+			}
+			std::string path = this->get_request()._uri;
+			std::ifstream in(path, std::ios::in);
+			if (!in)
+				this->get_response().set_500_response(config); // TODO check which error
+
+
+			this->get_response().set_status_code(200);
+			this->get_response().set_default_headers(extension);
+
+			std::stringstream contents;
+			contents << in.rdbuf();
+			in.close();
+			this->get_response().set_body(contents.str());
+
+			this->get_response().set_content_length();
+			// job->set_client_response(copy_writefds);
+		}
 	public:
 		int				type;
 		int				fd;
@@ -109,7 +163,6 @@ class Job
 
 		void set_3xx_response(Configuration &config)
 		{
-			VARR(this->get_request()._uri);
 			this->response.set_3xx_response(config, this->get_request()._uri);
 		}
 		void set_405_response(Configuration &config)
@@ -127,12 +180,9 @@ class Job
 			FD_SET(this->fd, copy_writefds);
 		}
 
-		char get_path_options(std::string uri, std::string root) // TODO FOR DEBUG OPEN IN CHROME https://github.com/bdekonin/minishell/blob/master/src/execve.c#:~:text=stat.h%3E-,int%09%09%09validate_file(char%20*filepath),%7D,-void%09%09signal_exec(
+		char get_path_options(std::string uri) // TODO FOR DEBUG OPEN IN CHROME https://github.com/bdekonin/minishell/blob/master/src/execve.c#:~:text=stat.h%3E-,int%09%09%09validate_file(char%20*filepath),%7D,-void%09%09signal_exec(
 		{
 			std::string &path = uri;
-
-			if (root.size() > 0)
-				path = root + path;
 
 			struct stat	sb;
 			int			ret;
@@ -141,7 +191,8 @@ class Job
 			ret = stat(path.c_str(), &sb);
 			if (ret < 0)
 				return '0'; // NOT FOUND
-			if (S_ISDIR(sb.st_mode))
+			// if (S_ISDIR(sb.st_mode))
+			if (S_ISDIR(sb.st_mode) && uri[uri.size() - 1] == '/')
 			{
 				returnstat = sb.st_mode & S_IXUSR;
 				if (returnstat == 0)
@@ -160,9 +211,9 @@ class Job
 			else // should never go here but if its error
 				return '0'; // NOT FOUND
 		}
-		char get_path_options(std::string root)
+		char get_path_options()
 		{
-			return this->get_path_options(this->request._uri, root);
+			return this->get_path_options(this->request._uri);
 		}
 		
 };

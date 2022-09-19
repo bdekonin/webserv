@@ -52,6 +52,10 @@ default: re
 		@echo "$(GREEN)Running tests...${CLR_RMV}"
 		@./${NAME} config/default_configfile.conf
 
+autoindex: re
+		@echo "$(GREEN)Running tests...${CLR_RMV}"
+		@./${NAME} config/autoindextest_config.conf
+
 bonus:		all
 
 clean:
