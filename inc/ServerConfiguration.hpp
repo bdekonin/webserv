@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/14 21:58:47 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/19 20:55:33 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,45 +131,40 @@ class ServerConfiguration : public Configuration
 				this->_names.push_back(v[i]);
 			}
 		}
+
+		size_t	getMatchLength(const std::string& URI, const std::string& locationPath)
+		{
+			size_t	matchLength = 0;
+
+			if (locationPath.size() > URI.size())
+				return 0;
+			for (size_t i = 0; i < locationPath.size(); i++)
+			{
+				if (locationPath[i] != URI[i])
+					return 0;
+				matchLength++;
+			}
+			return matchLength;
+		}
 		
 		LocationConfiguration *get_location_by_uri(std::string &uri)
 		{
 			std::string locations_path;
-			size_t location_counter;
-			size_t uri_counter;
+			LocationConfiguration *best_match = nullptr;
+			size_t best_match_length = 0;
+
 			for (size_t i = 0; i < this->_locations.size(); i++)
 			{
-				uri_counter = 0;
-				location_counter = 0;
 				locations_path = this->_locations[i].get_path();
 
-				if (uri[0] != '/')
-					uri = "/" + uri;
-
-				// [/tijdelijk/index.html] uri
-				// [/tijdelijk/] locpath
-
-				for (size_t i = 0; i < uri.size(); i++)
-					if (uri[i] == '/')
-						uri_counter++;
-				for (size_t i = 0; i < locations_path.size(); i++)
-					if (locations_path[i] == '/')
-						location_counter++;
-
-				if (uri.find(locations_path) != std::string::npos)
+				size_t matchlength = getMatchLength(uri, locations_path);
+				if (matchlength > best_match_length)
 				{
-					if (locations_path.size() == 1 && uri.size() > 1)
-						;
-					else if (uri_counter == location_counter)
-					{
-						std::cout << "Found location: " << locations_path << std::endl;
-						return &this->_locations[i];
-					}
+					best_match = &this->_locations[i];
+					best_match_length = matchlength;
 				}
-				// if (locations_path == uri)
-				// 	return &this->_locations[i];
 			}
-			return nullptr;
+			return best_match;
 		}
 
 		// Getters

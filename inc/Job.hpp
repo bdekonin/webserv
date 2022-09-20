@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/19 15:53:02 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/19 21:40:09 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,6 +173,10 @@ class Job
 		{
 			this->response.set_404_response(config);
 		}
+		void set_500_response(Configuration &config)
+		{
+			this->response.set_500_response(config);
+		}
 
 		void set_client_response(fd_set *copy_writefds) // fd_sets to write fd_set. and set client_response
 		{
@@ -205,8 +209,10 @@ class Job
 				returnstat = sb.st_mode & S_IXUSR;
 				if (returnstat == 0)
 					return ('X'); // NO PERMISSIONS
-				else
+				else if (S_ISDIR(sb.st_mode) == false)
 					return ('F'); // FILE FOUND
+				else
+					return '0';
 			}
 			else // should never go here but if its error
 				return '0'; // NOT FOUND

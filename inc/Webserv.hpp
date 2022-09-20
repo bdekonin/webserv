@@ -167,7 +167,7 @@ class Webserv
 			return (0);
 		}
 
-		void file_read(Job *job, fd_set *copy_writefds)
+		void file_read(Job *job, fd_set *copy_writefds, bool isRecursive = false)
 		{
 			char type; // is file or directory
 			Configuration &config = job->correct_config;
@@ -202,50 +202,26 @@ class Webserv
 			}
 			else if (type == 'D') // DIRECTORY
 			{
-				DIR *dir;
-				struct dirent *diread;
-				std::vector<char *> files;
-				std::string name;
-				struct stat sb;
-
-				std::string body = "";
-
-				// if (true)
+				
 				if (config.get_autoindex() == true)
 				{
-					if ((dir = opendir(job->get_request()._uri.c_str())) != nullptr)
+					std::string temp;
+					if (this->generate_autoindex(job, job->request._uri, temp) == 0)
 					{
-						while ((diread = readdir(dir)) != nullptr)
-						{
-							name.append(job->get_request()._uri);
-							name.append(diread->d_name);
-
-							if (lstat(name.c_str(), &sb) == -1)
-							{
-								perror("lstat");
-								exit(EXIT_FAILURE);
-							}
-							job->get_response().set_status_code(200);
-							job->get_response().set_default_headers("html");
-
-							// VAR(job->get_request().get_unedited_uri() + diread->d_name);
-							
-							body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctim, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
-							name.clear();
-						}
-						closedir(dir);
+						job->get_response().set_body(temp);
+						job->get_response().set_content_length();
 					}
 					else
-					{
-						// TODO ERROR
-					}
-					job->get_response().set_body(body);
-					job->get_response().set_content_length();
+						job->set_500_response(config);
 				}
 				else
 				{
 					job->get_response().set_405_response(config); // TESTING
 				}
+
+				// file read RECURIVE ???
+				// this->fileread(a new job, copy_writefds, true) ???
+
 				// Check AUTOINDEX
 				// else check order of index
 				// else 404
@@ -295,9 +271,9 @@ class Webserv
 			location = config.get_location_by_uri(request._uri);
 			if (location == nullptr)
 			{
-				std::string string_with_slash = request._uri + "/";
+				// std::string string_with_slash = request._uri + "/";
 
-				location = config.get_location_by_uri(string_with_slash); //  TODO MOET DIT???? zodat /redirect ook werkt en niet alleen /redirect/
+				// location = config.get_location_by_uri(string_with_slash); //  TODO MOET DIT???? zodat /redirect ook werkt en niet alleen /redirect/
 				if (location == nullptr)
 				{
 					/* No Location Block found: use default config */
@@ -317,26 +293,44 @@ class Webserv
 			return (200); // 200 OK
 		}
 		/* Methods */
-		void get(Job *job, Request &request, ServerConfiguration &config)
+		int generate_autoindex(Job *job, std::string &uri, std::string &body)
 		{
-			std::cout << "GET" << std::endl;
-			(void)job;
-			(void)request;
-			(void)config;
-		}
-		void post(Job *job, Request &request, ServerConfiguration &config)
-		{
-			std::cout << "POST" << std::endl;
-			(void)job;
-			(void)request;
-			(void)config;
-		}
-		void put(Job *job, Request &request, ServerConfiguration &config)
-		{
-			std::cout << "PUT" << std::endl;
-			(void)job;
-			(void)request;
-			(void)config;
+			body = "<html>\r\n<head>\r\n<title>Index of " + job->get_request().get_unedited_uri() + "</title>\r\n</head>\r\n<body>\r\n<h1>Index of " + job->get_request().get_unedited_uri() + "</h1>\r\n<hr>\r\n<pre>\r\n";
+			std::string		endBody = "\r\n</pre>\r\n<hr>\r\n</body>\r\n</html>\r\n";
+
+			DIR *dir;
+			struct dirent *diread;
+			std::string name;
+			struct stat sb;
+
+			if ((dir = opendir(job->get_request()._uri.c_str())) != nullptr)
+			{
+				while ((diread = readdir(dir)) != nullptr)
+				{
+					name.append(job->get_request()._uri);
+					name.append(diread->d_name);
+
+					if (lstat(name.c_str(), &sb) == -1)
+					{
+						perror("lstat");
+						exit(EXIT_FAILURE);
+					}
+					job->get_response().set_status_code(200);
+					job->get_response().set_default_headers("html");
+
+					body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctim, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
+					name.clear();
+				}
+				closedir(dir);
+				body.append(endBody);
+				return (0);
+			}
+			else
+			{
+				// TODO ERROR
+				body.clear();
+				return (1);
+			}
 		}
 		/* Accept a New Client */
 		int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
