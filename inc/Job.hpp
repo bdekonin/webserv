@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/21 15:41:39 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/21 15:44:11 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,7 @@ class Job
 			this->request = e.request;
 			this->response = e.response;
 			this->cgi = e.cgi;
+			this->correct_config = e.correct_config;
 			return *this;
 		}
 
