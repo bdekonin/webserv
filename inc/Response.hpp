@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/19 17:01:23 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/21 14:13:48 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,6 +109,10 @@ class Response
 			this->_headers.clear();
 			this->_body.clear();
 			this->_headers_map.clear();
+		}
+		bool is_body_empty()
+		{
+			return this->_body.empty();
 		}
 
 		void set_default_headers(std::string extension = "")

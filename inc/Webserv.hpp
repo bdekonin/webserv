@@ -17,7 +17,6 @@
 # include <cstring>
 # include <sys/socket.h>
 # include <netinet/in.h>
-# include <sys/stat.h> // stat
 
 
 # include "Configuration.hpp" // Base Class
@@ -30,7 +29,6 @@
 # include "Request.hpp" // Class that handles a request.
 # include "Response.hpp" // Class that handles a response.
 # include "utils.hpp"
-# include <dirent.h>
 
 
 #define getString(n) #n
@@ -167,22 +165,16 @@ class Webserv
 			return (0);
 		}
 
-		void file_read(Job *job, fd_set *copy_writefds, bool isRecursive = false)
+		char file_read(Job *job, fd_set *copy_writefds, bool isRecursive = false)
 		{
 			char type; // is file or directory
 			Configuration &config = job->correct_config;
 
 			type = job->get_path_options();
 
-			if (type == 'D')
-				if (job->get_request()._uri[job->get_request()._uri.size() - 1] != '/')
-					job->get_request()._uri += "/";
-
-
+			VAR(isRecursive);
 			VAR(job->get_request()._uri);
 			VAR(type);
-			
-			// type = '0';
 
 			if (job->get_response().get_status_code() != 0)
 			{
@@ -190,7 +182,12 @@ class Webserv
 			}
 			else if (type == '0') // NOT FOUND
 			{
-				job->get_response().set_404_response(config);
+				if (job->get_response().is_body_empty() == false)
+					;
+				else if (config.get_autoindex() == true)
+					job->generate_autoindex_add_respone(config);
+				else
+					job->get_response().set_404_response(config);
 			}
 			else if (type == 'X') // FORBIDDEN
 			{
@@ -202,21 +199,53 @@ class Webserv
 			}
 			else if (type == 'D') // DIRECTORY
 			{
-				
+				int i = 0;
+				bool hasIndex = false;
 				if (config.get_autoindex() == true)
-				{
-					std::string temp;
-					if (this->generate_autoindex(job, job->request._uri, temp) == 0)
-					{
-						job->get_response().set_body(temp);
-						job->get_response().set_content_length();
-					}
-					else
-						job->set_500_response(config);
-				}
+					job->generate_autoindex_add_respone(config);
 				else
 				{
-					job->get_response().set_405_response(config); // TESTING
+					/* Do files */
+					if (isRecursive == true)
+						throw std::runtime_error("Recursive is true, but type is D");
+
+					if (config.get_index().size() == 0)
+						config.get_index().push_back("index.html");
+
+					for (i = 0; i < config.get_index().size(); i++)
+					{
+						try
+						{
+							Job copy = *job;
+							copy.get_request()._uri = copy.get_request()._uri + config.get_index()[i];
+
+							char type2 = this->file_read(&copy, copy_writefds, true);
+							VAR(type2);
+							if (type2 == 'F')
+							{
+								job->get_response() = copy.get_response();
+								job->get_request() = copy.get_request(); 
+								hasIndex = true;
+								break;
+							}
+						}
+						catch(const std::exception& e)
+						{
+							std::cerr << e.what() << '\n';
+							exit(1);
+						}
+					}
+					if (hasIndex == false && config.get_autoindex() == true)
+					{
+						VAR("IN TOP IF STATEMENT");
+						job->generate_autoindex_add_respone(config);
+					}
+					else if (hasIndex == false)
+					{
+						VAR("IN SECOND IF STATEMENT");
+						job->get_response().set_404_response(config);
+					}
+					
 				}
 
 				// file read RECURIVE ???
@@ -232,6 +261,7 @@ class Webserv
 			}
 
 			job->set_client_response(copy_writefds);
+			return type;
 		}
 
 		void client_response(Job *job) // send response to client
@@ -293,45 +323,6 @@ class Webserv
 			return (200); // 200 OK
 		}
 		/* Methods */
-		int generate_autoindex(Job *job, std::string &uri, std::string &body)
-		{
-			body = "<html>\r\n<head>\r\n<title>Index of " + job->get_request().get_unedited_uri() + "</title>\r\n</head>\r\n<body>\r\n<h1>Index of " + job->get_request().get_unedited_uri() + "</h1>\r\n<hr>\r\n<pre>\r\n";
-			std::string		endBody = "\r\n</pre>\r\n<hr>\r\n</body>\r\n</html>\r\n";
-
-			DIR *dir;
-			struct dirent *diread;
-			std::string name;
-			struct stat sb;
-
-			if ((dir = opendir(job->get_request()._uri.c_str())) != nullptr)
-			{
-				while ((diread = readdir(dir)) != nullptr)
-				{
-					name.append(job->get_request()._uri);
-					name.append(diread->d_name);
-
-					if (lstat(name.c_str(), &sb) == -1)
-					{
-						perror("lstat");
-						exit(EXIT_FAILURE);
-					}
-					job->get_response().set_status_code(200);
-					job->get_response().set_default_headers("html");
-
-					body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctim, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
-					name.clear();
-				}
-				closedir(dir);
-				body.append(endBody);
-				return (0);
-			}
-			else
-			{
-				// TODO ERROR
-				body.clear();
-				return (1);
-			}
-		}
 		/* Accept a New Client */
 		int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
 		{

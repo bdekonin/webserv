@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/19 21:40:09 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/21 15:41:39 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,11 @@
 # include "Request.hpp"
 # include "Response.hpp"
 # include "User.hpp"
+
+
+# include <dirent.h>
+
+# include <sys/stat.h> // stat
 
 # define WAIT_FOR_CONNECTION 0 // READ | EVEN
 
@@ -67,6 +72,8 @@ class Job
 			this->fd = e.fd;
 			this->server = e.server;
 			this->user = e.user;
+			this->request = e.request;
+			this->response = e.response;
 			this->cgi = e.cgi;
 			return *this;
 		}
@@ -150,6 +157,18 @@ class Job
 			this->get_response().set_content_length();
 			// job->set_client_response(copy_writefds);
 		}
+	
+		void generate_autoindex_add_respone(Configuration &config)
+		{
+			std::string temp;
+			if (this->generate_autoindex(this, this->request._uri, temp) == 0)
+			{
+				this->get_response().set_body(temp);
+				this->get_response().set_content_length();
+			}
+			else
+				this->set_500_response(config);
+		}
 	public:
 		int				type;
 		int				fd;
@@ -195,7 +214,6 @@ class Job
 			ret = stat(path.c_str(), &sb);
 			if (ret < 0)
 				return '0'; // NOT FOUND
-			// if (S_ISDIR(sb.st_mode))
 			if (S_ISDIR(sb.st_mode) && uri[uri.size() - 1] == '/')
 			{
 				returnstat = sb.st_mode & S_IXUSR;
@@ -221,7 +239,46 @@ class Job
 		{
 			return this->get_path_options(this->request._uri);
 		}
-		
+	private:
+		int generate_autoindex(Job *job, std::string &uri, std::string &body)
+		{
+			body = "<html>\r\n<head>\r\n<title>Index of " + job->get_request().get_unedited_uri() + "</title>\r\n</head>\r\n<body>\r\n<h1>Index of " + job->get_request().get_unedited_uri() + "</h1>\r\n<hr>\r\n<pre>\r\n";
+			std::string		endBody = "\r\n</pre>\r\n<hr>\r\n</body>\r\n</html>\r\n";
+
+			DIR *dir;
+			struct dirent *diread;
+			std::string name;
+			struct stat sb;
+
+			if ((dir = opendir(job->get_request()._uri.c_str())) != nullptr)
+			{
+				while ((diread = readdir(dir)) != nullptr)
+				{
+					name.append(job->get_request()._uri);
+					name.append(diread->d_name);
+
+					if (lstat(name.c_str(), &sb) == -1)
+					{
+						perror("lstat");
+						exit(EXIT_FAILURE);
+					}
+					job->get_response().set_status_code(200);
+					job->get_response().set_default_headers("html");
+					if (__APPLE__)
+						body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctimespec, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
+					name.clear();
+				}
+				closedir(dir);
+				body.append(endBody);
+				return (0);
+			}
+			else
+			{
+				// TODO ERROR
+				body.clear();
+				return (1);
+			}
+		}
 };
 
 std::ostream&	operator<<(std::ostream& out, const Job &c)
