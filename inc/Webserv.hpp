@@ -137,6 +137,8 @@ class Webserv
 			job->request = Request(buffer);
 			this->create_correct_configfile(job->request, this->get_correct_server_configuration(job), job->correct_config, ConfigToChange_path);
 
+			std::cout << "Request:\n" << job->request << std::endl;
+
 			/* set file read */
 			if (job->request._method == "GET" && job->correct_config.is_method_allowed("GET") == true)
 			{
@@ -165,16 +167,15 @@ class Webserv
 			return (0);
 		}
 
-		char file_read(Job *job, fd_set *copy_writefds, bool isRecursive = false)
+		char file_read(Job *job, fd_set *copy_writefds, bool isRecursive = false, char type = '0')
 		{
-			char type; // is file or directory
 			Configuration &config = job->correct_config;
+			if (isRecursive == false)
+				type = job->get_path_options();
 
-			type = job->get_path_options();
-
-			VAR(isRecursive);
-			VAR(job->get_request()._uri);
-			VAR(type);
+			// VAR(isRecursive);
+			// VAR(job->get_request()._uri);
+			// VAR(type);
 
 			if (job->get_response().get_status_code() != 0)
 			{
@@ -200,8 +201,9 @@ class Webserv
 			else if (type == 'D') // DIRECTORY
 			{
 				int i = 0;
-				bool hasIndex = false;
-				if (config.get_autoindex() == true)
+				char copy_type;
+
+				if (config.get_autoindex() == true && job->get_request()._uri[job->get_request()._uri.size() - 1] != '/')
 					job->generate_autoindex_add_respone(config);
 				else
 				{
@@ -214,38 +216,23 @@ class Webserv
 
 					for (i = 0; i < config.get_index().size(); i++)
 					{
-						try
-						{
-							Job copy = *job;
-							copy.get_request()._uri = copy.get_request()._uri + config.get_index()[i];
+						Job copy = *job;
+						copy.get_request()._uri = copy.get_request()._uri + config.get_index()[i];
 
-							char type2 = this->file_read(&copy, copy_writefds, true);
-							VAR(type2);
-							if (type2 == 'F')
-							{
-								job->get_response() = copy.get_response();
-								job->get_request() = copy.get_request(); 
-								hasIndex = true;
-								break;
-							}
-						}
-						catch(const std::exception& e)
+						copy_type = copy.get_path_options();
+						this->file_read(&copy, copy_writefds, true, copy_type);
+						// VAR(copy_type);
+						if (copy_type == 'F')
 						{
-							std::cerr << e.what() << '\n';
-							exit(1);
+							job->get_request() = copy.get_request();
+							job->get_response() = copy.get_response();
+							break;
 						}
 					}
-					if (hasIndex == false && config.get_autoindex() == true)
-					{
-						VAR("IN TOP IF STATEMENT");
+					if (copy_type != 'F' && config.get_autoindex() == true)
 						job->generate_autoindex_add_respone(config);
-					}
-					else if (hasIndex == false)
-					{
-						VAR("IN SECOND IF STATEMENT");
+					else if (copy_type != 'F')
 						job->get_response().set_404_response(config);
-					}
-					
 				}
 
 				// file read RECURIVE ???
@@ -259,8 +246,8 @@ class Webserv
 			{
 				job->get_response().set_500_response(config);
 			}
-
-			job->set_client_response(copy_writefds);
+			if (isRecursive == false)
+				job->set_client_response(copy_writefds);
 			return type;
 		}
 

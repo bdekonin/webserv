@@ -7,6 +7,8 @@ https://stackoverflow.com/questions/39314086/what-does-it-mean-to-bind-a-socket-
 TUTS
 https://beej.us/guide/bgnet/html/
 
+https://trungams.github.io/2020-08-23-a-simple-http-server-from-scratch/
+
 CLIENTS FD AFTER SELECT()
 https://stackoverflow.com/questions/3444729/using-accept-and-select-at-the-same-time
 
@@ -30,3 +32,6 @@ These directives are inherited from the previous configuration level if and only
 error_page
 
 https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+
+CGI BINS ENVS
+https://www.tutorialspoint.com/python/python_cgi_programming.htm
