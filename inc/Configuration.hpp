@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/19 17:31:08 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/21 19:19:50 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,7 @@ class Configuration
 		bool is_method_allowed(const char *method)
 		{
 			std::string str(method);
-			return (this->is_method_allowed(str));
+			return (!this->is_method_allowed(str)); // 405!!!!!!!!!!!!!!!!!!!!
 		}
 		
 		// Setters

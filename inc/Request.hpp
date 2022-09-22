@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/19 13:21:35 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/21 20:24:28 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ class Request
 				this->set_header(lines[i]);
 
 			std::vector<std::string> request_line;
-			split(lines[0], " ", request_line);\
+			split(lines[0], " ", request_line);
 
 			to_upper(request_line[0]);
 
@@ -147,10 +147,10 @@ class Request
 std::ostream&	operator<<(std::ostream& out, const Request &c)
 {
 	out << c._method << " " << c._uri << " " << c._version << std::endl;
-	// for (auto it = c._headers_map.begin(); it != c._headers_map.end(); it++)
-	// {
-	// 	out << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
-	// }
+	for (std::map<std::string, std::string>::const_iterator it = c._headers_map.begin(); it != c._headers_map.end(); it++)
+	{
+		out << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
+	}
 	return out;
 }
 std::ostream&	operator<<(std::ostream& out, const Request *c)

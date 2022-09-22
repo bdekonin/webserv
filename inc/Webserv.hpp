@@ -137,7 +137,7 @@ class Webserv
 			job->request = Request(buffer);
 			this->create_correct_configfile(job->request, this->get_correct_server_configuration(job), job->correct_config, ConfigToChange_path);
 
-			std::cout << "Request:\n" << job->request << std::endl;
+			// std::cout << "Request:\n" << job->request << std::endl;
 
 			/* set file read */
 			if (job->request._method == "GET" && job->correct_config.is_method_allowed("GET") == true)
@@ -220,18 +220,20 @@ class Webserv
 						copy.get_request()._uri = copy.get_request()._uri + config.get_index()[i];
 
 						copy_type = copy.get_path_options();
+						if (copy_type == '0')
+							continue;
 						this->file_read(&copy, copy_writefds, true, copy_type);
 						// VAR(copy_type);
-						if (copy_type == 'F')
+						if (copy_type == 'F' || copy_type == 'X')
 						{
 							job->get_request() = copy.get_request();
 							job->get_response() = copy.get_response();
 							break;
 						}
 					}
-					if (copy_type != 'F' && config.get_autoindex() == true)
+					if (copy_type != 'F'  && copy_type != 'X' && config.get_autoindex() == true)
 						job->generate_autoindex_add_respone(config);
-					else if (copy_type != 'F')
+					else if (copy_type != 'F' && copy_type != 'X')
 						job->get_response().set_404_response(config);
 				}
 

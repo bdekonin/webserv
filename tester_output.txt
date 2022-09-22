@@ -1,0 +1,415 @@
+Request :
+[GET / HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 200 OK
+Content-Length: 30
+Content-Location: /index.html
+Content-Type: text/html
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 17:09:08 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+This is the default index yo!
+]
+
+Received a connection !   
+Request :
+[POST / HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Transfer-Encoding: chunked
+Content-Type: test/file
+Accept-Encoding: gzip
+
+
+
+]
+Response :                
+[HTTP/1.1 405 Method Not Allowed
+Allow: GET
+Content-Length: 0
+Content-Location: /
+Content-Type: text/plain
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 16:40:42 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+]
+
+Received a connection !   
+Request :
+[HEAD / HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+
+]
+Response :                
+[HTTP/1.1 405 Method Not Allowed
+Allow: GET
+Content-Length: 0
+Content-Location: /
+Content-Type: text/plain
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 16:40:42 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+]
+
+Received a connection !   
+Request :
+[GET /directory HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 200 OK
+Content-Length: 30
+Content-Location: /index.html
+Content-Type: text/html
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 17:09:08 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+This is the default index yo!
+]
+
+Received a connection !   
+Request :
+[GET /directory/youpi.bad_extension HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 200 OK
+Content-Length: 4
+Content-Location: /youpi.bad_extension
+Content-Type: text/plain
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 17:09:08 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+Nope]
+
+Received a connection !   
+Request :
+[GET /directory/youpi.bla HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 200 OK
+Content-Length: 0
+Content-Location: /directory/youpi.bla
+Content-Type: text/plain
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 17:09:08 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+]
+
+Received a connection !   
+Request :
+[GET /directory/oulalala HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 404 Not Found
+Content-Length: 189
+Content-Location: /oulalala
+Content-Type: text/html
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+<!DOCTYPE html>
+<html>
+        <title>404 Not Found</title>
+        <body>
+                <div>
+                        <H1>404 Not Found</H1>
+                        <p>Unable to find a representation of the requested resource</p>
+                </div>
+        </body>
+</html>
+]
+
+Received a connection !   
+Request :
+[GET /directory/nop HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 200 OK
+Content-Length: 15
+Content-Location: /nop/youpi.bad_extension
+Content-Type: text/plain
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 17:09:08 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+bad extension?
+]
+
+Received a connection !   
+Request :
+[GET /directory/nop/ HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 200 OK
+Content-Length: 15
+Content-Location: /nop/youpi.bad_extension
+Content-Type: text/plain
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 17:09:08 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+bad extension?
+]
+
+Received a connection !   
+Request :
+[GET /directory/nop/other.pouic HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 200 OK
+Content-Length: 14
+Content-Location: /nop/other.pouic
+Content-Type: text/plain
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 17:09:08 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+pouic content
+]
+
+Received a connection !   
+Request :
+[GET /directory/nop/other.pouac HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 404 Not Found
+Content-Length: 189
+Content-Location: /nop/other.pouac
+Content-Type: text/html
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+<!DOCTYPE html>
+<html>
+        <title>404 Not Found</title>
+        <body>
+                <div>
+                        <H1>404 Not Found</H1>
+                        <p>Unable to find a representation of the requested resource</p>
+                </div>
+        </body>
+</html>
+]
+
+Received a connection !   
+Request :
+[GET /directory/Yeah HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 404 Not Found
+Content-Length: 189
+Content-Location: /Yeah
+Content-Type: text/html
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 17:09:08 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+<!DOCTYPE html>
+<html>
+        <title>404 Not Found</title>
+        <body>
+                <div>
+                        <H1>404 Not Found</H1>
+                        <p>Unable to find a representation of the requested resource</p>
+                </div>
+        </body>
+</html>
+]
+
+Received a connection !   
+Request :
+[GET /directory/Yeah/not_happy.bad_extension HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+]
+Response :                
+[HTTP/1.1 200 OK
+Content-Length: 12
+Content-Location: /Yeah/not_happy.bad_extension
+Content-Type: text/plain
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Last-Modified: Wed, 21 Sep 2022 17:09:08 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+unhappyyyyy
+]
+
+Received a connection !   
+Request :
+[PUT /put_test/file_should_exist_after HTTP/1.1
+Host: 127.0.0.1:8000
+User-Agent: Go-http-client/1.1
+Transfer-Encoding: chunked
+Accept-Encoding: gzip
+
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee...eeeeee
+
+]
+Response :                
+[HTTP/1.1 403 Forbidden
+Content-Length: 202
+Content-Location: /file_should_exist_after
+Content-Type: text/html
+Date: Wed, 21 Sep 2022 17:12:48 GMT
+Server: Weebserv/1.0.0 (Unix)
+Transfer-Encoding: identity
+
+<!DOCTYPE html>
+<html>
+        <title>403 Forbidden</title>
+        <body>
+                <div>
+                        <H1>403 Forbidden</H1>
+                        <p>This request cannot be authorized (invalid permissions or credentials)</p>
+                </div>
+        </body>
+</html>
+]
+
+
+
+
+
+
+
+
+
+
+
+Test GET http://127.0.0.1:8000/
+content returned: This is the default index yo!
+
+
+Test POST http://127.0.0.1:8000/ with a size of 0
+
+Test HEAD http://127.0.0.1:8000/
+
+Test GET http://127.0.0.1:8000/directory
+content returned: This is the default index yo!
+
+
+Test GET http://127.0.0.1:8000/directory/youpi.bad_extension
+content returned: Nope
+
+Test GET http://127.0.0.1:8000/directory/youpi.bla
+content returned: 
+
+Test GET Expected 404 on http://127.0.0.1:8000/directory/oulalala
+content returned: <!DOCTYPE html>
+<html>
+        <title>404 Not Found</title>
+        <body>
+                <div>
+                        <H1>404 Not Found</H1>
+                        <p>Unable to find a representation of the requested resource</p>
+                </div>
+        </body>
+</html>
+
+
+Test GET http://127.0.0.1:8000/directory/nop
+content returned: bad extension?
+
+
+Test GET http://127.0.0.1:8000/directory/nop/
+content returned: bad extension?
+
+
+Test GET http://127.0.0.1:8000/directory/nop/other.pouic
+content returned: pouic content
+
+
+Test GET Expected 404 on http://127.0.0.1:8000/directory/nop/other.pouac
+content returned: <!DOCTYPE html>
+<html>
+        <title>404 Not Found</title>
+        <body>
+                <div>
+                        <H1>404 Not Found</H1>
+                        <p>Unable to find a representation of the requested resource</p>
+                </div>
+        </body>
+</html>
+
+
+Test GET Expected 404 on http://127.0.0.1:8000/directory/Yeah
+content returned: <!DOCTYPE html>
+<html>
+        <title>404 Not Found</title>
+        <body>
+                <div>
+                        <H1>404 Not Found</H1>
+                        <p>Unable to find a representation of the requested resource</p>
+                </div>
+        </body>
+</html>
+
+
+Test GET http://127.0.0.1:8000/directory/Yeah/not_happy.bad_extension
+content returned: unhappyyyyy
+
+
+Test Put http://127.0.0.1:8000/put_test/file_should_exist_after with a size of 1000
+FATAL ERROR ON LAST TEST: bad status code
