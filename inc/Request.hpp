@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/21 20:24:28 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/22 18:34:26 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,12 +30,17 @@
 # include "utils.hpp"
 # include "Job.hpp"
 
+#define getString(n) #n
+#define VARRR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
+#define PRINT(var) std::cout << var << std::endl
+
+
 class Request
 {
 	public:
 		/* Constructor  */
 		Request()
-		: _method(""), _uri(""), _version("")
+		: _method(""), _uri(""), _version(""), _body("")
 		{
 			this->_headers_map = std::map<std::string, std::string>();
 		}
@@ -70,6 +75,15 @@ class Request
 			this->_unedited_uri = this->_uri;
 
 			this->_version = request_line[2];
+
+			if (this->_method == "POST")
+			{
+				this->_body = lines[lines.size() - 1];
+				lines.pop_back();
+			}
+			VARRR(this->_body);
+			VARRR(this->_body.size());
+			VARRR(this->_headers_map["Content-Length"]);
 		}
 
 		/* Destructor */
@@ -116,8 +130,6 @@ class Request
 
 			identifier = ft_strtrim(identifier, whitespaces); // TODO WHITESPACES
 			value = ft_strtrim(value, whitespaces);
-
-			// std::cout << "[" << identifier << "]\t[" << value << "]\n";
 			this->_headers_map[identifier] = value;
 		}
 		void clear()
@@ -139,6 +151,8 @@ class Request
 		std::string _method;
 		std::string _uri;
 		std::string _version;
+
+		std::string _body;
 
 	private:
 		std::string _unedited_uri; // uri unedited
