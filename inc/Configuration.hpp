@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/21 19:19:50 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/03 23:05:36 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,7 @@ class Configuration
 		bool is_method_allowed(const char *method)
 		{
 			std::string str(method);
-			return (!this->is_method_allowed(str)); // 405!!!!!!!!!!!!!!!!!!!!
+			return (this->is_method_allowed(str)); // 405!!!!!!!!!!!!!!!!!!!!
 		}
 		
 		// Setters
@@ -137,6 +137,13 @@ class Configuration
 		}
 		void set_methods(std::string &s)
 		{
+			if (this->_isSet["methods"] == false)
+			{
+				this->_methods[0] = false; // GET
+				this->_methods[1] = false; // POST
+				this->_methods[2] = false; // DELETE
+			}
+
 			std::vector<std::string> v;
 
 			this->remove_semicolen(s);
@@ -155,11 +162,11 @@ class Configuration
 					v[i][j] = std::toupper(v[i][j]);
 
 				if (v[i] == "GET")
-					this->_methods[0] = false;
+					this->_methods[0] = true;
 				else if (v[i] == "POST")
-					this->_methods[1] = false;
+					this->_methods[1] = true;
 				else if (v[i] == "DELETE")
-					this->_methods[2] = false;
+					this->_methods[2] = true;
 				else
 					throw std::runtime_error("config: methods has a forbidden argument");
 			}

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/21 19:16:18 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/04 15:12:57 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,9 @@
 
 # define CGI_WRITE 5 // WRITE | ODD
 # define CGI_READ 6 // READ | EVEN
+
+
+
 
 #define getString(n) #n
 #define VARR(var) std::cerr << std::boolalpha << __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
@@ -87,6 +90,14 @@ class Job
 		{
 			return (this->type % 2 == 1);
 		}
+		bool is_server()
+		{
+			return (this->type == WAIT_FOR_CONNECTION);
+		}
+		bool is_client()
+		{
+			return (!this->is_server());
+		}
 
 		Response &get_response()
 		{
@@ -102,6 +113,7 @@ class Job
 			this->request.clear();
 			this->response.clear();
 			this->correct_config = Configuration();
+			// delete this->user; // TODO MUST? DO???? CHECK WEBSERV.hpp 353
 		}
 
 		void parse_request(std::string &ConfigToChange_path)
@@ -119,7 +131,6 @@ class Job
 				std::string path = this->request._uri;
 				path.replace(path.find(ConfigToChange_path), ConfigToChange_path.size(), ConfigToChange_path);
 				this->request._uri = this->correct_config.get_root() + path;
-				VARR(this->request._uri);
 			}
 		}
 
@@ -136,7 +147,7 @@ class Job
 				if (config.get_cgi().find(extension) != config.get_cgi().end())
 				{
 					// DO CGI STUFF
-					this->get_response().set_405_response(config); // TESTING
+					this->get_response().set_500_response(config);
 					this->set_client_response(copy_writefds);
 					return ;
 				}
@@ -169,6 +180,64 @@ class Job
 			}
 			else
 				this->set_500_response(config);
+		}
+	
+		const char *num_to_define_name(const int num)
+		{
+			if (num == 0)
+				return ("WAIT_FOR_CONNECTION");
+			if (num == 1)
+				return ("CLIENT_RESPONSE");
+			if (num == 2)
+				return ("CLIENT_READ");
+			if (num == 3)
+				return ("FILE_WRITE");
+			if (num == 4)
+				return ("FILE_READ");
+			if (num == 5)
+				return ("CGI_WRITE");
+			if (num == 6)
+				return ("CGI_READ");
+			return ("UNSUPPORTED");
+		}
+	
+		void set_environment_variables()
+		{
+			char buffer[1024];
+			getcwd(buffer, 1024);
+
+			std::string				cwd = std::string(buffer) + '/';
+			
+			Request &r = this->get_request();
+			
+			this->_set_environment_variable("CONTENT_TYPE", r._headers_map["Content-Type"].c_str());
+			this->_set_environment_variable("CONTENT_LENGTH", std::to_string( r._body.size() ).c_str());
+			this->_set_environment_variable("GATEWAY_INTERFACE", "CGI/1.1");
+			this->_set_environment_variable("HTTP_ACCEPT", r._headers_map["Accept"].c_str());
+			this->_set_environment_variable("HTTP_ACCEPT_CHARSET", r._headers_map["Accept-Charset"].c_str());
+			this->_set_environment_variable("HTTP_ACCEPT_ENCODING", r._headers_map["Accept-Encoding"].c_str());
+			this->_set_environment_variable("HTTP_ACCEPT_LANGUAGE", r._headers_map["Accept-Language"].c_str());
+			this->_set_environment_variable("HTTP_CONNECTION", r._headers_map["Connection"].c_str());
+			this->_set_environment_variable("HTTP_HOST", r._headers_map["Host"].c_str());
+			this->_set_environment_variable("HTTP_USER_AGENT", r._headers_map["User-Agent"].c_str());
+			this->_set_environment_variable("PATH_INFO", r._uri.c_str());
+			this->_set_environment_variable("QUERY_STRING", ""); // NO QUERY STRING
+			this->_set_environment_variable("REDIRECT_STATUS", "true");
+			this->_set_environment_variable("REMOTE_ADDR", this->user->get_address().c_str());
+			this->_set_environment_variable("REQUEST_METHOD", r._method.c_str());
+			this->_set_environment_variable("SCRIPT_FILENAME", cwd + r._uri);
+
+			this->_set_environment_variable("SCRIPT_NAME", r.get_unedited_uri().c_str());
+			this->_set_environment_variable("SERVER_PORT", std::to_string(this->server->get_port()).c_str());
+			// if (this->server && this->server->get_hostname() != "")
+				this->_set_environment_variable("SERVER_NAME", this->server->get_hostname());
+			// else
+			// 	this->_set_environment_variable("SERVER_NAME", "localhost");
+			this->_set_environment_variable("SERVER_PROTOCOL", "HTTP/1.1");
+
+			this->_set_environment_variable("SERVER_SOFTWARE", "Webserver Codam 1.0");
+
+			
 		}
 	public:
 		int				type;
@@ -240,7 +309,22 @@ class Job
 		{
 			return this->get_path_options(this->request._uri);
 		}
+
 	private:
+		void	_set_environment_variable(const char *name, const char *value)
+		{
+			// std::cout << "setenv: " << name << " = " << value << std::endl;
+			if (setenv(name, value, 1) < 0)
+				exit(EXIT_FAILURE);
+		}
+		void	_set_environment_variable(const char *name, std::string &value)
+		{
+			this->_set_environment_variable(name, value.c_str());
+		}
+		void	_set_environment_variable(const char *name, std::string value)
+		{
+			this->_set_environment_variable(name, value.c_str());
+		}
 		int generate_autoindex(Job *job, std::string &uri, std::string &body)
 		{
 			body = "<html>\r\n<head>\r\n<title>Index of " + job->get_request().get_unedited_uri() + "</title>\r\n</head>\r\n<body>\r\n<h1>Index of " + job->get_request().get_unedited_uri() + "</h1>\r\n<hr>\r\n<pre>\r\n";

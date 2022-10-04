@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/19 17:29:20 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/09/30 19:56:34 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,10 @@ class Parser
 				this->parse_block(blocks[i], temp_server, temp_server);
 				servers.push_back(temp_server);
 			}
+			for (size_t i = 0; i < servers.size(); i++)
+				for (size_t j = 0; j < servers[i].get_locations().size(); j++)
+					servers[i].get_locations()[j].get_cgi().insert(servers[i].get_cgi().begin(), servers[i].get_cgi().end());
+
 			return (servers);
 		}
 

@@ -1,0 +1,45 @@
+
+this->_trySetVar("CONTENT_TYPE", request.getHeader("Content-Type"));
+
+this->_trySetVar("CONTENT_LENGTH", request.getBodyLengthString().c_str());
+
+this->_trySetVar("GATEWAY_INTERFACE", "CGI/1.1");
+
+this->_trySetVar("HTTP_ACCEPT", request.getHeader("Accept"));
+
+this->_trySetVar("HTTP_ACCEPT_CHARSET", request.getHeader("Accept-Charset"));
+
+this->_trySetVar("HTTP_ACCEPT_ENCODING", request.getHeader("Accept-Encoding"));
+
+this->_trySetVar("HTTP_ACCEPT_LANGUAGE", request.getHeader("Accept-Language"));
+
+this->_trySetVar("HTTP_CONNECTION", request.getHeader("Connection"));
+
+this->_trySetVar("HTTP_HOST", request.getHeader("Host"));
+
+this->_trySetVar("HTTP_USER_AGENT", request.getHeader("User-Agent"));
+
+this->_trySetVar("PATH_INFO", root + URI);
+
+this->_trySetVar("QUERY_STRING", request.getQueryString());
+
+this->_trySetVar("REDIRECT_STATUS", "true");
+
+this->_trySetVar("REMOTE_ADDR", task.client->getAddress());
+
+this->_trySetVar("REQUEST_METHOD", request.getMethod());
+
+this->_trySetVar("SCRIPT_FILENAME", cwd + root + URI);
+
+this->_trySetVar("SCRIPT_NAME", URI);
+
+
+
+this->_trySetVar("SERVER_NAME", request.getMatchedServerName());
+
+this->_trySetVar("SERVER_PORT", request.getPort());
+
+this->_trySetVar("SERVER_PROTOCOL", "HTTP/1.1");
+
+this->_trySetVar("SERVER_SOFTWARE", "Spinnenwebservetjes v1.337");
+ 

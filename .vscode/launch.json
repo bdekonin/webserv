@@ -5,11 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(lldb) Launch rpet",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/rpet/webserv",
+            "args": ["rpet/config/posttest_config.conf"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        },
+        {
             "name": "(lldb) Launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/webserv",
-            "args": ["config/tester.conf"],
+            "args": ["config/posttest_config.conf"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

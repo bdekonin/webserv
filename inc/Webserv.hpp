@@ -92,6 +92,48 @@ class Webserv
 							// check redirect
 							this->file_read(job, &copy_writefds);
 						}
+						else if ( job->type == CGI_WRITE)
+						{
+							std::string body(job->request._body.begin(), job->request._body.end());
+
+							// std::cout << "string: " << body << std::endl;
+							// std::cout << "CGI_WRITE: body = " << body.size() << std::endl;
+							job->set_500_response(job->correct_config);
+							job->set_client_response(&copy_writefds);
+							job->set_environment_variables();
+
+
+
+							std::ofstream out("output.txt");
+
+							out << "CONTENT_TYPE"			<< ": " << std::getenv("CONTENT_TYPE") << std::endl;
+							out << "CONTENT_LENGTH"			<< ": " << std::getenv("CONTENT_LENGTH") << std::endl;
+							out << "GATEWAY_INTERFACE"		<< ": " << std::getenv("GATEWAY_INTERFACE") << std::endl;
+							out << "HTTP_ACCEPT"			<< ": " << std::getenv("HTTP_ACCEPT") << std::endl;
+							out << "HTTP_ACCEPT_CHARSET"	<< ": " << std::getenv("HTTP_ACCEPT_CHARSET") << std::endl;
+							out << "HTTP_ACCEPT_ENCODING"	<< ": " << std::getenv("HTTP_ACCEPT_ENCODING") << std::endl;
+							out << "HTTP_ACCEPT_LANGUAGE"	<< ": " << std::getenv("HTTP_ACCEPT_LANGUAGE") << std::endl;
+							out << "HTTP_CONNECTION"		<< ": " << std::getenv("HTTP_CONNECTION") << std::endl;
+							out << "HTTP_HOST"				<< ": " << std::getenv("HTTP_HOST") << std::endl;
+							out << "HTTP_USER_AGENT"		<< ": " << std::getenv("HTTP_USER_AGENT") << std::endl;
+							out << "PATH_INFO"				<< ": " << std::getenv("PATH_INFO") << std::endl;
+							out << "QUERY_STRING"			<< ": " << std::getenv("QUERY_STRING") << std::endl;
+							out << "REDIRECT_STATUS"		<< ": " << std::getenv("REDIRECT_STATUS") << std::endl;
+							out << "REMOTE_ADDR"			<< ": " << std::getenv("REMOTE_ADDR") << std::endl;
+							out << "REQUEST_METHOD"			<< ": " << std::getenv("REQUEST_METHOD") << std::endl;
+							out << "SCRIPT_FILENAME"		<< ": " << std::getenv("SCRIPT_FILENAME") << std::endl;
+							out << "SCRIPT_NAME"			<< ": " << std::getenv("SCRIPT_NAME") << std::endl;
+							out << "SERVER_NAME"			<< ": " << std::getenv("SERVER_NAME") << std::endl;
+							out << "SERVER_PORT"			<< ": " << std::getenv("SERVER_PORT") << std::endl;
+							out << "SERVER_PROTOCOL"		<< ": " << std::getenv("SERVER_PROTOCOL") << std::endl;
+							out << "SERVER_SOFTWARE"		<< ": " << std::getenv("SERVER_SOFTWARE") << std::endl;
+
+							out << body;
+							out.close();
+
+							// system("bash");
+							exit(0);
+						}
 						// else other job->type
 					}
 				}
@@ -130,38 +172,64 @@ class Webserv
 				std::cout << "Client " << job->fd << " disconnected." << std::endl;
 				FD_CLR(job->fd, &this->read_fds);
 				FD_CLR(job->fd, &this->write_fds);
+				delete job->user;
 				this->jobs.erase(job->fd);
 				return (0);
 			}
+			VAR(job->request.is_empty());
 			// TODO is Chunked? if so, read until 0\r
 			job->request = Request(buffer);
 			this->create_correct_configfile(job->request, this->get_correct_server_configuration(job), job->correct_config, ConfigToChange_path);
 
-			// std::cout << "Request:\n" << job->request << std::endl;
+			// if (job->request == CHUNKED) TODO
+			VAR(job->request);
+			VAR(job->get_request().is_complete());
+			VAR(bytesRead);
 
-			/* set file read */
-			if (job->request._method == "GET" && job->correct_config.is_method_allowed("GET") == true)
+			// bytesRead 
+
+
+			std::string &method = job->request._method;
+			bool get = method == "GET";
+			bool post = method == "POST";
+			bool del = method == "DELETE";
+			std::string &uri = job->get_request()._uri;
+			std::string extension = uri.substr(uri.find_last_of(".") + 1);
+
+			if (extension == uri)
+				extension = "";
+			if (get == true && job->correct_config.is_method_allowed("GET") == false)
+				get = false;
+			if (post == true && job->correct_config.is_method_allowed("POST") == false)
+				post = false;
+			if (del == true && job->correct_config.is_method_allowed("DELETE") == false)
+				del = false;
+
+			std::map<std::string, std::string>::iterator it;
+			it = job->correct_config.get_cgi().find("." + extension);
+
+			if (del == true) // method is DELETE
 			{
-				loop_job_counter--;
-				job->type = FILE_READ; // MOET FILE_READ ZIJN
-			}
-			else if (job->request._method == "POST" && job->correct_config.is_method_allowed("POST") == true)
-			{
-				// *loop_job_counter--;
 				job->type = FILE_WRITE;
 			}
-			else if (job->request._method == "DELETE" && job->correct_config.is_method_allowed("DELETE") == true)
+			else if (extension != "" &&  it != job->correct_config.get_cgi().end())
 			{
-				// *loop_job_counter--;
-				job->type = FILE_WRITE;
+				if (get == true)
+					job->type = CGI_READ;
+				else
+					job->type = CGI_WRITE;
 			}
 			else
 			{
-				// *loop_job_counter--;
-				job->set_405_response(job->correct_config);
-				job->set_client_response(copy_writefds);
+				if (get == true)
+					job->type = FILE_READ;
+				else
+				{
+					job->set_405_response(job->correct_config);
+					job->set_client_response(copy_writefds);
+				}
 			}
-
+			loop_job_counter--;
 			/* Parse Request */
 			job->parse_request(ConfigToChange_path);
 			return (0);
@@ -303,6 +371,8 @@ class Webserv
 			}
 			ConfigToChange = *location;
 			ConfigToChange_path = location->get_path();
+
+
 			return (0);
 		}
 		size_t			method_handling(Request &request, Configuration &config)
@@ -315,15 +385,17 @@ class Webserv
 		/* Accept a New Client */
 		int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
 		{
-			struct sockaddr_in client_address;
+			struct sockaddr_in *client_address = new struct sockaddr_in;
 			int address_size = sizeof(struct sockaddr_in);
-			size_t client_fd = accept(job->fd, (struct sockaddr*)&client_address, (socklen_t*)&address_size);
+			bzero(client_address, address_size);
+			
+			size_t client_fd = accept(job->fd, (struct sockaddr*)client_address, (socklen_t*)&address_size);
 			if (client_fd < 0)
 				throw std::runtime_error("accept: failed to accept.");
 
-			User user(client_fd, &client_address);
+			User *user = new User(client_fd, client_address); // TODO FREE WHEN JOB IS
 			fcntl(client_fd, F_SETFL, O_NONBLOCK);
-			jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, &user);
+			jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, user);
 
 			if (client_fd > this->_max_fd)
 				this->_max_fd = client_fd;
@@ -368,8 +440,11 @@ class Webserv
 					if (it == this->servers.end())
 					{
 						std::cout << "Creating server on port " << ports[j].second << std::endl;
-						s = openSocket(ports[j].second);
-						h = (char*)ports[j].first.c_str();
+						s = openSocket(ports[j].second, ports[j].first.c_str());
+						h = strdup(ports[j].first.c_str());
+						if (h == NULL)
+							throw std::runtime_error("strdup: failed to duplicate string.");
+						// std::cout << "[" << h << "]" << std::endl;
 						p = ports[j].second;
 						this->servers[ports[j].second] = Server(s, h, p, this->configs[i]);
 					}
@@ -396,9 +471,15 @@ class Webserv
 			bzero(&sock_struct, sizeof(sock_struct));
 			sock_struct.sin_family = AF_INET;
 			if (strcmp(hostname, "") == 0)
+			{
+				// std::cout << "hostname is empty" << std::endl;
 				sock_struct.sin_addr.s_addr = htonl(INADDR_ANY);
+			}
 			else
+			{
+				// std::cout << "hostname: " << hostname << std::endl;
 				sock_struct.sin_addr.s_addr = inet_addr(hostname);
+			}
 			sock_struct.sin_port = htons(port);
 
 			if (bind(socketFD, (struct sockaddr*)&sock_struct, sizeof(sock_struct)) < 0)
@@ -434,6 +515,7 @@ class Webserv
 						default_server = job_configs[k];
 				}
 			}
+
 			return default_server;
 		}
 		size_t get_port_from_job(Job *job)

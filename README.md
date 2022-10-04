@@ -35,3 +35,8 @@ https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 
 CGI BINS ENVS
 https://www.tutorialspoint.com/python/python_cgi_programming.htm
+
+https://www.oreilly.com/openbook/cgi/ch04_02.html
+
+https://www6.uniovi.es/~antonio/ncsa_httpd/cgi/env.html
+
