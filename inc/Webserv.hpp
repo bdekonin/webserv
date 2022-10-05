@@ -97,7 +97,7 @@ class Webserv
 							std::string body(job->request._body.begin(), job->request._body.end());
 
 							// std::cout << "string: " << body << std::endl;
-							// std::cout << "CGI_WRITE: body = " << body.size() << std::endl;
+							std::cout << "CGI_WRITE: body = " << body.size() << std::endl;
 							job->set_500_response(job->correct_config);
 							job->set_client_response(&copy_writefds);
 							job->set_environment_variables();
@@ -132,6 +132,7 @@ class Webserv
 							out.close();
 
 							// system("bash");
+							std::cerr << "DONE" << std::endl;
 							exit(0);
 						}
 						// else other job->type
@@ -163,7 +164,7 @@ class Webserv
 			std::string ConfigToChange_path = "";
 			// std::cout << job->fd << " Reading request Client\n";
 			char	buffer[4096 + 1];
-			int		bytesRead;
+			int		bytesRead = 0;
 			bzero(buffer, 4096 + 1);
 			bytesRead = recv(job->fd, buffer, 4096, 0);
 			if (bytesRead <= 0)
@@ -176,17 +177,38 @@ class Webserv
 				this->jobs.erase(job->fd);
 				return (0);
 			}
-			VAR(job->request.is_empty());
+
 			// TODO is Chunked? if so, read until 0\r
-			job->request = Request(buffer);
+			job->request.add_incoming_data(buffer);
+
+
+			VAR(job->request.is_complete());
+
+			if (job->request.is_complete() == false)
+				return (1); 
+
+			
+			VAR(bytesRead);
+
+			exit(1);
+			job->request.setup();
+
+
+
+
 			this->create_correct_configfile(job->request, this->get_correct_server_configuration(job), job->correct_config, ConfigToChange_path);
 
 			// if (job->request == CHUNKED) TODO
-			VAR(job->request);
+			VAR(job->request.is_empty());
+			// VAR(job->request);
 			VAR(job->get_request().is_complete());
 			VAR(bytesRead);
+			VAR(job->request._body.size());
+			VAR(job->request._headers_map["content-length"]);
+			VAR(job->request.enum_to_char_p(job->request._type));
+			VAR(job->request.is_bad_request());
 
-			// bytesRead 
+
 
 
 			std::string &method = job->request._method;
@@ -195,7 +217,13 @@ class Webserv
 			bool del = method == "DELETE";
 			std::string &uri = job->get_request()._uri;
 			std::string extension = uri.substr(uri.find_last_of(".") + 1);
+			
+			
+			VAR(get);
+			VAR(post);
+			VAR(del);
 
+			exit(4);
 			if (extension == uri)
 				extension = "";
 			if (get == true && job->correct_config.is_method_allowed("GET") == false)
@@ -341,6 +369,7 @@ class Webserv
 			job->clear();
 			this->jobs[job->fd].clear();
 			this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
+			std::cout << "\n\n" << std::endl;
 		}
 
 

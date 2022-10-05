@@ -6,11 +6,13 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/19 21:30:23 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/05 13:22:17 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "inc/utils.hpp"
+# include "inc/utils.hpp"
+# include <cstring>
+
 
 // std::string create_autoindex_line(std::string &path, char *name, struct timespec ts, unsigned long bytes)
 std::string create_autoindex_line(const std::string &path, const char *name, const struct timespec ts, const unsigned long bytes, bool is_file)
@@ -178,4 +180,19 @@ std::string		ft_strtrim(std::string &s1, const char *set)
 		return (std::string(""));
 	str = s1.substr(left, right - left + 1);
 	return (str);
+}
+
+char *ft_strnstr(const char *s1, const char *s2, size_t len)
+{
+	size_t l2;
+	l2 = strlen(s2);
+	if (!l2)
+		return (char *)s1;
+	while (len >= l2) {
+		len--;
+		if (!memcmp(s1, s2, l2))
+			return (char *)s1;
+		s1++;
+	}
+	return NULL;
 }
