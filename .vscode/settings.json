@@ -72,5 +72,12 @@
 		"memory_resource": "cpp",
 		"numeric": "cpp",
 		"random": "cpp"
-	}
+	},
+	"makefile.launchConfigurations": [
+		{
+			"cwd": "/home/bob/webserv",
+			"binaryPath": "/home/bob/webserv/webserv",
+			"binaryArgs": []
+		}
+	]
 }

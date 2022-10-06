@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/04 15:12:57 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/06 14:38:21 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,29 +210,26 @@ class Job
 			
 			Request &r = this->get_request();
 			
-			this->_set_environment_variable("CONTENT_TYPE", r._headers_map["Content-Type"].c_str());
-			this->_set_environment_variable("CONTENT_LENGTH", std::to_string( r._body.size() ).c_str());
+			this->_set_environment_variable("CONTENT_TYPE", r.get_header("content-type").c_str());
+			this->_set_environment_variable("CONTENT_LENGTH", std::to_string( r._content_length ).c_str());
 			this->_set_environment_variable("GATEWAY_INTERFACE", "CGI/1.1");
-			this->_set_environment_variable("HTTP_ACCEPT", r._headers_map["Accept"].c_str());
-			this->_set_environment_variable("HTTP_ACCEPT_CHARSET", r._headers_map["Accept-Charset"].c_str());
-			this->_set_environment_variable("HTTP_ACCEPT_ENCODING", r._headers_map["Accept-Encoding"].c_str());
-			this->_set_environment_variable("HTTP_ACCEPT_LANGUAGE", r._headers_map["Accept-Language"].c_str());
-			this->_set_environment_variable("HTTP_CONNECTION", r._headers_map["Connection"].c_str());
-			this->_set_environment_variable("HTTP_HOST", r._headers_map["Host"].c_str());
-			this->_set_environment_variable("HTTP_USER_AGENT", r._headers_map["User-Agent"].c_str());
+			this->_set_environment_variable("HTTP_ACCEPT", r.get_header("accept").c_str());
+			this->_set_environment_variable("HTTP_ACCEPT_CHARSET", r.get_header("accept-charset").c_str());
+			this->_set_environment_variable("HTTP_ACCEPT_ENCODING", r.get_header("accept-encoding").c_str());
+			this->_set_environment_variable("HTTP_ACCEPT_LANGUAGE", r.get_header("accept-language").c_str());
+			this->_set_environment_variable("HTTP_CONNECTION", r.get_header("connection").c_str());
+			this->_set_environment_variable("HTTP_HOST", r.get_header("host").c_str());
+			this->_set_environment_variable("HTTP_USER_AGENT", r.get_header("user-agent").c_str());
 			this->_set_environment_variable("PATH_INFO", r._uri.c_str());
 			this->_set_environment_variable("QUERY_STRING", ""); // NO QUERY STRING
 			this->_set_environment_variable("REDIRECT_STATUS", "true");
 			this->_set_environment_variable("REMOTE_ADDR", this->user->get_address().c_str());
-			this->_set_environment_variable("REQUEST_METHOD", r._method.c_str());
+			this->_set_environment_variable("REQUEST_METHOD", r.method_to_s());
 			this->_set_environment_variable("SCRIPT_FILENAME", cwd + r._uri);
 
-			this->_set_environment_variable("SCRIPT_NAME", r.get_unedited_uri().c_str());
+			this->_set_environment_variable("SCRIPT_NAME", r._uri.c_str());
 			this->_set_environment_variable("SERVER_PORT", std::to_string(this->server->get_port()).c_str());
-			// if (this->server && this->server->get_hostname() != "")
-				this->_set_environment_variable("SERVER_NAME", this->server->get_hostname());
-			// else
-			// 	this->_set_environment_variable("SERVER_NAME", "localhost");
+			this->_set_environment_variable("SERVER_NAME", this->server->get_hostname());
 			this->_set_environment_variable("SERVER_PROTOCOL", "HTTP/1.1");
 
 			this->_set_environment_variable("SERVER_SOFTWARE", "Webserver Codam 1.0");

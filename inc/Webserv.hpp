@@ -94,17 +94,16 @@ class Webserv
 						}
 						else if ( job->type == CGI_WRITE)
 						{
-							std::string body(job->request._body.begin(), job->request._body.end());
+							std::vector<unsigned char>	&bodyVector = job->get_request()._body;
+							char						*body = reinterpret_cast<char*>(&bodyVector[0]);
 
-							// std::cout << "string: " << body << std::endl;
-							std::cout << "CGI_WRITE: body = " << body.size() << std::endl;
 							job->set_500_response(job->correct_config);
 							job->set_client_response(&copy_writefds);
 							job->set_environment_variables();
 
 
 
-							std::ofstream out("output.txt");
+							std::ofstream out("headers.txt");
 
 							out << "CONTENT_TYPE"			<< ": " << std::getenv("CONTENT_TYPE") << std::endl;
 							out << "CONTENT_LENGTH"			<< ": " << std::getenv("CONTENT_LENGTH") << std::endl;
@@ -127,11 +126,13 @@ class Webserv
 							out << "SERVER_PORT"			<< ": " << std::getenv("SERVER_PORT") << std::endl;
 							out << "SERVER_PROTOCOL"		<< ": " << std::getenv("SERVER_PROTOCOL") << std::endl;
 							out << "SERVER_SOFTWARE"		<< ": " << std::getenv("SERVER_SOFTWARE") << std::endl;
-
-							out << body;
 							out.close();
 
-							// system("bash");
+							int fd = open("body.txt", O_WRONLY | O_APPEND | O_CREAT, 0644);
+
+							write(fd, body, bodyVector.size());
+
+							system("/usr/bin/php-cgi < body.txt > cgi2.txt");
 							std::cerr << "DONE" << std::endl;
 							exit(0);
 						}
@@ -179,19 +180,16 @@ class Webserv
 			}
 
 			// TODO is Chunked? if so, read until 0\r
-			job->request.add_incoming_data(buffer);
+			job->request.add_incoming_data(buffer, bytesRead);
 
+			VAR(job->request.type_to_s());
 
-			VAR(job->request.is_complete());
-
+			// exit(printf("EXITING\n"));
 			if (job->request.is_complete() == false)
 				return (1); 
 
 			
 			VAR(bytesRead);
-
-			exit(1);
-			job->request.setup();
 
 
 
@@ -205,16 +203,16 @@ class Webserv
 			VAR(bytesRead);
 			VAR(job->request._body.size());
 			VAR(job->request._headers_map["content-length"]);
-			VAR(job->request.enum_to_char_p(job->request._type));
+			VAR(job->request.type_to_s());
 			VAR(job->request.is_bad_request());
 
 
 
 
-			std::string &method = job->request._method;
-			bool get = method == "GET";
-			bool post = method == "POST";
-			bool del = method == "DELETE";
+			// std::string &method = job->request._method;
+			bool get = job->request.is_method_get();
+			bool post = job->request.is_method_post();
+			bool del = job->request.is_method_delete();
 			std::string &uri = job->get_request()._uri;
 			std::string extension = uri.substr(uri.find_last_of(".") + 1);
 			
@@ -222,8 +220,6 @@ class Webserv
 			VAR(get);
 			VAR(post);
 			VAR(del);
-
-			exit(4);
 			if (extension == uri)
 				extension = "";
 			if (get == true && job->correct_config.is_method_allowed("GET") == false)
@@ -406,7 +402,7 @@ class Webserv
 		}
 		size_t			method_handling(Request &request, Configuration &config)
 		{
-			if (config.is_method_allowed(request._method) == false)
+			if (config.is_method_allowed(request.method_to_s()) == false)
 				return (405);
 			return (200); // 200 OK
 		}
