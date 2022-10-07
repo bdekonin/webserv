@@ -17,6 +17,8 @@
 # include <cstring>
 # include <sys/socket.h>
 # include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 
 # include "Configuration.hpp" // Base Class
@@ -95,48 +97,68 @@ class Webserv
 						else if ( job->type == CGI_WRITE)
 						{
 							std::vector<unsigned char>	&bodyVector = job->get_request()._body;
+							bodyVector.push_back('\0');
 							char						*body = reinterpret_cast<char*>(&bodyVector[0]);
 
-							job->set_500_response(job->correct_config);
+							std::string extension = job->get_request()._uri.substr(job->get_request()._uri.find_last_of("."));
+							std::cout << extension << std::endl;
+
+
+							std::string path = job->correct_config.get_cgi().find(extension)->second;
+							std::cout << path << std::endl;
+
+							pid_t pid;
+							int fd_out[2];
+							int fd_in[2];
+							bool post = job->get_request().is_method_post();
+							bool get = job->get_request().is_method_post();
+
+							if (pipe(fd_out) < 0)
+								throw std::runtime_error("pipe: failed to create pipe on fd_out.");
+							
+							if (post && pipe(fd_in) < 0)
+								throw std::runtime_error("pipe: failed to create pipe on fd_in.");
+
+							pid = fork();
+							if (pid < 0)
+								throw std::runtime_error("fork: failed to fork.");
+
+							if (pid == 0)
+							{
+								job->set_environment_variables();
+
+								close(fd_out[0]);
+
+								dup2(fd_out[1], 1);
+								close(fd_out[1]);
+								if (post)
+								{
+									close(fd_in[1]);
+									// write(fd_in[0], body, bodyVector.size());
+									dup2(fd_in[0], STDIN_FILENO);
+									close(fd_in[0]);
+								}
+								char	*args[2] = {const_cast<char*>(path.c_str()), NULL};
+								std::cerr << "executing: " << path << std::endl;
+								execv(path.c_str(), args);
+								exit(EXIT_FAILURE);
+							}
+							close(fd_out[1]);
+							if (post)
+							{
+								close(fd_in[0]);
+								write(fd_in[1], body, bodyVector.size());
+							}
+
+							if (get == true)
+								job->handle_file(fd_out[0], job->correct_config, true);
+							else if (post == true)
+								job->handle_file(fd_in[1], job->correct_config, true);
+							else
+								throw std::runtime_error("Something went terribbly wrong");
+							// exit(EXIT_SUCCESS);
 							job->set_client_response(&copy_writefds);
-							job->set_environment_variables();
-
-
-
-							std::ofstream out("headers.txt");
-
-							out << "CONTENT_TYPE"			<< ": " << std::getenv("CONTENT_TYPE") << std::endl;
-							out << "CONTENT_LENGTH"			<< ": " << std::getenv("CONTENT_LENGTH") << std::endl;
-							out << "GATEWAY_INTERFACE"		<< ": " << std::getenv("GATEWAY_INTERFACE") << std::endl;
-							out << "HTTP_ACCEPT"			<< ": " << std::getenv("HTTP_ACCEPT") << std::endl;
-							out << "HTTP_ACCEPT_CHARSET"	<< ": " << std::getenv("HTTP_ACCEPT_CHARSET") << std::endl;
-							out << "HTTP_ACCEPT_ENCODING"	<< ": " << std::getenv("HTTP_ACCEPT_ENCODING") << std::endl;
-							out << "HTTP_ACCEPT_LANGUAGE"	<< ": " << std::getenv("HTTP_ACCEPT_LANGUAGE") << std::endl;
-							out << "HTTP_CONNECTION"		<< ": " << std::getenv("HTTP_CONNECTION") << std::endl;
-							out << "HTTP_HOST"				<< ": " << std::getenv("HTTP_HOST") << std::endl;
-							out << "HTTP_USER_AGENT"		<< ": " << std::getenv("HTTP_USER_AGENT") << std::endl;
-							out << "PATH_INFO"				<< ": " << std::getenv("PATH_INFO") << std::endl;
-							out << "QUERY_STRING"			<< ": " << std::getenv("QUERY_STRING") << std::endl;
-							out << "REDIRECT_STATUS"		<< ": " << std::getenv("REDIRECT_STATUS") << std::endl;
-							out << "REMOTE_ADDR"			<< ": " << std::getenv("REMOTE_ADDR") << std::endl;
-							out << "REQUEST_METHOD"			<< ": " << std::getenv("REQUEST_METHOD") << std::endl;
-							out << "SCRIPT_FILENAME"		<< ": " << std::getenv("SCRIPT_FILENAME") << std::endl;
-							out << "SCRIPT_NAME"			<< ": " << std::getenv("SCRIPT_NAME") << std::endl;
-							out << "SERVER_NAME"			<< ": " << std::getenv("SERVER_NAME") << std::endl;
-							out << "SERVER_PORT"			<< ": " << std::getenv("SERVER_PORT") << std::endl;
-							out << "SERVER_PROTOCOL"		<< ": " << std::getenv("SERVER_PROTOCOL") << std::endl;
-							out << "SERVER_SOFTWARE"		<< ": " << std::getenv("SERVER_SOFTWARE") << std::endl;
-							out.close();
-
-							int fd = open("body.txt", O_WRONLY | O_APPEND | O_CREAT, 0644);
-
-							write(fd, body, bodyVector.size());
-
-							system("/usr/bin/php-cgi < body.txt > cgi2.txt");
-							std::cerr << "DONE" << std::endl;
-							exit(0);
 						}
-						// else other job->type
 					}
 				}
 				for (size_t loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
@@ -182,32 +204,11 @@ class Webserv
 			// TODO is Chunked? if so, read until 0\r
 			job->request.add_incoming_data(buffer, bytesRead);
 
-			VAR(job->request.type_to_s());
-
 			// exit(printf("EXITING\n"));
 			if (job->request.is_complete() == false)
 				return (1); 
 
-			
-			VAR(bytesRead);
-
-
-
-
 			this->create_correct_configfile(job->request, this->get_correct_server_configuration(job), job->correct_config, ConfigToChange_path);
-
-			// if (job->request == CHUNKED) TODO
-			VAR(job->request.is_empty());
-			// VAR(job->request);
-			VAR(job->get_request().is_complete());
-			VAR(bytesRead);
-			VAR(job->request._body.size());
-			VAR(job->request._headers_map["content-length"]);
-			VAR(job->request.type_to_s());
-			VAR(job->request.is_bad_request());
-
-
-
 
 			// std::string &method = job->request._method;
 			bool get = job->request.is_method_get();
@@ -215,11 +216,7 @@ class Webserv
 			bool del = job->request.is_method_delete();
 			std::string &uri = job->get_request()._uri;
 			std::string extension = uri.substr(uri.find_last_of(".") + 1);
-			
-			
-			VAR(get);
-			VAR(post);
-			VAR(del);
+
 			if (extension == uri)
 				extension = "";
 			if (get == true && job->correct_config.is_method_allowed("GET") == false)
@@ -265,10 +262,6 @@ class Webserv
 			if (isRecursive == false)
 				type = job->get_path_options();
 
-			// VAR(isRecursive);
-			// VAR(job->get_request()._uri);
-			// VAR(type);
-
 			if (job->get_response().get_status_code() != 0)
 			{
 				job->set_3xx_response(config);
@@ -288,7 +281,12 @@ class Webserv
 			}
 			else if (type == 'F') // FILE
 			{
-				job->handle_file(copy_writefds, config);
+				int fd;
+
+				fd = open(job->get_request()._uri.c_str(), O_RDONLY);
+				if (fd == -1)
+					job->get_response().set_500_response(config);
+				job->handle_file(fd, config);
 			}
 			else if (type == 'D') // DIRECTORY
 			{

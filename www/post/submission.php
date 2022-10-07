@@ -4,5 +4,5 @@ if (!empty($_GET))
 else if (!empty($_POST))
 	echo $_POST["name"] . " picked " . $_POST["game"] . " as their favourite game with POST method.";
 
-phpinfo();
+// phpinfo();
 ?>

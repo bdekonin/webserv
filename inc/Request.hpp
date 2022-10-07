@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/06 14:55:59 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/06 21:19:54 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,8 +111,8 @@ class Request
 
 				this->_request_line(headers);
 				this->_headers(headers);
-				for (auto it = this->_headers_map.begin(); it != this->_headers_map.end(); it++)
-					std::cout << it->first << " : " << it->second << std::endl;
+				// for (auto it = this->_headers_map.begin(); it != this->_headers_map.end(); it++)
+				// 	std::cout << it->first << " : " << it->second << std::endl;
 				this->_reading_mode();
 
 				std::vector<unsigned char>::iterator it = this->_incoming_data.begin();

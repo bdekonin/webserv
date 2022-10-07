@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/06 14:38:21 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/07 11:50:12 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,40 +134,30 @@ class Job
 			}
 		}
 
-		void handle_file(fd_set *copy_writefds, Configuration &config)
+		void handle_file(int fd, Configuration &config, bool is_cgi = false)
 		{
 			std::string &uri = this->get_request()._uri;
-			std::string extension = uri.substr(uri.find_last_of(".") + 1);
 
-			if (extension == uri)
-				extension = "";
-			
-			if (extension != "") // file has extension
-			{
-				if (config.get_cgi().find(extension) != config.get_cgi().end())
-				{
-					// DO CGI STUFF
-					this->get_response().set_500_response(config);
-					this->set_client_response(copy_writefds);
-					return ;
-				}
-			}
-			std::string path = this->get_request()._uri;
-			std::ifstream in(path, std::ios::in);
+			std::ifstream in(uri, std::ios::in);
 			if (!in)
 				this->get_response().set_500_response(config); // TODO check which error
 
 
 			this->get_response().set_status_code(200);
-			this->get_response().set_default_headers(extension);
+			this->get_response().set_default_headers(uri.substr(uri.find_last_of(".") + 1));
 
-			std::stringstream contents;
-			contents << in.rdbuf();
-			in.close();
-			this->get_response().set_body(contents.str());
-
+			int ret;
+			char buf[4096 + 1];
+			
+			bzero(buf, 4096 + 1);
+			while ((ret = read(fd, buf, 4096)) > 0)
+			{
+				this->get_response().set_body(buf, is_cgi);
+				if (ret < 4096)
+					break;
+				bzero(buf, 4096);
+			}
 			this->get_response().set_content_length();
-			// job->set_client_response(copy_writefds);
 		}
 	
 		void generate_autoindex_add_respone(Configuration &config)

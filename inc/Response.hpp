@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/21 14:13:48 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/07 12:25:30 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ class Response
 	public:
 		/* Constructor  */
 		Response()
-		: _status_code(0)
+		: _status_code(0), is_cgi(false)
 		{
 			ft::RespondCodes codes = ft::RespondCodes();
 			this->_response_codes = codes.get_respond_codes();
@@ -73,8 +73,9 @@ class Response
 		{
 			this->_headers_map[identifier] = value;
 		}
-		void set_body(const std::string &body)
+		void set_body(const std::string &body, bool is_cgi = false)
 		{
+			this->is_cgi = is_cgi;
 			this->_insert_chars_to_vector(this->_body, body);
 		}
 		void set_content_length()
@@ -94,12 +95,32 @@ class Response
 			this->build_headers();
 			total_response.insert(total_response.end(), this->_headers.begin(), this->_headers.end());
 
-			// this->_insert_chars_to_vector(total_response, "\r\n");
-			total_response.push_back('\r');
-			total_response.push_back('\n');
-			// Body
-			total_response.insert(total_response.end(), this->_body.begin(), this->_body.end());
+			if (this->is_cgi == false)
+			{
+				total_response.push_back('\r');
+				total_response.push_back('\n');
+			}
+			else
+			{
+				const char						*bod = reinterpret_cast<const char*>(&this->_body[0]);
+				int pos = ft_strnstr(bod, "\r\n", this->_body.size()) - bod;
+				std::cerr << "pos: " << pos << std::endl;
+				this->_body.erase(this->_body.begin(), this->_body.begin() + pos + 4);
 
+				std::cerr << "["; 
+				for (auto it = total_response.begin(); it != total_response.end(); it++)
+					std::cerr << *it;
+				std::cerr << "]" << std::endl; 
+
+				std::cout << "body: " << this->_body.size() << std::endl;
+				this->set_content_length();
+				std::cerr << "["; 
+				for (auto it = this->_body.begin(); it != this->_body.end(); it++)
+					std::cerr << *it;
+				std::cerr << "]";
+			}
+			// Body
+			total_response.insert(total_response.end(), this->_body.begin(), this->_body.begin() + this->_body.size());
 			return total_response;
 		}
 		void clear()
@@ -127,6 +148,7 @@ class Response
 		std::vector<char> _body;
 		std::map<int, std::string> _response_codes;
 		std::map<std::string, std::string> _headers_map;
+		bool is_cgi;
 
 		void _insert_chars_to_vector(std::vector<char> &vector, std::string string)
 		{
