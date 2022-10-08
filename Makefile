@@ -71,3 +71,8 @@ re:			fclean all
 .PHONY:		all clean fclean re
 
 
+chunk:
+	curl -X POST -H "Transfer-Encoding: chunked" -H Expect: -F 'file=@inc/Parser.hpp' localhost:8080/post/upload2.php
+
+upload:
+	curl -X POST -H Expect: -F 'file=@inc/Parser.hpp' localhost:8080/post/upload2.php

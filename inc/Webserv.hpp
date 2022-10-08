@@ -94,14 +94,13 @@ class Webserv
 							// check redirect
 							this->file_read(job, &copy_writefds);
 						}
-						else if ( job->type == CGI_WRITE)
+						else if ( job->type == CGI_WRITE || job->type == CGI_READ)
 						{
 							std::vector<unsigned char>	&bodyVector = job->get_request()._body;
 							bodyVector.push_back('\0');
 							char						*body = reinterpret_cast<char*>(&bodyVector[0]);
 
 							std::string extension = job->get_request()._uri.substr(job->get_request()._uri.find_last_of("."));
-							std::cout << extension << std::endl;
 
 
 							std::string path = job->correct_config.get_cgi().find(extension)->second;
@@ -111,7 +110,7 @@ class Webserv
 							int fd_out[2];
 							int fd_in[2];
 							bool post = job->get_request().is_method_post();
-							bool get = job->get_request().is_method_post();
+							bool get = job->get_request().is_method_get();
 
 							if (pipe(fd_out) < 0)
 								throw std::runtime_error("pipe: failed to create pipe on fd_out.");
@@ -123,6 +122,8 @@ class Webserv
 							if (pid < 0)
 								throw std::runtime_error("fork: failed to fork.");
 
+							std::cout << "pid: " << pid << std::endl;
+							std::cout << "path: " << path << std::endl;
 							if (pid == 0)
 							{
 								job->set_environment_variables();
@@ -134,12 +135,10 @@ class Webserv
 								if (post)
 								{
 									close(fd_in[1]);
-									// write(fd_in[0], body, bodyVector.size());
 									dup2(fd_in[0], STDIN_FILENO);
 									close(fd_in[0]);
 								}
 								char	*args[2] = {const_cast<char*>(path.c_str()), NULL};
-								std::cerr << "executing: " << path << std::endl;
 								execv(path.c_str(), args);
 								exit(EXIT_FAILURE);
 							}
@@ -153,10 +152,9 @@ class Webserv
 							if (get == true)
 								job->handle_file(fd_out[0], job->correct_config, true);
 							else if (post == true)
-								job->handle_file(fd_in[1], job->correct_config, true);
+								job->handle_file(fd_out[0], job->correct_config, true);
 							else
 								throw std::runtime_error("Something went terribbly wrong");
-							// exit(EXIT_SUCCESS);
 							job->set_client_response(&copy_writefds);
 						}
 					}
@@ -230,9 +228,7 @@ class Webserv
 			it = job->correct_config.get_cgi().find("." + extension);
 
 			if (del == true) // method is DELETE
-			{
 				job->type = FILE_WRITE;
-			}
 			else if (extension != "" &&  it != job->correct_config.get_cgi().end())
 			{
 				if (get == true)
@@ -345,9 +341,10 @@ class Webserv
 
 		void client_response(Job *job) // send response to client
 		{
-			std::vector<char> vec_response = job->response.build_response();
-			size_t response_size = vec_response.size();
-			char *response_char = reinterpret_cast<char*> (&vec_response[0]);
+			job->response.build_response_text();
+			std::vector<unsigned char> &response = job->response.get_response();
+			size_t response_size = response.size();
+			char *response_char = reinterpret_cast<char*> (&response[0]);
 
 			size_t bytes = 0;
 			while (response_size > 0) 

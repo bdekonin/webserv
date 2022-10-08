@@ -9,6 +9,10 @@ echo $fileType;
 echo "</pre>";
 
 echo "<pre>";
+echo $uploadfile;
+echo "</pre>";
+
+echo "<pre>";
 var_dump($_POST);
 echo "</pre>";
 

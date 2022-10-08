@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/07 11:50:12 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/08 09:19:22 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,36 +138,39 @@ class Job
 		{
 			std::string &uri = this->get_request()._uri;
 
-			std::ifstream in(uri, std::ios::in);
-			if (!in)
-				this->get_response().set_500_response(config); // TODO check which error
-
-
 			this->get_response().set_status_code(200);
 			this->get_response().set_default_headers(uri.substr(uri.find_last_of(".") + 1));
 
-			int ret;
+			int ret, pos = 0;
+			char *pointer = NULL;
 			char buf[4096 + 1];
 			
 			bzero(buf, 4096 + 1);
 			while ((ret = read(fd, buf, 4096)) > 0)
 			{
-				this->get_response().set_body(buf, is_cgi);
+
+				pointer = ft_strnstr(buf, "\r\n\r\n", ret);
+				if (pointer != NULL)
+					pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
+				else
+					pos = 0;
+				if (pointer != NULL && pos > 0)
+					this->get_response().set_header(std::string(buf, pos));
+
+				this->get_response().set_body(buf, ret, pos);
 				if (ret < 4096)
 					break;
 				bzero(buf, 4096);
+				pos = 0;
+				pointer = NULL;
 			}
-			this->get_response().set_content_length();
 		}
 	
 		void generate_autoindex_add_respone(Configuration &config)
 		{
 			std::string temp;
 			if (this->generate_autoindex(this, this->request._uri, temp) == 0)
-			{
-				this->get_response().set_body(temp);
-				this->get_response().set_content_length();
-			}
+				this->get_response().set_body(temp.c_str(), temp.size());
 			else
 				this->set_500_response(config);
 		}
@@ -300,7 +303,7 @@ class Job
 	private:
 		void	_set_environment_variable(const char *name, const char *value)
 		{
-			// std::cout << "setenv: " << name << " = " << value << std::endl;
+			std::cerr << "setenv: " << name << " = " << value << std::endl;
 			if (setenv(name, value, 1) < 0)
 				exit(EXIT_FAILURE);
 		}

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/06 21:19:54 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/08 11:35:28 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,10 +57,10 @@ class Request
 			DELETE,
 			UNSUPPORTED
 		};
-		
+
 		/* Constructor  */
 		Request()
-		: _method(Method::UNSET), _uri(""), _version(""), _body(std::vector<unsigned char>()), _type(Type::NOT_SET), _incoming_data(std::vector<unsigned char>())
+		: _method(Method::UNSET), _uri(""), _version(""), _body(std::vector<unsigned char>()), _type(Type::NOT_SET), _incoming_data(std::vector<unsigned char>()), _content_length(0), was_chunked(false)
 		{
 			this->_headers_map = std::map<std::string, std::string>();
 		}
@@ -94,6 +94,7 @@ class Request
 			this->_unedited_uri = e->_unedited_uri;
 			return *this;
 		}
+
 		// Methods
 		void add_incoming_data(char *incoming_buffer, size_t len)
 		{
@@ -111,20 +112,17 @@ class Request
 
 				this->_request_line(headers);
 				this->_headers(headers);
-				// for (auto it = this->_headers_map.begin(); it != this->_headers_map.end(); it++)
-				// 	std::cout << it->first << " : " << it->second << std::endl;
 				this->_reading_mode();
 
 				std::vector<unsigned char>::iterator it = this->_incoming_data.begin();
-				
+
 				// Incoming data is now only the body
 				this->_incoming_data.erase(it, it + headers_size);
 
 				if (this->_type == Type::UNMATCHED_CONTENT_LENGTH)
 					this->add_body();
 				else if (this->_type == Type::ENCODING_CHUNKED)
-					;
-					// this->add_chunked_body();
+					_parseChunk();
 				else if (this->_incoming_data.size() > 0)
 				{
 					this->_type = Type::DONE;
@@ -136,14 +134,57 @@ class Request
 			else if (this->_type == Type::UNMATCHED_CONTENT_LENGTH)
 				this->add_body();
 			else if (this->_type == Type::ENCODING_CHUNKED)
-				;
+				_parseChunk();
 			else
 				this->_type == Type::ERROR;
 		}
 
+		void						_parseChunk()
+		{
+			size_t	totalChunkLength = 0;
+			std::vector<unsigned char>::iterator		it;
+			while (true)
+			{
 
-			// const char *request = reinterpret_cast<const char*> (&this->_request_total_buffer[0]);
+				it = std::search(this->_incoming_data.begin(), this->_incoming_data.end(),
+								"\r\n", "\r\n" + 2);
+				if (it == this->_incoming_data.end())
+					break;
 
+				std::stringstream	conversionStream;
+				size_t				chunkLength;
+				size_t				firstLineEnd = it - this->_incoming_data.begin();
+				std::string			hexString(reinterpret_cast<char*>(&this->_incoming_data[0]), firstLineEnd);
+				conversionStream << std::hex << hexString;
+				conversionStream >> chunkLength;
+				totalChunkLength += chunkLength;
+
+				size_t		chunkStartPos = firstLineEnd + 2;
+				size_t		chunkEndPos = chunkStartPos + chunkLength;
+				if (this->_incoming_data.size() < chunkEndPos + 2)
+					break;
+				if (this->_incoming_data[chunkEndPos] != '\r' ||
+						this->_incoming_data[chunkEndPos + 1] != '\n')
+				{
+					this->_type = Type::ERROR;
+					throw std::runtime_error("Invalid chunked encoding");
+					break;
+				}
+				if (chunkLength == 0)
+				{
+					this->_type = Type::DONE;
+					this->_body.push_back('\0');
+
+					this->_headers_map["Content-Length"] = std::to_string(this->_body.size());
+					this->_content_length = this->_body.size();
+					this->was_chunked = true;
+					break;
+				}
+				it = this->_incoming_data.begin() + chunkStartPos;
+				this->setBody(this->_incoming_data.begin() + chunkStartPos, chunkLength);
+				this->_incoming_data.erase(this->_incoming_data.begin(), this->_incoming_data.begin() + chunkEndPos + 2);
+			}
+		}
 
 		bool is_complete()
 		{
@@ -151,11 +192,6 @@ class Request
 				return true;
 			return false;
 		}
-
-
-
-
-
 
 		void clear()
 		{
@@ -167,6 +203,7 @@ class Request
 			this->_unedited_uri.clear();
 			this->_type = Type::NOT_SET;
 		}
+
 		bool is_empty() const
 		{
 			if (this->_method == Method::UNSET && this->_uri == "" && this->_version == "" && this->_headers_map.empty())
@@ -174,6 +211,7 @@ class Request
 			else
 				return false;
 		}
+
 		bool is_method_get() const
 		{
 			return this->_method == Method::GET;
@@ -349,6 +387,7 @@ class Request
 
 		size_t _bytes_read;
 		size_t _content_length;
+		bool was_chunked;
 	private:
 		std::string _unedited_uri; // uri unedited
 
