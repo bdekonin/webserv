@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/08 09:19:22 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/10 18:53:13 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,14 @@
 class Job
 {
 	public:
+		enum PATH_TYPE
+		{
+			NOT_FOUND = '0',
+			NO_PERMISSIONS = 'X',
+			DIRECTORY = 'D',
+			FILE_FOUND = 'F',
+		};
+
 		/* Constructor  */
 		Job()
 		: request(Request()), response(Response()), correct_config(Configuration())
@@ -148,7 +156,7 @@ class Job
 			bzero(buf, 4096 + 1);
 			while ((ret = read(fd, buf, 4096)) > 0)
 			{
-
+				// TODO read error
 				pointer = ft_strnstr(buf, "\r\n\r\n", ret);
 				if (pointer != NULL)
 					pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
@@ -172,7 +180,7 @@ class Job
 			if (this->generate_autoindex(this, this->request._uri, temp) == 0)
 				this->get_response().set_body(temp.c_str(), temp.size());
 			else
-				this->set_500_response(config);
+				this->set_xxx_response(config, 500);
 		}
 	
 		const char *num_to_define_name(const int num)
@@ -214,7 +222,7 @@ class Job
 			this->_set_environment_variable("HTTP_HOST", r.get_header("host").c_str());
 			this->_set_environment_variable("HTTP_USER_AGENT", r.get_header("user-agent").c_str());
 			this->_set_environment_variable("PATH_INFO", r._uri.c_str());
-			this->_set_environment_variable("QUERY_STRING", ""); // NO QUERY STRING
+			this->_set_environment_variable("QUERY_STRING", r._query_string.c_str()); // NO QUERY STRING
 			this->_set_environment_variable("REDIRECT_STATUS", "true");
 			this->_set_environment_variable("REMOTE_ADDR", this->user->get_address().c_str());
 			this->_set_environment_variable("REQUEST_METHOD", r.method_to_s());
@@ -248,13 +256,15 @@ class Job
 		{
 			this->response.set_405_response(config);
 		}
-		void set_404_response(Configuration &config)
-		{
-			this->response.set_404_response(config);
-		}
 		void set_500_response(Configuration &config)
 		{
-			this->response.set_500_response(config);
+			this->set_xxx_response(config, 500);
+		}
+
+		/* Sets a response to @code with no special headers */
+		void set_xxx_response(Configuration &config, int code)
+		{
+			this->response.set_xxx_response(config, code);
 		}
 
 		void set_client_response(fd_set *copy_writefds) // fd_sets to write fd_set. and set client_response
@@ -263,7 +273,7 @@ class Job
 			FD_SET(this->fd, copy_writefds);
 		}
 
-		char get_path_options(std::string uri) // TODO FOR DEBUG OPEN IN CHROME https://github.com/bdekonin/minishell/blob/master/src/execve.c#:~:text=stat.h%3E-,int%09%09%09validate_file(char%20*filepath),%7D,-void%09%09signal_exec(
+		PATH_TYPE get_path_options(std::string uri) // TODO FOR DEBUG OPEN IN CHROME https://github.com/bdekonin/minishell/blob/master/src/execve.c#:~:text=stat.h%3E-,int%09%09%09validate_file(char%20*filepath),%7D,-void%09%09signal_exec(
 		{
 			std::string &path = uri;
 
@@ -273,29 +283,29 @@ class Job
 
 			ret = stat(path.c_str(), &sb);
 			if (ret < 0)
-				return '0'; // NOT FOUND
+				return PATH_TYPE::NOT_FOUND; // NOT FOUND
 			if (S_ISDIR(sb.st_mode) && uri[uri.size() - 1] == '/')
 			{
 				returnstat = sb.st_mode & S_IXUSR;
 				if (returnstat == 0)
-					return ('X'); // NO PERMISSIONS
+					return PATH_TYPE::NO_PERMISSIONS; // NO PERMISSIONS
 				else
-					return 'D'; // DIRECTORY
+					return PATH_TYPE::DIRECTORY; // DIRECTORY
 			}
 			else if (ret == 0)
 			{
 				returnstat = sb.st_mode & S_IXUSR;
 				if (returnstat == 0)
-					return ('X'); // NO PERMISSIONS
+					return PATH_TYPE::NO_PERMISSIONS; // NO PERMISSIONS
 				else if (S_ISDIR(sb.st_mode) == false)
-					return ('F'); // FILE FOUND
+					return PATH_TYPE::FILE_FOUND; // FILE FOUND
 				else
-					return '0';
+					return PATH_TYPE::NOT_FOUND;
 			}
 			else // should never go here but if its error
-				return '0'; // NOT FOUND
+				return PATH_TYPE::NOT_FOUND; // NOT FOUND
 		}
-		char get_path_options()
+		PATH_TYPE get_path_options()
 		{
 			return this->get_path_options(this->request._uri);
 		}
@@ -303,7 +313,6 @@ class Job
 	private:
 		void	_set_environment_variable(const char *name, const char *value)
 		{
-			std::cerr << "setenv: " << name << " = " << value << std::endl;
 			if (setenv(name, value, 1) < 0)
 				exit(EXIT_FAILURE);
 		}
@@ -339,8 +348,7 @@ class Job
 					}
 					job->get_response().set_status_code(200);
 					job->get_response().set_default_headers("html");
-					// if (__APPLE__)
-						body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctim, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
+					body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctim, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
 					name.clear();
 				}
 				closedir(dir);

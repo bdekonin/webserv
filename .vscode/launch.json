@@ -17,7 +17,7 @@
             "MIMode": "gdb"
         },
         {
-            "name": "(lldb) Launch",
+            "name": "(lldb) Launch post",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/webserv",
@@ -34,6 +34,18 @@
             "request": "launch",
             "program": "${workspaceFolder}/webserv",
             "args": ["config/tester.conf"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        },
+        {
+            "name": "(lldb) Launch redirect",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/webserv",
+            "args": ["config/redirecttest_config.conf"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

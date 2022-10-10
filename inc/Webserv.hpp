@@ -19,7 +19,7 @@
 # include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
+# include "Colors.h"
 
 # include "Configuration.hpp" // Base Class
 # include "ServerConfiguration.hpp" // Derived from Configuration
@@ -70,6 +70,7 @@ class Webserv
 
 		void run()
 		{
+			std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 			Job *job;
 			while (true)
 			{
@@ -104,7 +105,6 @@ class Webserv
 
 
 							std::string path = job->correct_config.get_cgi().find(extension)->second;
-							std::cout << path << std::endl;
 
 							pid_t pid;
 							int fd_out[2];
@@ -122,8 +122,6 @@ class Webserv
 							if (pid < 0)
 								throw std::runtime_error("fork: failed to fork.");
 
-							std::cout << "pid: " << pid << std::endl;
-							std::cout << "path: " << path << std::endl;
 							if (pid == 0)
 							{
 								job->set_environment_variables();
@@ -166,6 +164,22 @@ class Webserv
 					{
 						if (job->type == CLIENT_RESPONSE)
 							this->client_response(job);
+						else if (job->type == FILE_WRITE) // DELETE
+						{
+							if (remove(job->get_request()._uri.c_str()) < 0)
+							{
+								if (errno == EACCES)
+									job->set_xxx_response(job->correct_config, 403);
+								else
+									job->set_xxx_response(job->correct_config, 404);
+							}
+							else
+							{
+								std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->get_request()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
+								job->set_xxx_response(job->correct_config, 204);
+							}
+							this->client_response(job);
+						}
 					}
 				}
 			}
@@ -182,8 +196,8 @@ class Webserv
 		/* User Types Handling */
 		int client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
 		{
+			size_t server_index = 0;
 			std::string ConfigToChange_path = "";
-			// std::cout << job->fd << " Reading request Client\n";
 			char	buffer[4096 + 1];
 			int		bytesRead = 0;
 			bzero(buffer, 4096 + 1);
@@ -191,7 +205,7 @@ class Webserv
 			if (bytesRead <= 0)
 			{
 				close(job->fd);
-				std::cout << "Client " << job->fd << " disconnected." << std::endl;
+				std::cerr << CLRS_GRN << "server : connection closed by client " << job->fd << CLRS_reset << std::endl;
 				FD_CLR(job->fd, &this->read_fds);
 				FD_CLR(job->fd, &this->write_fds);
 				delete job->user;
@@ -202,16 +216,58 @@ class Webserv
 			// TODO is Chunked? if so, read until 0\r
 			job->request.add_incoming_data(buffer, bytesRead);
 
-			// exit(printf("EXITING\n"));
-			if (job->request.is_complete() == false)
+			Request::Type rtype = job->request.get_type();
+
+			if (rtype == Request::Type::MAX_ENTITY)
+			{
+				job->set_xxx_response(job->correct_config, 431);
+				job->get_response().set_header("Connection: close");
+				this->client_response(job);
+				return (0);
+			}
+			if (job->get_request()._type != Request::Type::ERROR && job->request.is_complete() == false)
 				return (1); 
 
-			this->create_correct_configfile(job->request, this->get_correct_server_configuration(job), job->correct_config, ConfigToChange_path);
 
-			// std::string &method = job->request._method;
 			bool get = job->request.is_method_get();
 			bool post = job->request.is_method_post();
 			bool del = job->request.is_method_delete();
+
+			/* Checks */
+			// 413 Request Entity Too Large
+			// 400 Bad Request
+			if (job->get_request().is_bad_request() == true)
+			{
+				job->set_xxx_response(job->correct_config, 400);
+				this->client_response(job);
+				return (0);
+			}
+			// 505 HTTP Version Not Supported
+			if (job->get_request().is_http_supported() == false)
+			{
+				job->set_xxx_response(job->correct_config, 505);
+				this->client_response(job);
+				return (0);
+			}
+			// 414 Request-URI Too Long
+			if (job->get_request()._uri.size() > 1024)
+			{
+				job->set_xxx_response(job->correct_config, 414);
+				this->client_response(job);
+				return (0);
+			}
+			if (post && job->correct_config.get_client_max_body_size() < job->get_request()._body.size())
+			{
+				job->set_xxx_response(job->correct_config, 413);
+				job->set_client_response(copy_writefds);
+				return (0);
+			}
+
+
+
+			ServerConfiguration &server_configuration = this->get_correct_server_configuration(job, server_index);
+			this->create_correct_configfile(job->request, server_configuration, job->correct_config, ConfigToChange_path);
+
 			std::string &uri = job->get_request()._uri;
 			std::string extension = uri.substr(uri.find_last_of(".") + 1);
 
@@ -228,7 +284,10 @@ class Webserv
 			it = job->correct_config.get_cgi().find("." + extension);
 
 			if (del == true) // method is DELETE
+			{
+				job->set_client_response(copy_writefds);
 				job->type = FILE_WRITE;
+			}
 			else if (extension != "" &&  it != job->correct_config.get_cgi().end())
 			{
 				if (get == true)
@@ -249,10 +308,22 @@ class Webserv
 			loop_job_counter--;
 			/* Parse Request */
 			job->parse_request(ConfigToChange_path);
+
+			// Print nice things
+			std::stringstream ss;
+			ss << CLRS_YEL;
+			ss << "server : << [method: " << job->get_request().method_to_s() << "] ";
+			ss << "[target: " << job->get_request().get_unedited_uri() << "] ";
+			ss << "[server: " << server_index << "] ";
+			ss << "[location: " << ConfigToChange_path << "] ";
+			ss << "[client fd: " << job->fd << "]";
+			ss << CLRS_reset << std::endl;
+
+			std::cerr << ss.str();
 			return (0);
 		}
 
-		char file_read(Job *job, fd_set *copy_writefds, bool isRecursive = false, char type = '0')
+		char file_read(Job *job, fd_set *copy_writefds, bool isRecursive = false, Job::PATH_TYPE type = Job::PATH_TYPE::NOT_FOUND)
 		{
 			Configuration &config = job->correct_config;
 			if (isRecursive == false)
@@ -262,32 +333,33 @@ class Webserv
 			{
 				job->set_3xx_response(config);
 			}
-			else if (type == '0') // NOT FOUND
+			else if (type == Job::PATH_TYPE::NOT_FOUND) // NOT FOUND
 			{
 				if (job->get_response().is_body_empty() == false)
 					;
-				else if (config.get_autoindex() == true)
+				else if (config.get_autoindex() == true && job->get_request()._uri.rbegin()[0] == '/')
 					job->generate_autoindex_add_respone(config);
 				else
-					job->get_response().set_404_response(config);
+					job->set_xxx_response(config, 404);
 			}
-			else if (type == 'X') // FORBIDDEN
+			else if (type == Job::PATH_TYPE::NO_PERMISSIONS) // FORBIDDEN
 			{
-				job->get_response().set_403_response(config);
+				job->set_xxx_response(config, 403);
 			}
-			else if (type == 'F') // FILE
+			else if (type == Job::PATH_TYPE::FILE_FOUND) // FILE
 			{
 				int fd;
 
 				fd = open(job->get_request()._uri.c_str(), O_RDONLY);
 				if (fd == -1)
-					job->get_response().set_500_response(config);
+					job->set_xxx_response(config, 500);
 				job->handle_file(fd, config);
+				close(fd);
 			}
-			else if (type == 'D') // DIRECTORY
+			else if (type == Job::PATH_TYPE::DIRECTORY) // DIRECTORY
 			{
 				int i = 0;
-				char copy_type;
+				Job::PATH_TYPE copy_type;
 
 				if (config.get_autoindex() == true && job->get_request()._uri[job->get_request()._uri.size() - 1] != '/')
 					job->generate_autoindex_add_respone(config);
@@ -306,21 +378,20 @@ class Webserv
 						copy.get_request()._uri = copy.get_request()._uri + config.get_index()[i];
 
 						copy_type = copy.get_path_options();
-						if (copy_type == '0')
+						if (copy_type == Job::PATH_TYPE::NOT_FOUND)
 							continue;
 						this->file_read(&copy, copy_writefds, true, copy_type);
-						// VAR(copy_type);
-						if (copy_type == 'F' || copy_type == 'X')
+						if (copy_type == Job::PATH_TYPE::FILE_FOUND || copy_type == Job::PATH_TYPE::NO_PERMISSIONS)
 						{
 							job->get_request() = copy.get_request();
 							job->get_response() = copy.get_response();
 							break;
 						}
 					}
-					if (copy_type != 'F'  && copy_type != 'X' && config.get_autoindex() == true)
+					if (copy_type != Job::PATH_TYPE::FILE_FOUND  && copy_type != Job::PATH_TYPE::NO_PERMISSIONS && config.get_autoindex() == true)
 						job->generate_autoindex_add_respone(config);
-					else if (copy_type != 'F' && copy_type != 'X')
-						job->get_response().set_404_response(config);
+					else if (copy_type != Job::PATH_TYPE::FILE_FOUND && copy_type != Job::PATH_TYPE::NO_PERMISSIONS)
+						job->set_xxx_response(config, 404);
 				}
 
 				// file read RECURIVE ???
@@ -331,22 +402,32 @@ class Webserv
 				// else 404
 			}
 			else // ERROR
-			{
-				job->get_response().set_500_response(config);
-			}
+				job->set_xxx_response(config, 500);
 			if (isRecursive == false)
-				job->set_client_response(copy_writefds);
+				job->set_client_response(copy_writefds); 
 			return type;
 		}
 
 		void client_response(Job *job) // send response to client
 		{
+			bool connection_close = false;
+			size_t bytes;
 			job->response.build_response_text();
 			std::vector<unsigned char> &response = job->response.get_response();
 			size_t response_size = response.size();
 			char *response_char = reinterpret_cast<char*> (&response[0]);
 
-			size_t bytes = 0;
+
+			std::stringstream ss;
+			ss << CLRS_BLU;
+			bytes = ft_strnstr(response_char, "\r\n", 60) - response_char;
+			ss << "server : >> [status: " << std::string(response_char, bytes)  << "] ";
+			ss << "[length: " << response_size << "] ";
+			ss << "[client: " << job->fd << "] ";
+			ss << CLRS_reset;
+			std::cerr << ss.str() << std::endl;
+
+			bytes = 0;
 			while (response_size > 0) 
 			{
 				bytes = send(job->fd, response_char, response_size, 0);
@@ -357,10 +438,23 @@ class Webserv
 				response_char += bytes;
 			}
 
+			if (job->get_response().get_headers().find("Connection: close") != std::string::npos)
+				connection_close = true;
+
 			job->clear();
 			this->jobs[job->fd].clear();
 			this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
-			std::cout << "\n\n" << std::endl;
+
+
+			if (connection_close)
+			{
+				close(job->fd);
+				std::cerr << CLRS_GRN << "server : connection closed by server " << job->fd << CLRS_reset << std::endl;
+				FD_CLR(job->fd, &this->read_fds);
+				FD_CLR(job->fd, &this->write_fds);
+				delete job->user;
+				this->jobs.erase(job->fd);
+			}
 		}
 
 
@@ -419,7 +513,9 @@ class Webserv
 
 			if (client_fd > this->_max_fd)
 				this->_max_fd = client_fd;
-			
+			std::cerr << CLRS_GRN << "server : new connection on " << job->server->get_hostname() << ":" << job->server->get_port() << " [client: " << client_fd << "]";
+			std::cerr << " [ip: " << inet_ntoa(client_address->sin_addr) << "]" << CLRS_reset << std::endl;
+
 			FD_SET(client_fd, set);
 			return (client_fd);
 		}
@@ -435,7 +531,6 @@ class Webserv
 
 			for (it = this->servers.begin(); it != this->servers.end(); it++)
 			{
-				// std::cout << "server " << it->second.get_port() << " has " << it->second.get_configurations().size() << " configurations" << std::endl;
 				fd = it->second.get_socket();
 				this->jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
 				FD_SET(fd, &this->read_fds);
@@ -459,13 +554,15 @@ class Webserv
 					std::map<int, Server>::iterator it = this->servers.find(ports[j].second);
 					if (it == this->servers.end())
 					{
-						std::cout << "Creating server on port " << ports[j].second << std::endl;
 						s = openSocket(ports[j].second, ports[j].first.c_str());
-						h = strdup(ports[j].first.c_str());
+						if (ports[j].first == "")
+							h = strdup("127.0.0.1");
+						else
+							h = strdup(ports[j].first.c_str());
 						if (h == NULL)
 							throw std::runtime_error("strdup: failed to duplicate string.");
-						// std::cout << "[" << h << "]" << std::endl;
 						p = ports[j].second;
+						std::cerr << CLRS_GRN << "Listening on " << h << ":" << p << CLRS_reset << std::endl;
 						this->servers[ports[j].second] = Server(s, h, p, this->configs[i]);
 					}
 					else
@@ -491,15 +588,9 @@ class Webserv
 			bzero(&sock_struct, sizeof(sock_struct));
 			sock_struct.sin_family = AF_INET;
 			if (strcmp(hostname, "") == 0)
-			{
-				// std::cout << "hostname is empty" << std::endl;
 				sock_struct.sin_addr.s_addr = htonl(INADDR_ANY);
-			}
 			else
-			{
-				// std::cout << "hostname: " << hostname << std::endl;
 				sock_struct.sin_addr.s_addr = inet_addr(hostname);
-			}
 			sock_struct.sin_port = htons(port);
 
 			if (bind(socketFD, (struct sockaddr*)&sock_struct, sizeof(sock_struct)) < 0)
@@ -510,9 +601,9 @@ class Webserv
 			return socketFD;
 		}
 		/* Server Utilities Methods */
-		ServerConfiguration &get_correct_server_configuration(Job *job)
+		ServerConfiguration &get_correct_server_configuration(Job *job, size_t &i)
 		{
-
+			size_t index = 0;
 			int port = this->get_port_from_job(job);
 			std::vector<ServerConfiguration> &job_configs = this->servers[port].get_configurations();
 
@@ -526,16 +617,16 @@ class Webserv
 			host_header = job->request._headers_map["host"];
 			pos = host_header.find(":");
 
-			for (size_t k = 0; k < job_configs.size(); k++)
+			for (index = 0; index < job_configs.size(); index++)
 			{
-				server_names = job_configs[k].get_server_names();
+				server_names = job_configs[index].get_server_names();
 				for (size_t j = 0; j < server_names.size(); j++)
 				{
 					if (host_header.substr(0, pos) == server_names[j])
-						default_server = job_configs[k];
+						default_server = job_configs[index];
 				}
 			}
-
+			i = index;
 			return default_server;
 		}
 		size_t get_port_from_job(Job *job)

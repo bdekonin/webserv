@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:26:24 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/07 12:15:17 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/10 14:16:22 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ namespace ft
 				this->response_codes[200] = "OK";
 				// this->response_codes[201] = "Created";
 				// this->response_codes[202] = "Accepted";
-				// this->response_codes[204] = "No Content";
+				this->response_codes[204] = "No Content";
 				// this->response_codes[205] = "Reset Content";
 				// this->response_codes[206] = "Partial Content";
 				// this->response_codes[207] = "Multi-Status";
@@ -68,8 +68,8 @@ namespace ft
 				this->response_codes[400] = "Bad Request";
 				// this->response_codes[401] = "Unauthorized";
 				// this->response_codes[402] = "Payment Required";
-				// this->response_codes[403] = "Forbidden";
-				// this->response_codes[404] = "Not Found";
+				this->response_codes[403] = "Forbidden";
+				this->response_codes[404] = "Not Found";
 				this->response_codes[405] = "Method Not Allowed";
 				// this->response_codes[406] = "Not Acceptable";
 				// this->response_codes[407] = "Proxy Authentication Required";
@@ -78,8 +78,8 @@ namespace ft
 				// this->response_codes[410] = "Gone";
 				// this->response_codes[411] = "Length Required";
 				// this->response_codes[412] = "Precondition Failed";
-				// this->response_codes[413] = "Request Entity Too Large";
-				// this->response_codes[414] = "URI Too Long";
+				this->response_codes[413] = "Request Entity Too Large";
+				this->response_codes[414] = "URI Too Long";
 				// this->response_codes[415] = "Unsupported Media Type";
 				// this->response_codes[416] = "Range Not Satisfiable";
 				// this->response_codes[417] = "Expectation Failed";
@@ -92,7 +92,7 @@ namespace ft
 				// this->response_codes[426] = "Upgrade Required";
 				// this->response_codes[428] = "Precondition Required";
 				// this->response_codes[429] = "Too Many Requests";
-				// this->response_codes[431] = "Request Header Fields Too Large";
+				this->response_codes[431] = "Request Header Fields Too Large";
 				// this->response_codes[451] = "Unavailable For Legal Reasons";
 
 				this->response_codes[500] = "Internal Server Error";
@@ -100,7 +100,7 @@ namespace ft
 				// this->response_codes[502] = "Bad Gateway";
 				// this->response_codes[503] = "Service Unavailable";
 				// this->response_codes[504] = "Gateway Timeout";
-				// this->response_codes[505] = "HTTP Version Not Supported";
+				this->response_codes[505] = "HTTP Version Not Supported";
 				// this->response_codes[506] = "Variant Also Negotiates";
 				// this->response_codes[507] = "Insufficient Storage";
 				// this->response_codes[508] = "Loop Detected";

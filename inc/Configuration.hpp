@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/03 23:05:36 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/10 19:13:48 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,9 @@
 # define whitespaces " \v\t\n"
 # define forbidden_characters "\'\"|&;<>`$(){}[]*?#~"
 
+# define CLIENT_MAX_BODY_SIZE_MULTIPLIER 1000000
+
+
 class ServerConfiguration;
 
 void	split(const std::string& str, const char* delims, std::vector<std::string>& out);
@@ -33,7 +36,7 @@ class Configuration
 	public:
 		/* Constructor  */
 		Configuration()
-		: _error_page(), _client_max_body_size(0), _return(), _root(""), _index(), _cgi()
+		: _error_page(), _client_max_body_size(1 * CLIENT_MAX_BODY_SIZE_MULTIPLIER), _return(), _root(""), _index(), _cgi()
 		{
 			
 			this->_methods[0] = true; // ??
@@ -132,7 +135,23 @@ class Configuration
 		}
 		void set_client_max_body_size(std::string &s)
 		{
-			(void)s;
+			std::vector<std::string> v;
+
+			this->remove_semicolen(s);
+			split(s, whitespaces, v);
+
+			if (v.size() != 1)
+				throw std::runtime_error("config: client_max_body_size has invalid number of arguments");
+
+			if (*v[0].rbegin() != 'm')
+				throw std::runtime_error("config: client_max_body_size doesnt specify a size in megabytes (m)");
+
+			v[0].pop_back();
+
+			this->has_forbidden_charachters(v[0]);
+			
+			this->_client_max_body_size = std::stoi(v[0]);
+			this->_client_max_body_size *= CLIENT_MAX_BODY_SIZE_MULTIPLIER;
 			this->_isSet["client_max_body_size"] = true;
 		}
 		void set_methods(std::string &s)
@@ -147,9 +166,6 @@ class Configuration
 			std::vector<std::string> v;
 
 			this->remove_semicolen(s);
-
-			// std::cout << "s: " << s << std::endl;
-
 			split(s, whitespaces, v);
 			if (v.size() == 0)
 				throw std::runtime_error("config: methods has invalid number of arguments");

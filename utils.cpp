@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/05 13:22:17 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/10 18:50:22 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,19 +14,34 @@
 # include <cstring>
 
 
+static std::string get_x_spaces(int x)
+{
+	if (x < 0)
+		return "     ";
+	std::string spaces(x, ' ');
+	return (spaces);
+}
+
 // std::string create_autoindex_line(std::string &path, char *name, struct timespec ts, unsigned long bytes)
 std::string create_autoindex_line(const std::string &path, const char *name, const struct timespec ts, const unsigned long bytes, bool is_file)
 {
-	std::string line = "<a href=\"PATH\">NAME</a>               DATE               BYTES";
+	size_t spaces = 0;
+	std::string line = "<a href=\"PATH\">NAME</a> SPACE DATE               BYTES";
 	std::string date = "";
 	char buff[100];
 
 	strftime(buff, 100, "%d-%b-%Y %H:%M:%S", gmtime(&ts.tv_sec));
 
+	spaces = 90 - (path.size() + 2);
 	if (is_file == false)
+	{
+		spaces -= 1;
 		line.replace(line.find("PATH"), 4, path + "/");
+	}
 	else
 		line.replace(line.find("PATH"), 4, path);
+
+	line.replace(line.find("SPACE"), 5, get_x_spaces(spaces));
 
 	if (is_file == false)
 		line.replace(line.find("NAME"), 4, std::string(name) + "/");
