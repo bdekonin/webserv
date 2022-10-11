@@ -9,8 +9,8 @@
 
 NAME        := webserv
 CC         := c++
-# FLAGS    := -Wall -Wextra -Werror -std=c++98
-FLAGS    := -g -fsanitize=address
+FLAGS    := -Wall -Wextra -Werror -std=c++98
+# FLAGS    := -g -fsanitize=address
  
 ################################################################################
 #                                 PROGRAM'S SRCS                               #

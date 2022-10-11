@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/08 18:34:48 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/11 13:31:13 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,7 @@
 
 # include "Configuration.hpp"
 # include "LocationConfiguration.hpp"
-
-#define getString(n) #n
-#define VARR(var) std::cerr << std::boolalpha << __FILE__ ":"<< __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
-#define PRINT(var) std::cout << var << std::endl
-
+# include <iostream>
 
 class ServerConfiguration : public Configuration
 {

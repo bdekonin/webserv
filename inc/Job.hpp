@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/10 18:53:13 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/11 13:15:04 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,8 +66,8 @@ class Job
 		/* Destructor */
 		virtual ~Job()
 		{
-			// if (this->request)
-			// 	delete request;
+			if (this->is_client() == true)
+				delete this->user;
 		}
 
 		/* Copy constructor */
@@ -121,19 +121,12 @@ class Job
 			this->request.clear();
 			this->response.clear();
 			this->correct_config = Configuration();
-			// delete this->user; // TODO MUST? DO???? CHECK WEBSERV.hpp 353
 		}
 
 		void parse_request(std::string &ConfigToChange_path)
 		{
-			// VAR(this->request._uri);
-			// VAR(ConfigToChange_path);
-
 			if (this->correct_config.get_return().size() != 0)
-			{
-				// this->set_3xx_response(this->correct_config);
 				this->get_response().set_status_code(this->correct_config.get_return().begin()->first);
-			}
 			else
 			{
 				std::string path = this->request._uri;
@@ -245,7 +238,6 @@ class Job
 		Request			request;
 		Response		response;
 		void			*cgi;// TODO change to CGI Object
-
 		Configuration correct_config;
 
 		void set_3xx_response(Configuration &config)

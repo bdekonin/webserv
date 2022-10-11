@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 # include "Colors.h"
+# include <iostream>
 
 # include "Configuration.hpp" // Base Class
 # include "ServerConfiguration.hpp" // Derived from Configuration
@@ -192,7 +193,7 @@ class Webserv
 		fd_set								write_fds;	// List of all file descriptors that are ready to write.
 
 	private:
-		size_t _max_fd;
+		int _max_fd;
 		/* User Types Handling */
 		int client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
 		{
@@ -465,28 +466,16 @@ class Webserv
 		{
 			LocationConfiguration *location;
 
-			// TODO Putting a / at the end if there is not a slash (/) Makes sense??
-
-
-
 			location = config.get_location_by_uri(request._uri);
 			if (location == nullptr)
 			{
-				// std::string string_with_slash = request._uri + "/";
-
-				// location = config.get_location_by_uri(string_with_slash); //  TODO MOET DIT???? zodat /redirect ook werkt en niet alleen /redirect/
-				if (location == nullptr)
-				{
-					/* No Location Block found: use default config */
-					ConfigToChange = config;
-					ConfigToChange_path = "";
-					return (1);
-				}
+				/* No Location Block found: use default config */
+				ConfigToChange = config;
+				ConfigToChange_path.clear();
+				return (1);
 			}
 			ConfigToChange = *location;
 			ConfigToChange_path = location->get_path();
-
-
 			return (0);
 		}
 		size_t			method_handling(Request &request, Configuration &config)
@@ -499,11 +488,14 @@ class Webserv
 		/* Accept a New Client */
 		int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
 		{
+			int client_fd = 0;
+			size_t address_size = 0;
+
 			struct sockaddr_in *client_address = new struct sockaddr_in;
-			int address_size = sizeof(struct sockaddr_in);
+			address_size = sizeof(struct sockaddr_in);
 			bzero(client_address, address_size);
 			
-			size_t client_fd = accept(job->fd, (struct sockaddr*)client_address, (socklen_t*)&address_size);
+			client_fd = accept(job->fd, (struct sockaddr*)client_address, (socklen_t*)&address_size);
 			if (client_fd < 0)
 				throw std::runtime_error("accept: failed to accept.");
 
@@ -511,7 +503,7 @@ class Webserv
 			fcntl(client_fd, F_SETFL, O_NONBLOCK);
 			jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, user);
 
-			if (client_fd > this->_max_fd)
+			if (client_fd >this->_max_fd)
 				this->_max_fd = client_fd;
 			std::cerr << CLRS_GRN << "server : new connection on " << job->server->get_hostname() << ":" << job->server->get_port() << " [client: " << client_fd << "]";
 			std::cerr << " [ip: " << inet_ntoa(client_address->sin_addr) << "]" << CLRS_reset << std::endl;
@@ -523,7 +515,7 @@ class Webserv
 		void	setFdSets()
 		{
 			std::map<int, Server>::iterator it;
-			size_t fd;
+			int fd;
 			
 			// Zeroing the fd_sets.
 			FD_ZERO(&this->read_fds);
@@ -573,17 +565,17 @@ class Webserv
 		}
 		int		openSocket(int port, const char *hostname = "")
 		{
+			int ret;
 			struct sockaddr_in		sock_struct;
 			int						socketFD;
 
 			socketFD = socket(AF_INET, SOCK_STREAM, 0);
 			if (socketFD < 0)
 				throw std::runtime_error("socket: failed to create socket.");
-			// ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));SO_REUSEADDR
 			int options = 1;
-			setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &options, sizeof(options));
-			// if (socketFD < 0)
-			// 	throw std::runtime_error("error");
+			ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));
+			if (ret < 0)
+				throw std::runtime_error("Failed to set socket options.");
 
 			bzero(&sock_struct, sizeof(sock_struct));
 			sock_struct.sin_family = AF_INET;

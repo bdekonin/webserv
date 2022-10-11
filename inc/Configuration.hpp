@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/10 19:13:48 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/11 13:04:45 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,8 +78,9 @@ class Configuration
 		// Methods
 		void clear() // clear all data
 		{
+			this->_isSet.clear();
 			this->_error_page.clear();
-			this->_client_max_body_size = 0;
+			this->_client_max_body_size = 1 * CLIENT_MAX_BODY_SIZE_MULTIPLIER;
 			this->_methods[0] = false; // GET
 			this->_methods[1] = false; // POST
 			this->_methods[2] = false; // DELETE
@@ -88,8 +89,6 @@ class Configuration
 			this->_autoindex = false;
 			this->_index.clear();
 			this->_cgi.clear();
-
-			this->_isSet.clear();
 		}
 
 		void combine_two_locations(Configuration &src) // copying <src> to *this | src is previous config level
@@ -329,7 +328,7 @@ class Configuration
 		{
 			return this->_autoindex;
 		}
-		bool									get_autoindex() const
+		bool										get_autoindex() const
 		{
 			return this->_autoindex;
 		}
@@ -351,9 +350,9 @@ class Configuration
 		{
 			return this->_cgi;
 		}
-		
-		std::map<std::string, bool>					_isSet;
+
 	protected:
+		std::map<std::string, bool>			_isSet;
 		std::map<size_t, std::string>		_error_page; // <error code, path>
 		size_t								_client_max_body_size; // max size of body
 		bool								_methods[3]; // GET, POST, DELETE

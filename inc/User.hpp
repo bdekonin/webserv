@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 14:46:37 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/04 15:15:45 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/11 13:13:21 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,6 @@ class User
 		User& operator = (const User& e)
 		{
 			this->_fd = e._fd;
-
 			this->_address_info = e._address_info;
 			this->_address = e._address;
 			return *this;
