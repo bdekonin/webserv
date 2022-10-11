@@ -219,14 +219,14 @@ class Webserv
 
 			Request::Type rtype = job->request.get_type();
 
-			if (rtype == Request::Type::MAX_ENTITY)
+			if (rtype == Request::MAX_ENTITY)
 			{
 				job->set_xxx_response(job->correct_config, 431);
 				job->get_response().set_header("Connection: close");
 				this->client_response(job);
 				return (0);
 			}
-			if (job->get_request()._type != Request::Type::ERROR && job->request.is_complete() == false)
+			if (job->get_request()._type != Request::ERROR && job->request.is_complete() == false)
 				return (1); 
 
 
@@ -324,7 +324,7 @@ class Webserv
 			return (0);
 		}
 
-		char file_read(Job *job, fd_set *copy_writefds, bool isRecursive = false, Job::PATH_TYPE type = Job::PATH_TYPE::NOT_FOUND)
+		char file_read(Job *job, fd_set *copy_writefds, bool isRecursive = false, Job::PATH_TYPE type = Job::NOT_FOUND)
 		{
 			Configuration &config = job->correct_config;
 			if (isRecursive == false)
@@ -334,7 +334,7 @@ class Webserv
 			{
 				job->set_3xx_response(config);
 			}
-			else if (type == Job::PATH_TYPE::NOT_FOUND) // NOT FOUND
+			else if (type == Job::NOT_FOUND) // NOT FOUND
 			{
 				if (job->get_response().is_body_empty() == false)
 					;
@@ -343,11 +343,11 @@ class Webserv
 				else
 					job->set_xxx_response(config, 404);
 			}
-			else if (type == Job::PATH_TYPE::NO_PERMISSIONS) // FORBIDDEN
+			else if (type == Job::NO_PERMISSIONS) // FORBIDDEN
 			{
 				job->set_xxx_response(config, 403);
 			}
-			else if (type == Job::PATH_TYPE::FILE_FOUND) // FILE
+			else if (type == Job::FILE_FOUND) // FILE
 			{
 				int fd;
 
@@ -357,9 +357,9 @@ class Webserv
 				job->handle_file(fd, config);
 				close(fd);
 			}
-			else if (type == Job::PATH_TYPE::DIRECTORY) // DIRECTORY
+			else if (type == Job::DIRECTORY) // DIRECTORY
 			{
-				int i = 0;
+				size_t i = 0;
 				Job::PATH_TYPE copy_type;
 
 				if (config.get_autoindex() == true && job->get_request()._uri[job->get_request()._uri.size() - 1] != '/')
@@ -379,19 +379,19 @@ class Webserv
 						copy.get_request()._uri = copy.get_request()._uri + config.get_index()[i];
 
 						copy_type = copy.get_path_options();
-						if (copy_type == Job::PATH_TYPE::NOT_FOUND)
+						if (copy_type == Job::NOT_FOUND)
 							continue;
 						this->file_read(&copy, copy_writefds, true, copy_type);
-						if (copy_type == Job::PATH_TYPE::FILE_FOUND || copy_type == Job::PATH_TYPE::NO_PERMISSIONS)
+						if (copy_type == Job::FILE_FOUND || copy_type == Job::NO_PERMISSIONS)
 						{
 							job->get_request() = copy.get_request();
 							job->get_response() = copy.get_response();
 							break;
 						}
 					}
-					if (copy_type != Job::PATH_TYPE::FILE_FOUND  && copy_type != Job::PATH_TYPE::NO_PERMISSIONS && config.get_autoindex() == true)
+					if (copy_type != Job::FILE_FOUND  && copy_type != Job::NO_PERMISSIONS && config.get_autoindex() == true)
 						job->generate_autoindex_add_respone(config);
-					else if (copy_type != Job::PATH_TYPE::FILE_FOUND && copy_type != Job::PATH_TYPE::NO_PERMISSIONS)
+					else if (copy_type != Job::FILE_FOUND && copy_type != Job::NO_PERMISSIONS)
 						job->set_xxx_response(config, 404);
 				}
 
@@ -412,7 +412,7 @@ class Webserv
 		void client_response(Job *job) // send response to client
 		{
 			bool connection_close = false;
-			size_t bytes;
+			int bytes;
 			job->response.build_response_text();
 			std::vector<unsigned char> &response = job->response.get_response();
 			size_t response_size = response.size();
@@ -467,7 +467,7 @@ class Webserv
 			LocationConfiguration *location;
 
 			location = config.get_location_by_uri(request._uri);
-			if (location == nullptr)
+			if (location == NULL) // nullpointer doesnt work
 			{
 				/* No Location Block found: use default config */
 				ConfigToChange = config;

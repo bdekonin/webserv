@@ -6,12 +6,19 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/10 18:50:22 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/11 13:55:19 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "inc/utils.hpp"
 # include <cstring>
+
+
+
+std::string &ft_to_string()
+{
+	
+}
 
 
 static std::string get_x_spaces(int x)

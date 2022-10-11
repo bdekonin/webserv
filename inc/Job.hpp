@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/11 13:15:04 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/11 13:53:09 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include "Request.hpp"
 # include "Response.hpp"
 # include "User.hpp"
+# include <string>
 
 
 # include <dirent.h>
@@ -220,15 +221,11 @@ class Job
 			this->_set_environment_variable("REMOTE_ADDR", this->user->get_address().c_str());
 			this->_set_environment_variable("REQUEST_METHOD", r.method_to_s());
 			this->_set_environment_variable("SCRIPT_FILENAME", cwd + r._uri);
-
 			this->_set_environment_variable("SCRIPT_NAME", r._uri.c_str());
-			this->_set_environment_variable("SERVER_PORT", std::to_string(this->server->get_port()).c_str());
+			this->_set_environment_variable("SERVER_PORT", std::string::to_string(this->server->get_port()).c_str());
 			this->_set_environment_variable("SERVER_NAME", this->server->get_hostname());
 			this->_set_environment_variable("SERVER_PROTOCOL", "HTTP/1.1");
-
 			this->_set_environment_variable("SERVER_SOFTWARE", "Webserver Codam 1.0");
-
-			
 		}
 	public:
 		int				type;
@@ -275,27 +272,27 @@ class Job
 
 			ret = stat(path.c_str(), &sb);
 			if (ret < 0)
-				return PATH_TYPE::NOT_FOUND; // NOT FOUND
+				return this->NOT_FOUND; // NOT FOUND
 			if (S_ISDIR(sb.st_mode) && uri[uri.size() - 1] == '/')
 			{
 				returnstat = sb.st_mode & S_IXUSR;
 				if (returnstat == 0)
-					return PATH_TYPE::NO_PERMISSIONS; // NO PERMISSIONS
+					return this->NO_PERMISSIONS; // NO PERMISSIONS
 				else
-					return PATH_TYPE::DIRECTORY; // DIRECTORY
+					return this->DIRECTORY; // DIRECTORY
 			}
 			else if (ret == 0)
 			{
 				returnstat = sb.st_mode & S_IXUSR;
 				if (returnstat == 0)
-					return PATH_TYPE::NO_PERMISSIONS; // NO PERMISSIONS
+					return this->NO_PERMISSIONS; // NO PERMISSIONS
 				else if (S_ISDIR(sb.st_mode) == false)
-					return PATH_TYPE::FILE_FOUND; // FILE FOUND
+					return this->FILE_FOUND; // FILE FOUND
 				else
-					return PATH_TYPE::NOT_FOUND;
+					return this->NOT_FOUND;
 			}
 			else // should never go here but if its error
-				return PATH_TYPE::NOT_FOUND; // NOT FOUND
+				return this->NOT_FOUND; // NOT FOUND
 		}
 		PATH_TYPE get_path_options()
 		{
@@ -326,11 +323,11 @@ class Job
 			std::string name;
 			struct stat sb;
 
-			if ((dir = opendir(job->get_request()._uri.c_str())) != nullptr)
+			if ((dir = opendir(job->get_request()._uri.c_str())) != NULL)
 			{
-				while ((diread = readdir(dir)) != nullptr)
+				while ((diread = readdir(dir)) != NULL)
 				{
-					name.append(job->get_request()._uri);
+					name.append(uri);
 					name.append(diread->d_name);
 
 					if (lstat(name.c_str(), &sb) == -1)
@@ -347,12 +344,8 @@ class Job
 				body.append(endBody);
 				return (0);
 			}
-			else
-			{
-				// TODO ERROR
-				body.clear();
-				return (1);
-			}
+			body.clear();
+			return (1);
 		}
 };
 
