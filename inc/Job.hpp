@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/11 13:53:09 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/12 08:57:08 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,8 +67,8 @@ class Job
 		/* Destructor */
 		virtual ~Job()
 		{
-			if (this->is_client() == true)
-				delete this->user;
+			// if (this->is_client() == true)
+			// 	delete this->user;
 		}
 
 		/* Copy constructor */
@@ -158,7 +158,6 @@ class Job
 					pos = 0;
 				if (pointer != NULL && pos > 0)
 					this->get_response().set_header(std::string(buf, pos));
-
 				this->get_response().set_body(buf, ret, pos);
 				if (ret < 4096)
 					break;
@@ -167,7 +166,6 @@ class Job
 				pointer = NULL;
 			}
 		}
-	
 		void generate_autoindex_add_respone(Configuration &config)
 		{
 			std::string temp;
@@ -206,7 +204,9 @@ class Job
 			Request &r = this->get_request();
 			
 			this->_set_environment_variable("CONTENT_TYPE", r.get_header("content-type").c_str());
+			
 			this->_set_environment_variable("CONTENT_LENGTH", std::to_string( r._content_length ).c_str());
+			
 			this->_set_environment_variable("GATEWAY_INTERFACE", "CGI/1.1");
 			this->_set_environment_variable("HTTP_ACCEPT", r.get_header("accept").c_str());
 			this->_set_environment_variable("HTTP_ACCEPT_CHARSET", r.get_header("accept-charset").c_str());
@@ -222,7 +222,7 @@ class Job
 			this->_set_environment_variable("REQUEST_METHOD", r.method_to_s());
 			this->_set_environment_variable("SCRIPT_FILENAME", cwd + r._uri);
 			this->_set_environment_variable("SCRIPT_NAME", r._uri.c_str());
-			this->_set_environment_variable("SERVER_PORT", std::string::to_string(this->server->get_port()).c_str());
+			this->_set_environment_variable("SERVER_PORT", std::to_string(this->server->get_port()).c_str());
 			this->_set_environment_variable("SERVER_NAME", this->server->get_hostname());
 			this->_set_environment_variable("SERVER_PROTOCOL", "HTTP/1.1");
 			this->_set_environment_variable("SERVER_SOFTWARE", "Webserver Codam 1.0");
@@ -253,7 +253,14 @@ class Job
 		/* Sets a response to @code with no special headers */
 		void set_xxx_response(Configuration &config, int code)
 		{
-			this->response.set_xxx_response(config, code);
+			if (code >= 300 && code <= 399)
+				this->set_3xx_response(config);
+			else if (code == 405)
+				this->set_405_response(config);
+			else if (code == 500)
+				this->set_500_response(config);
+			else
+				this->response.set_xxx_response(config, code);
 		}
 
 		void set_client_response(fd_set *copy_writefds) // fd_sets to write fd_set. and set client_response
@@ -323,6 +330,8 @@ class Job
 			std::string name;
 			struct stat sb;
 
+			job->get_response().set_status_code(200);
+			job->get_response().set_default_headers("html");
 			if ((dir = opendir(job->get_request()._uri.c_str())) != NULL)
 			{
 				while ((diread = readdir(dir)) != NULL)
@@ -335,8 +344,6 @@ class Job
 						perror("lstat");
 						exit(EXIT_FAILURE);
 					}
-					job->get_response().set_status_code(200);
-					job->get_response().set_default_headers("html");
 					body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctim, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
 					name.clear();
 				}

@@ -101,6 +101,7 @@ class Webserv
 							std::vector<unsigned char>	&bodyVector = job->get_request()._body;
 							bodyVector.push_back('\0');
 							char						*body = reinterpret_cast<char*>(&bodyVector[0]);
+							size_t bodyVec_size = bodyVector.size();
 
 							std::string extension = job->get_request()._uri.substr(job->get_request()._uri.find_last_of("."));
 
@@ -145,7 +146,7 @@ class Webserv
 							if (post)
 							{
 								close(fd_in[0]);
-								write(fd_in[1], body, bodyVector.size());
+								write(fd_in[1], body, bodyVec_size);
 							}
 
 							if (get == true)
@@ -239,7 +240,10 @@ class Webserv
 			// 400 Bad Request
 			if (job->get_request().is_bad_request() == true)
 			{
-				job->set_xxx_response(job->correct_config, 400);
+				if (job->get_request()._method == Request::UNSUPPORTED)
+					job->set_xxx_response(job->correct_config, 405);
+				else
+					job->set_xxx_response(job->correct_config, 400);
 				this->client_response(job);
 				return (0);
 			}
@@ -276,9 +280,9 @@ class Webserv
 				extension = "";
 			if (get == true && job->correct_config.is_method_allowed("GET") == false)
 				get = false;
-			if (post == true && job->correct_config.is_method_allowed("POST") == false)
+			else if (post == true && job->correct_config.is_method_allowed("POST") == false)
 				post = false;
-			if (del == true && job->correct_config.is_method_allowed("DELETE") == false)
+			else if (del == true && job->correct_config.is_method_allowed("DELETE") == false)
 				del = false;
 
 			std::map<std::string, std::string>::iterator it;
@@ -432,7 +436,6 @@ class Webserv
 			while (response_size > 0) 
 			{
 				bytes = send(job->fd, response_char, response_size, 0);
-
 				if (bytes < 0) 
 					throw std::runtime_error("Error sending response to client");
 				response_size -= bytes;

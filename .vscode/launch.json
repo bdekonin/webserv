@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Launch",
+            "program": "${workspaceFolder}/webserv",
+            "args": ["config/posttest_config.conf"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "(lldb) Launch rpet",
             "type": "cppdbg",
             "request": "launch",
@@ -17,7 +25,7 @@
             "MIMode": "gdb"
         },
         {
-            "name": "(lldb) Launch post",
+            "name": "(gdb) Launch post",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/webserv",
@@ -29,7 +37,7 @@
             "MIMode": "gdb"
         },
         {
-            "name": "(lldb) Launch test",
+            "name": "(gdb) Launch test",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/webserv",
@@ -41,7 +49,7 @@
             "MIMode": "gdb"
         },
         {
-            "name": "(lldb) Launch redirect",
+            "name": "(gdb) Launch redirect",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/webserv",
@@ -50,7 +58,7 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb"
+            "MIMode": "lldb"
         }
     ]
 }

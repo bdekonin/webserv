@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/10 18:53:46 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/12 08:58:44 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,7 +173,6 @@ class Request
 						this->_incoming_data[chunkEndPos + 1] != '\n')
 				{
 					this->_type = Type::ERROR;
-					throw std::runtime_error("Invalid chunked encoding");
 					break;
 				}
 				if (chunkLength == 0)
@@ -489,11 +488,10 @@ class Request
 							else
 							{
 								if (header == "content-length")
-								{
-									for (int i = 0; i < value.length(); i++)
-										if (!isdigit(value[i]))
-											this->_type = Type::ERROR;
-								}
+									this->check_content_length(header, value);
+								else if (header == "host")
+									this->check_host(header, value);
+
 								if (this->_type != Type::ERROR)
 									this->_headers_map[header] = value;
 							}
@@ -545,6 +543,38 @@ class Request
 		void	setBody(std::vector<unsigned char>::iterator it, size_t length)
 		{
 			this->_body.insert(this->_body.end(), it, it + length);
+		}
+
+		void check_content_length(std::string &header, std::string &value)
+		{
+			for (int i = 0; i < value.length(); i++)
+				if (!isdigit(value[i]))
+					this->_type = Type::ERROR;
+		}
+
+		void check_host(std::string &header, std::string &value)
+		{
+			for (int i = 0; i < value.length(); i++)
+			{
+				if (value[i] == ':')
+				{
+					i++;
+					for (; i < value.length(); i++)
+					{
+						if (!isdigit(value[i]))
+						{
+							this->_type = Type::ERROR;
+							return ;
+						}
+					}
+					if (i == value.length())
+						return ;
+				}
+				if (isalnum(value[i]) || value[i] == '.')
+					continue ;
+				else
+					this->_type = Type::ERROR;
+			}
 		}
 };
 
