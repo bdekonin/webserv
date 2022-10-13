@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/10 15:04:25 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/13 17:03:40 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,7 @@ class Response
 		const char *get_status_code_str() const
 		{
 			std::string temp;
-			temp = std::to_string(this->_status_code);
+			temp = SSTR(this->_status_code);
 			temp += " " + this->_response_codes.at(this->_status_code);
 			return temp.c_str();
 		}
@@ -106,16 +106,20 @@ class Response
 			std::string res = "";
 
 			if (this->_is_build == true)
+			{
 				;
+			}
 			
-			res += "HTTP/1.1 " + std::to_string(this->_status_code) + " " + this->_response_codes[this->_status_code] + "\r\n";
+			res += "HTTP/1.1 " + SSTR(this->_status_code) + " " + this->_response_codes[this->_status_code] + "\r\n";
 			res += this->_headers + "\r\n";
 
 			if (this->_headers.find("Content-Length") == std::string::npos)
 			{
-				res.pop_back();
-				res.pop_back();
-				res += "Content-Length: " + std::to_string(this->_body.size()) + "\r\n\r\n";
+				// res.pop_back();
+				res.erase(res.size() - 1);
+				// res.pop_back();
+				res.erase(res.size() - 1);
+				res += "Content-Length: " + SSTR(this->_body.size()) + "\r\n\r\n";
 			}
 
 			this->_response.insert(this->_response.end(), res.c_str(), res.c_str() + res.length());
@@ -142,7 +146,7 @@ class Response
 
 	public:
 		std::vector<char> _body;
-		void set_3xx_response(Configuration &config, std::string uri) /* Redirections */
+		void set_3xx_response(Configuration &config) /* Redirections */
 		{
 			std::map<size_t, std::string> map = config.get_return();
 			std::map<size_t, std::string>::iterator it = map.begin();
@@ -203,12 +207,12 @@ class Response
 				if (fd > 0 && ret > 0)
 					content = buffer;
 				else
-					content = std::to_string(code) + " " + this->_response_codes[code] + "<br>Using default error page because the error page file couldnt be read or openen";
+					content = SSTR(code) + " " + this->_response_codes[code] + "<br>Using default error page because the error page file couldnt be read or openen";
 				if (fd > 0 && ret >= 0)
 					close(fd);
 			}
 			else
-				content = std::to_string(code) + " " + this->_response_codes[code];
+				content = SSTR(code) + " " + this->_response_codes[code];
 			this->set_body(content.c_str(), content.size());
 		}
 	private:

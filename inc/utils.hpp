@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:26:24 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/10 14:16:22 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/13 16:47:06 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 # include <map>
 # include "Configuration.hpp"
 # include <time.h>
+
+#define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
 
 std::string create_autoindex_line(const std::string &path, const char *name, const struct timespec ts, const unsigned long bytes, bool is_file);
 
@@ -31,6 +33,7 @@ size_t count(std::string str, char c); // Function that counts the amount of tim
 std::string		ft_strtrim(std::string &s1, const char *set);
 char *ft_strnstr(const char *s1, const char *s2, size_t len);
 
+int ft_stoi(const std::string &str);
 
 namespace ft
 {

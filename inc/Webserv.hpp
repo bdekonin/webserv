@@ -108,6 +108,15 @@ class Webserv
 
 							std::string path = job->correct_config.get_cgi().find(extension)->second;
 
+							if (access(path.c_str(), F_OK) != 0)
+							{
+								// file doesn't exist
+							}
+							else
+							{
+								// file exists
+							}
+
 							pid_t pid;
 							int fd_out[2];
 							int fd_in[2];
@@ -150,9 +159,9 @@ class Webserv
 							}
 
 							if (get == true)
-								job->handle_file(fd_out[0], job->correct_config, true);
+								job->handle_file(fd_out[0]);
 							else if (post == true)
-								job->handle_file(fd_out[0], job->correct_config, true);
+								job->handle_file(fd_out[0]);
 							else
 								throw std::runtime_error("Something went terribbly wrong");
 							job->set_client_response(&copy_writefds);
@@ -358,7 +367,7 @@ class Webserv
 				fd = open(job->get_request()._uri.c_str(), O_RDONLY);
 				if (fd == -1)
 					job->set_xxx_response(config, 500);
-				job->handle_file(fd, config);
+				job->handle_file(fd);
 				close(fd);
 			}
 			else if (type == Job::DIRECTORY) // DIRECTORY

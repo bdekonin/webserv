@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/12 08:58:44 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/13 16:16:55 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ class Request
 
 		/* Constructor  */
 		Request()
-		: _method(Method::UNSET), _uri(""), _version(""), _body(std::vector<unsigned char>()), _type(Type::NOT_SET), _incoming_data(std::vector<unsigned char>()), _content_length(0), was_chunked(false)
+		: _method(this->UNSET), _uri(""), _version(""), _body(std::vector<unsigned char>()), _type(this->NOT_SET), _incoming_data(std::vector<unsigned char>()), _content_length(0), was_chunked(false)
 		{
 			this->_headers_map = std::map<std::string, std::string>();
 		}
@@ -95,7 +95,7 @@ class Request
 		void add_incoming_data(char *incoming_buffer, size_t len)
 		{
 			this->_incoming_data.insert(this->_incoming_data.end(), incoming_buffer, incoming_buffer + len);
-			if (this->_type == Type::NOT_SET)
+			if (this->_type == this->NOT_SET)
 			{
 				std::string request(reinterpret_cast<char *>(&this->_incoming_data[0]), this->_incoming_data.size());
 
@@ -103,7 +103,7 @@ class Request
 				if (start_body == std::string::npos) // keep reading headers
 				{
 					if (this->_incoming_data.size() > MAX_ENTITIY_SIZE)
-						this->_type = Type::MAX_ENTITY;
+						this->_type = this->MAX_ENTITY;
 					return ;
 				}
 
@@ -114,7 +114,7 @@ class Request
 				this->_headers(headers);
 				this->_reading_mode();
 				
-				if (this->_type == Type::ERROR || this->_type == Type::MAX_ENTITY)
+				if (this->_type == this->ERROR || this->_type == this->MAX_ENTITY)
 					return ;	
 
 				std::vector<unsigned char>::iterator it = this->_incoming_data.begin();
@@ -122,27 +122,27 @@ class Request
 				// Incoming data is now only the body
 				this->_incoming_data.erase(it, it + headers_size);
 
-				if (this->_type == Type::UNMATCHED_CONTENT_LENGTH)
+				if (this->_type == this->UNMATCHED_CONTENT_LENGTH)
 					this->add_body();
-				else if (this->_type == Type::ENCODING_CHUNKED)
+				else if (this->_type == this->ENCODING_CHUNKED)
 					_parseChunk();
 				else if (this->_incoming_data.size() > 0)
 				{
-					this->_type = Type::DONE;
-					this->_type = Type::ERROR;
+					this->_type = this->DONE;
+					this->_type = this->ERROR;
 				}
 				else
-					this->_type = Type::DONE;
+					this->_type = this->DONE;
 			}
-			else if (this->_type == Type::UNMATCHED_CONTENT_LENGTH)
+			else if (this->_type == this->UNMATCHED_CONTENT_LENGTH)
 				this->add_body();
-			else if (this->_type == Type::ENCODING_CHUNKED)
+			else if (this->_type == this->ENCODING_CHUNKED)
 				_parseChunk();
 			else
-				this->_type == Type::ERROR;
+				this->_type = this->ERROR;
 
 			if (this->_content_length > 0)
-				this->_headers_map["content-length"] = std::to_string(this->_content_length);
+				this->_headers_map["content-length"] = SSTR(this->_content_length);
 		}
 
 		void						_parseChunk()
@@ -172,15 +172,15 @@ class Request
 				if (this->_incoming_data[chunkEndPos] != '\r' ||
 						this->_incoming_data[chunkEndPos + 1] != '\n')
 				{
-					this->_type = Type::ERROR;
+					this->_type = this->ERROR;
 					break;
 				}
 				if (chunkLength == 0)
 				{
-					this->_type = Type::DONE;
+					this->_type = this->DONE;
 					this->_body.push_back('\0');
 
-					this->_headers_map["Content-Length"] = std::to_string(this->_body.size());
+					this->_headers_map["Content-Length"] = SSTR(this->_body.size());
 					this->_content_length = this->_body.size();
 					this->was_chunked = true;
 					break;
@@ -193,7 +193,7 @@ class Request
 
 		bool is_complete()
 		{
-			if (this->_type == Type::DONE)
+			if (this->_type == this->DONE)
 				return true;
 			return false;
 		}
@@ -201,18 +201,18 @@ class Request
 		void clear()
 		{
 			this->_headers_map.clear();
-			this->_method = Method::UNSET;
+			this->_method = this->UNSET;
 			this->_uri.clear();
 			this->_version.clear();
 			this->_body.clear();
 			this->_unedited_uri.clear();
-			this->_type = Type::NOT_SET;
+			this->_type = this->NOT_SET;
 			this->_query_string.clear();
 		}
 
 		bool is_empty() const
 		{
-			if (this->_method == Method::UNSET && this->_uri == "" && this->_version == "" && this->_headers_map.empty())
+			if (this->_method == this->UNSET && this->_uri == "" && this->_version == "" && this->_headers_map.empty())
 				return true;
 			else
 				return false;
@@ -220,23 +220,23 @@ class Request
 
 		bool is_method_get() const
 		{
-			return this->_method == Method::GET;
+			return this->_method == this->GET;
 		}
 		bool is_method_post() const
 		{
-			return this->_method == Method::POST;
+			return this->_method == this->POST;
 		}
 		bool is_method_delete() const
 		{
-			return this->_method == Method::DELETE;
+			return this->_method == this->DELETE;
 		}
 		bool is_method_unset() const
 		{
-			return this->_method == Method::UNSET;
+			return this->_method == this->UNSET;
 		}
 		bool is_method_unsupported() const
 		{
-			return this->_method == Method::UNSUPPORTED;
+			return this->_method == this->UNSUPPORTED;
 		}
 		const std::string &get_unedited_uri() const
 		{
@@ -249,10 +249,10 @@ class Request
 		}
 		bool				is_bad_request()
 		{
-			if (this->_type == Type::ERROR)
+			if (this->_type == this->ERROR)
 				return true;
 
-			if (this->_method == Method::UNSUPPORTED)
+			if (this->_method == this->UNSUPPORTED)
 				return true;
 
 			if (this->get_header("host") == "")
@@ -264,20 +264,20 @@ class Request
 			if (this->_version == "")
 				return true;
 			
-			if (this->_method == Method::POST)
+			if (this->_method == this->POST)
 			{
 				if (this->get_header("content-length") == "")
 					return true; 
 
-				if (this->_type != Type::DONE)
+				if (this->_type != this->DONE)
 					return true;
 				
 				// Should not go here
 
-				if (this->_type == Type::NO_BODY) 
+				if (this->_type == this->NO_BODY) 
 					return true;
 
-				if (this->_type == Type::UNMATCHED_CONTENT_LENGTH)
+				if (this->_type == this->UNMATCHED_CONTENT_LENGTH)
 					return true;
 			}
 
@@ -299,33 +299,33 @@ class Request
 		}
 		const char 			*type_enum_to_s(Type type) const
 		{
-			if (type == Type::NOT_SET)
+			if (type == this->NOT_SET)
 				return "NOT_SET";
-			else if (type == Type::NO_BODY)
+			else if (type == this->NO_BODY)
 				return "NO_BODY";
-			else if (type == Type::UNMATCHED_CONTENT_LENGTH)
+			else if (type == this->UNMATCHED_CONTENT_LENGTH)
 				return "UNMATCHED_CONTENT_LENGTH";
-			else if (type == Type::ENCODING_CHUNKED)
+			else if (type == this->ENCODING_CHUNKED)
 				return "ENCODING_CHUNKED";
-			else if (type == Type::DONE)
+			else if (type == this->DONE)
 				return "DONE";
 			return "ERROR";
 		}
 		const char 			*type_to_s() const
 		{
-			if (this->_type == Type::NOT_SET)
+			if (this->_type == this->NOT_SET)
 				return "NOT_SET";
-			else if (this->_type == Type::NO_BODY)
+			else if (this->_type == this->NO_BODY)
 				return "NO_BODY";
-			else if (this->_type == Type::UNMATCHED_CONTENT_LENGTH)
+			else if (this->_type == this->UNMATCHED_CONTENT_LENGTH)
 				return "UNMATCHED_CONTENT_LENGTH";
-			else if (this->_type == Type::ENCODING_CHUNKED)
+			else if (this->_type == this->ENCODING_CHUNKED)
 				return "ENCODING_CHUNKED";
-			else if (this->_type == Type::DONE)
+			else if (this->_type == this->DONE)
 				return "DONE";
 			return "ERROR";
 		}
-		const Type			get_type() const
+		Type			get_type() const
 		{
 			return this->_type;
 		}
@@ -344,30 +344,30 @@ class Request
 		}
 		const char 			*method_enum_to_s(Method method) const
 		{
-			if (method == Method::UNSET)
+			if (method == this->UNSET)
 				return "UNSET";
-			else if (method == Method::GET)
+			else if (method == this->GET)
 				return "GET";
-			else if (method == Method::POST)
+			else if (method == this->POST)
 				return "POST";
-			else if (method == Method::DELETE)
+			else if (method == this->DELETE)
 				return "DELETE";
 			return "UNSUPPORTED";
 		}
 		const char 			*method_to_s() const
 		{
-			if (this->_method == Method::UNSET)
+			if (this->_method == this->UNSET)
 				return "UNSET";
-			else if (this->_method == Method::GET)
+			else if (this->_method == this->GET)
 				return "GET";
-			else if (this->_method == Method::POST)
+			else if (this->_method == this->POST)
 				return "POST";
-			else if (this->_method == Method::DELETE)
+			else if (this->_method == this->DELETE)
 				return "DELETE";
 			return "UNSUPPORTED";
 		}
 	
-		const Method 		get_method() const
+		Method 		get_method() const
 		{
 			return this->_method;
 		}
@@ -383,13 +383,13 @@ class Request
 		void set_method(std::string &method)
 		{
 			if (method == "GET")
-				this->_method = Method::GET;
+				this->_method = this->GET;
 			else if (method == "POST")
-				this->_method = Method::POST;
+				this->_method = this->POST;
 			else if (method == "DELETE")
-				this->_method = Method::DELETE;
+				this->_method = this->DELETE;
 			else
-				this->_method = Method::UNSUPPORTED;
+				this->_method = this->UNSUPPORTED;
 		}
 		
 
@@ -455,7 +455,7 @@ class Request
 				line = line.substr(end + 2);
 			}
 			else
-				this->_type = Type::ERROR;
+				this->_type = this->ERROR;
 		}
 		void _headers(std::string &line)
 		{
@@ -476,23 +476,23 @@ class Request
 						header[i] = std::tolower(header[i]);
 
 					if (header.find(' ') != std::string::npos)
-						this->_type = Type::ERROR;
+						this->_type = this->ERROR;
 					else
 					{
 						if (header.empty() || value.empty())
-							this->_type = Type::ERROR;
+							this->_type = this->ERROR;
 						else
 						{
 							if (this->_headers_map[header] != "")
-								this->_type = Type::ERROR;
+								this->_type = this->ERROR;
 							else
 							{
 								if (header == "content-length")
-									this->check_content_length(header, value);
+									this->check_content_length(value);
 								else if (header == "host")
-									this->check_host(header, value);
+									this->check_host(value);
 
-								if (this->_type != Type::ERROR)
+								if (this->_type != this->ERROR)
 									this->_headers_map[header] = value;
 							}
 						}
@@ -505,27 +505,27 @@ class Request
 		{
 			std::string value;
 
-			if (this->_type == Type::ERROR)
+			if (this->_type == this->ERROR)
 				return ;
 			if ((value =this->get_header("content-length")) != "")
 			{
 				this->_content_length = atoi(value.c_str());
 				if (this->get_header("transfer-encoding") == "chunked")
-					this->_type = Type::ERROR;
+					this->_type = this->ERROR;
 				else if (this->_content_length > MAX_ENTITIY_SIZE)
-					this->_type = Type::MAX_ENTITY;
+					this->_type = this->MAX_ENTITY;
 				else
-					this->_type = Type::UNMATCHED_CONTENT_LENGTH;
+					this->_type = this->UNMATCHED_CONTENT_LENGTH;
 			}
 			else if (this->get_header("transfer-encoding") == "chunked")
 			{
 				if (this->get_header("content-length") != "")
-					this->_type = Type::ERROR;
+					this->_type = this->ERROR;
 				else
-					this->_type = Type::ENCODING_CHUNKED;
+					this->_type = this->ENCODING_CHUNKED;
 			}
 			else
-				this->_type = Type::NO_BODY;
+				this->_type = this->NO_BODY;
 		}
 
 
@@ -535,9 +535,9 @@ class Request
 			this->_incoming_data.clear();
 			if (this->_body.size() >= this->_content_length)
 			{
-				this->_type = Type::DONE;
+				this->_type = this->DONE;
 				if (this->_body.size() != this->_content_length)
-					this->_type = Type::ERROR;
+					this->_type = this->ERROR;
 			}
 		}
 		void	setBody(std::vector<unsigned char>::iterator it, size_t length)
@@ -545,16 +545,16 @@ class Request
 			this->_body.insert(this->_body.end(), it, it + length);
 		}
 
-		void check_content_length(std::string &header, std::string &value)
+		void check_content_length(std::string &value)
 		{
-			for (int i = 0; i < value.length(); i++)
+			for (size_t i = 0; i < value.length(); i++)
 				if (!isdigit(value[i]))
-					this->_type = Type::ERROR;
+					this->_type = this->ERROR;
 		}
 
-		void check_host(std::string &header, std::string &value)
+		void check_host(std::string &value)
 		{
-			for (int i = 0; i < value.length(); i++)
+			for (size_t i = 0; i < value.length(); i++)
 			{
 				if (value[i] == ':')
 				{
@@ -563,7 +563,7 @@ class Request
 					{
 						if (!isdigit(value[i]))
 						{
-							this->_type = Type::ERROR;
+							this->_type = this->ERROR;
 							return ;
 						}
 					}
@@ -573,7 +573,7 @@ class Request
 				if (isalnum(value[i]) || value[i] == '.')
 					continue ;
 				else
-					this->_type = Type::ERROR;
+					this->_type = this->ERROR;
 			}
 		}
 };

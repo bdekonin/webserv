@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/30 19:56:34 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/13 16:21:11 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,13 +79,26 @@ class Parser
 			if (this->_filename.empty())
 				throw std::runtime_error("parser: No filename given");
 
-			std::ifstream in(this->_filename, std::ios::in);
-			if (!in)
+			int fd = open(this->_filename.c_str(), O_RDONLY);
+			if (fd == -1)
 				throw std::runtime_error("parser: Failed to open config file");
-			std::stringstream contents;
-			contents << in.rdbuf();
-			in.close();
-			this->_filecontent = contents.str();
+
+			this->handle_file(fd, this->_filecontent);
+		}
+
+		void handle_file(int fd, std::string &content)
+		{
+			int ret = 0;
+			char buf[4096 + 1];
+			
+			bzero(buf, 4096 + 1);
+			while ((ret = read(fd, buf, 4096)) > 0)
+			{
+				content.insert(content.end(), buf, buf + ret);
+				if (ret < 4096)
+					break;
+				bzero(buf, 4096);
+			}
 		}
 		std::vector<std::vector<std::string> > splitServer(const std::string &content) // Splits the Content in multiple blocks
 		{
@@ -176,7 +189,7 @@ class Parser
 						// TODO Configure Syntax eg. location / + location /post = //post change to /post
 						// or change location A to /A or location /post + location TEST to /post/TEST and not /postTEST
 					}
-					catch(const std::bad_cast &e)
+					catch(const std::exception &e)
 					{
 						// std::cerr << e.what() << '\n';
 					}

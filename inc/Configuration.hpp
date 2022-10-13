@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/11 13:04:45 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/13 17:01:19 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 # include <string>
 # include <vector>
 # include <map>
+int ft_stoi(const std::string &str);
 
 
 # define whitespaces " \v\t\n"
@@ -129,7 +130,7 @@ class Configuration
 			this->has_forbidden_charachters(v[0]);
 			this->has_forbidden_charachters(v[1]);
 
-			this->_error_page[std::stoi(v[0])] = v[1];
+			this->_error_page[ft_stoi(v[0])] = v[1];
 			this->_isSet["error_page"] = true;
 		}
 		void set_client_max_body_size(std::string &s)
@@ -145,11 +146,12 @@ class Configuration
 			if (*v[0].rbegin() != 'm')
 				throw std::runtime_error("config: client_max_body_size doesnt specify a size in megabytes (m)");
 
-			v[0].pop_back();
+			// v[0].pop_back();
+			v[0].erase(v[0].size() - 1);
 
 			this->has_forbidden_charachters(v[0]);
 			
-			this->_client_max_body_size = std::stoi(v[0]);
+			this->_client_max_body_size = ft_stoi(v[0]);
 			this->_client_max_body_size *= CLIENT_MAX_BODY_SIZE_MULTIPLIER;
 			this->_isSet["client_max_body_size"] = true;
 		}
@@ -205,7 +207,7 @@ class Configuration
 			this->has_forbidden_charachters(v[0]);
 			this->has_forbidden_charachters(v[1]);
 			
-			this->_return[std::stoi(v[0])] = v[1];
+			this->_return[ft_stoi(v[0])] = v[1];
 			this->_isSet["return"] = true;
 		}
 		void set_root(std::string &s)

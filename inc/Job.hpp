@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/12 08:57:08 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/13 16:10:12 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,7 +136,7 @@ class Job
 			}
 		}
 
-		void handle_file(int fd, Configuration &config, bool is_cgi = false)
+		void handle_file(int fd)
 		{
 			std::string &uri = this->get_request()._uri;
 
@@ -205,7 +205,7 @@ class Job
 			
 			this->_set_environment_variable("CONTENT_TYPE", r.get_header("content-type").c_str());
 			
-			this->_set_environment_variable("CONTENT_LENGTH", std::to_string( r._content_length ).c_str());
+			this->_set_environment_variable("CONTENT_LENGTH", SSTR( r._content_length ).c_str());
 			
 			this->_set_environment_variable("GATEWAY_INTERFACE", "CGI/1.1");
 			this->_set_environment_variable("HTTP_ACCEPT", r.get_header("accept").c_str());
@@ -222,7 +222,8 @@ class Job
 			this->_set_environment_variable("REQUEST_METHOD", r.method_to_s());
 			this->_set_environment_variable("SCRIPT_FILENAME", cwd + r._uri);
 			this->_set_environment_variable("SCRIPT_NAME", r._uri.c_str());
-			this->_set_environment_variable("SERVER_PORT", std::to_string(this->server->get_port()).c_str());
+			this->_set_environment_variable("SERVER_PORT", SSTR(this->server->get_port()).c_str());
+
 			this->_set_environment_variable("SERVER_NAME", this->server->get_hostname());
 			this->_set_environment_variable("SERVER_PROTOCOL", "HTTP/1.1");
 			this->_set_environment_variable("SERVER_SOFTWARE", "Webserver Codam 1.0");
@@ -239,7 +240,7 @@ class Job
 
 		void set_3xx_response(Configuration &config)
 		{
-			this->response.set_3xx_response(config, this->get_request()._uri);
+			this->response.set_3xx_response(config);
 		}
 		void set_405_response(Configuration &config)
 		{

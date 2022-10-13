@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/11 13:31:13 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/13 16:44:19 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,14 +95,14 @@ class ServerConfiguration : public Configuration
 				}
 				else if (h_and_p.size() == 1)
 				{
-					host_port_pair pair = std::make_pair(std::string(""), std::stoi(h_and_p[0]));
-					// this->_ports[std::stoi(h_and_p[0])] = "";
+					host_port_pair pair = std::make_pair(std::string(""), ft_stoi(h_and_p[0]));
+					// this->_ports[ft_stoi(h_and_p[0])] = "";
 					this->_ports.push_back(pair);
 				}
 				else if (h_and_p.size() == 2)
 				{
-					host_port_pair pair = std::make_pair(h_and_p[0], std::stoi(h_and_p[1]));
-					// this->_ports[std::stoi(h_and_p[1])] = h_and_p[0];
+					host_port_pair pair = std::make_pair(h_and_p[0], ft_stoi(h_and_p[1]));
+					// this->_ports[ft_stoi(h_and_p[1])] = h_and_p[0];
 					this->_ports.push_back(pair);
 				}
 				else
@@ -146,7 +146,7 @@ class ServerConfiguration : public Configuration
 		LocationConfiguration *get_location_by_uri(std::string &uri)
 		{
 			std::string locations_path;
-			LocationConfiguration *best_match = nullptr;
+			LocationConfiguration *best_match = NULL;
 			size_t best_match_length = 0;
 
 			for (size_t i = 0; i < this->_locations.size(); i++)
