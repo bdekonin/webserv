@@ -108,62 +108,60 @@ class Webserv
 
 							std::string path = job->correct_config.get_cgi().find(extension)->second;
 
-							if (access(path.c_str(), F_OK) != 0)
+							if (access(path.c_str(), F_OK) != 0) // File doesn't exist
 							{
-								// file doesn't exist
+								job->set_xxx_response(job->correct_config, 404);
 							}
-							else
+							else // File Exist
 							{
-								// file exists
-							}
+								pid_t pid;
+								int fd_out[2];
+								int fd_in[2];
+								bool post = job->get_request().is_method_post();
+								bool get = job->get_request().is_method_get();
 
-							pid_t pid;
-							int fd_out[2];
-							int fd_in[2];
-							bool post = job->get_request().is_method_post();
-							bool get = job->get_request().is_method_get();
+								if (pipe(fd_out) < 0)
+									throw std::runtime_error("pipe: failed to create pipe on fd_out.");
+								
+								if (post && pipe(fd_in) < 0)
+									throw std::runtime_error("pipe: failed to create pipe on fd_in.");
 
-							if (pipe(fd_out) < 0)
-								throw std::runtime_error("pipe: failed to create pipe on fd_out.");
-							
-							if (post && pipe(fd_in) < 0)
-								throw std::runtime_error("pipe: failed to create pipe on fd_in.");
+								pid = fork();
+								if (pid < 0)
+									throw std::runtime_error("fork: failed to fork.");
 
-							pid = fork();
-							if (pid < 0)
-								throw std::runtime_error("fork: failed to fork.");
+								if (pid == 0)
+								{
+									job->set_environment_variables();
 
-							if (pid == 0)
-							{
-								job->set_environment_variables();
+									close(fd_out[0]);
 
-								close(fd_out[0]);
-
-								dup2(fd_out[1], 1);
+									dup2(fd_out[1], 1);
+									close(fd_out[1]);
+									if (post)
+									{
+										close(fd_in[1]);
+										dup2(fd_in[0], STDIN_FILENO);
+										close(fd_in[0]);
+									}
+									char	*args[2] = {const_cast<char*>(path.c_str()), NULL};
+									execv(path.c_str(), args);
+									exit(EXIT_FAILURE);
+								}
 								close(fd_out[1]);
 								if (post)
 								{
-									close(fd_in[1]);
-									dup2(fd_in[0], STDIN_FILENO);
 									close(fd_in[0]);
+									write(fd_in[1], body, bodyVec_size);
 								}
-								char	*args[2] = {const_cast<char*>(path.c_str()), NULL};
-								execv(path.c_str(), args);
-								exit(EXIT_FAILURE);
-							}
-							close(fd_out[1]);
-							if (post)
-							{
-								close(fd_in[0]);
-								write(fd_in[1], body, bodyVec_size);
-							}
 
-							if (get == true)
-								job->handle_file(fd_out[0]);
-							else if (post == true)
-								job->handle_file(fd_out[0]);
-							else
-								throw std::runtime_error("Something went terribbly wrong");
+								if (get == true)
+									job->handle_file(fd_out[0]);
+								else if (post == true)
+									job->handle_file(fd_out[0]);
+								else
+									throw std::runtime_error("Something went terribbly wrong");
+							}
 							job->set_client_response(&copy_writefds);
 						}
 					}
