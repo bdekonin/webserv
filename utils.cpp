@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/13 16:47:15 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/21 11:54:09 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,14 +32,15 @@ static std::string get_x_spaces(int x)
 }
 
 // std::string create_autoindex_line(std::string &path, char *name, struct timespec ts, unsigned long bytes)
-std::string create_autoindex_line(const std::string &path, const char *name, const struct timespec ts, const unsigned long bytes, bool is_file)
+std::string create_autoindex_line(const std::string &path, const char *name, time_t ts, const unsigned long bytes, bool is_file)
 {
 	size_t spaces = 0;
 	std::string line = "<a href=\"PATH\">NAME</a> SPACE DATE               BYTES";
 	std::string date = "";
 	char buff[100];
 
-	strftime(buff, 100, "%d-%b-%Y %H:%M:%S", gmtime(&ts.tv_sec));
+	strftime(buff, 100, "%d-%b-%Y %H:%M:%S", localtime(&ts));
+
 
 	spaces = 90 - (path.size() + 2);
 	if (is_file == false)

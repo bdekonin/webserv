@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/13 16:10:12 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/21 11:52:36 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -345,7 +345,7 @@ class Job
 						perror("lstat");
 						exit(EXIT_FAILURE);
 					}
-					body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctim, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
+					body += create_autoindex_line(job->get_request().get_unedited_uri() + diread->d_name, diread->d_name, sb.st_ctime, diread->d_reclen, S_ISREG(sb.st_mode)) + "<br>";
 					name.clear();
 				}
 				closedir(dir);
