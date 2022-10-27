@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/13 17:01:19 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/27 18:52:28 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,23 +19,21 @@
 # include <string>
 # include <vector>
 # include <map>
-int ft_stoi(const std::string &str);
-
 
 # define whitespaces " \v\t\n"
 # define forbidden_characters "\'\"|&;<>`$(){}[]*?#~"
-
 # define CLIENT_MAX_BODY_SIZE_MULTIPLIER 1000000
 
-
 class ServerConfiguration;
-
-void	split(const std::string& str, const char* delims, std::vector<std::string>& out);
 
 class Configuration
 {
 	public:
-		/* Constructor  */
+		/* Constructor */
+		/*
+		** Default constructor which is parent class of the ServerConfiguration.hpp and Configuration.hpp
+		** It includes everything a 'Server' and a 'Location Block' should have.
+		*/
 		Configuration()
 		: _error_page(), _client_max_body_size(1 * CLIENT_MAX_BODY_SIZE_MULTIPLIER), _return(), _root(""), _index(), _cgi()
 		{
@@ -92,6 +90,10 @@ class Configuration
 			this->_cgi.clear();
 		}
 
+		/*
+		** When there is a location block inside a config the location block will have a seperate config object.
+		** some data has to be copied into the next config object.
+		*/
 		void combine_two_locations(Configuration &src) // copying <src> to *this | src is previous config level
 		{
 			if (this->_error_page.empty())

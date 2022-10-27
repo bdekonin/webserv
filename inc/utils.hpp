@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:26:24 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/21 11:54:26 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/27 18:59:24 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,24 +16,24 @@
 # include <string>
 # include <vector>
 # include <map>
-# include "Configuration.hpp"
 # include <time.h>
 
-#define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
+# define whitespaces " \v\t\n"
+# define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
 
 std::string create_autoindex_line(const std::string &path, const char *name, time_t ts, const unsigned long bytes, bool is_file);
 
-void to_upper(std::string &str);
-void to_lower(std::string &str);
 
-void	split(const std::string& str, const char* delims, std::vector<std::string>& out);
-size_t	getCurlyBraceMatch(const std::vector<std::string> &v, size_t curlyBraceOpen);
-size_t	getCurlyBraceMatch(const std::string& str, size_t curlyBraceOpen);
-size_t count(std::string str, char c); // Function that counts the amount of times c is in str
+void			to_upper(std::string &str);
+void			to_lower(std::string &str);
+void			split(const std::string& str, const char* delims, std::vector<std::string>& out);
+size_t			getCurlyBraceMatch(const std::vector<std::string> &v, size_t curlyBraceOpen);
+size_t			getCurlyBraceMatch(const std::string& str, size_t curlyBraceOpen);
+size_t 			count(std::string str, char c); // Function that counts the amount of times c is in str
 std::string		ft_strtrim(std::string &s1, const char *set);
-char *ft_strnstr(const char *s1, const char *s2, size_t len);
-
-int ft_stoi(const std::string &str);
+char 			*ft_strnstr(const char *s1, const char *s2, size_t len);
+void			split(const std::string& str, const char* delims, std::vector<std::string>& out);
+int 			ft_stoi(const std::string &str);
 
 namespace ft
 {

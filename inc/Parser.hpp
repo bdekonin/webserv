@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/13 16:21:11 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/27 19:27:33 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,10 @@ class Parser
 		Parser& operator = (const Parser& e);
 
 		// Methods
+		/*
+		** Firstly we parse all the {} so that everything will belong to a block. So vector[0] will have a block but every block can have nested blocks.
+		** After that we 
+		*/
 		std::vector<ServerConfiguration> init()
 		{
 			std::vector<std::vector<std::string> > blocks; // vector of blocks, will be used temporarily to store the blocks
@@ -143,6 +147,14 @@ class Parser
 			return serverBlocks;
 		}
 
+		/*
+		** Function that converts the blocks (made in this.init()) into a ServerConfiguration.
+		** When this function finds a 'location' identifier,
+		** it goes recursive and uses the @Param config to create a LocationConfiguration.
+		** which will append to the Server after location has been fully set.
+		**
+		**
+		*/
 		size_t parse_block(std::vector<std::string> &block, Configuration &config, ServerConfiguration &server)
 		{
 			std::string identifier;

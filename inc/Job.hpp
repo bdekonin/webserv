@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/21 11:52:36 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/27 19:03:01 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ class Job
 		{
 		}
 		Job(int type, int fd, Server *server, User *user)
-		: type(type), fd(fd), server(server), user(user), request(Request()), response(Response()), cgi(NULL), correct_config(Configuration())
+		: type(type), fd(fd), server(server), user(user), request(Request()), response(Response()), correct_config(Configuration())
 		{
 		}
 
@@ -86,7 +86,6 @@ class Job
 			this->user = e.user;
 			this->request = e.request;
 			this->response = e.response;
-			this->cgi = e.cgi;
 			this->correct_config = e.correct_config;
 			return *this;
 		}
@@ -235,7 +234,6 @@ class Job
 		User			*user; // TODO: change to client class | SAME AS CLIENT
 		Request			request;
 		Response		response;
-		void			*cgi;// TODO change to CGI Object
 		Configuration correct_config;
 
 		void set_3xx_response(Configuration &config)
@@ -270,7 +268,11 @@ class Job
 			FD_SET(this->fd, copy_writefds);
 		}
 
-		PATH_TYPE get_path_options(std::string uri) // TODO FOR DEBUG OPEN IN CHROME https://github.com/bdekonin/minishell/blob/master/src/execve.c#:~:text=stat.h%3E-,int%09%09%09validate_file(char%20*filepath),%7D,-void%09%09signal_exec(
+
+		/*
+		** Function that returns information about the file. See PATH_TYPE for more information.
+		*/
+		PATH_TYPE get_path_options(std::string &uri) // TODO FOR DEBUG OPEN IN CHROME https://github.com/bdekonin/minishell/blob/master/src/execve.c#:~:text=stat.h%3E-,int%09%09%09validate_file(char%20*filepath),%7D,-void%09%09signal_exec(
 		{
 			std::string &path = uri;
 
