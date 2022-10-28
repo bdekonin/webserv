@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/27 19:27:33 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/28 19:57:22 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,25 +164,45 @@ class Parser
 
 			for (; i < block.size(); i++)
 			{
+				size_t size;
 
-				identifier = block[i].substr(0, block[i].find_first_of(whitespaces)); // gets identifier
-				temp = block[i].substr(block[i].find_first_of(whitespaces) + 1); // gets value with whitespaces
-				value = temp.substr(temp.find_first_not_of(whitespaces)); // removes front whitespaces
+				size = block[i].find_first_of(whitespaces);
+				size = (size > block[i].length() || size == std::string::npos) ? block[i].length() : size;
+				identifier = block[i].substr(0, size); // gets identifier
+	
+				size = block[i].find_first_of(whitespaces);
+				size = (size == std::string::npos) ? block[i].length() - 1 : size;
+				temp = block[i].substr(size + 1); // gets value with whitespaces
 
-				value = value.substr(0, value.find_last_not_of(whitespaces) + 1); // removes back whitespaces + 1 for ;. or location / and the {} of location
+				size = temp.find_first_not_of(whitespaces);
+				size = (size > temp.length() || size == std::string::npos) ? temp.length() : size;
+				value = temp.substr(size); // removes front whitespaces
+
+				size = value.find_last_not_of(whitespaces);
+				size = (size > value.length() || size == std::string::npos) ? value.length() : size;
+				value = value.substr(0, size + 1); // removes back whitespaces + 1 for ;. or location / and the {} of location
+
 
 				if (identifier == "location")
 				{
+					if (identifier == value || value.empty())
+						throw std::runtime_error("config: location value is empty");
 					size_t bracketOpen;
 					size_t bracketClose;
 					std::vector<std::string> copy; // a copy of the location block
-
 					bracketOpen = i + 1;
 					bracketClose = i;
-
 					bracketClose = getCurlyBraceMatch(block, bracketOpen + 1) - 1;
-
 					copy = std::vector<std::string>(block.begin() + bracketOpen + 1, block.begin() + bracketClose);
+					/* removes the { when you add it to the end of the location identifier + value */
+					if (value[value.length() - 1] == '{')
+					{
+						size_t last_whitspace;
+						value = value.substr(0, value.length() - 1);
+						last_whitspace = value.find_last_not_of(whitespaces);
+						value = value.substr(0, last_whitspace + 1);
+					}
+
 					block.erase(block.begin() + bracketOpen - 1, block.begin() + bracketClose + 1);
 
 					// checks is the location is nested in another location. if yes it add the parent location to the front.
