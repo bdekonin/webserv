@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/28 19:57:22 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/28 20:34:04 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,11 +48,8 @@ class Parser
 		/* Operation overload = */
 		Parser& operator = (const Parser& e);
 
-		// Methods
-		/*
-		** Firstly we parse all the {} so that everything will belong to a block. So vector[0] will have a block but every block can have nested blocks.
-		** After that we 
-		*/
+		/// @brief Parses the config file and returns a vector of ServerConfiguration objects
+		/// @return this returns a vector of ServerConfiguration objects. Each ServerConfiguration object has a vector of LocationConfiguration objects if they exist in the config file.
 		std::vector<ServerConfiguration> init()
 		{
 			std::vector<std::vector<std::string> > blocks; // vector of blocks, will be used temporarily to store the blocks
@@ -60,7 +57,7 @@ class Parser
 			std::vector<ServerConfiguration> servers;
 			
 			this->_get_content();
-			blocks = this->splitServer(this->_filecontent);
+			blocks = this->splitServer();
 			for (size_t i = 0; i < blocks.size(); i++)
 			{
 				temp_server = ServerConfiguration();
@@ -78,7 +75,8 @@ class Parser
 		std::string			_filename;
 		std::string			_filecontent;
 
-		void _get_content() // Function that uses the _filename to read the file and store it in _filecontent and throws an error if it fails
+		/// @brief Function that uses the _filename to read the file and store it in _filecontent and throws an error if it fails
+		void _get_content()
 		{
 			if (this->_filename.empty())
 				throw std::runtime_error("parser: No filename given");
@@ -90,6 +88,7 @@ class Parser
 			this->handle_file(fd, this->_filecontent);
 		}
 
+		/// @brief Function that splits the filecontent into blocks and returns a vector of blocks
 		void handle_file(int fd, std::string &content)
 		{
 			int ret = 0;
@@ -104,34 +103,38 @@ class Parser
 				bzero(buf, 4096);
 			}
 		}
-		std::vector<std::vector<std::string> > splitServer(const std::string &content) // Splits the Content in multiple blocks
+		
+		/// @brief Function that splits the filecontent into blocks. a block is everything that belongs between the { }, without the { }
+		/// @return 
+		std::vector<std::vector<std::string> > splitServer()
 		{
 			size_t posBegin = 0; 
 			size_t bracketOpen = 0;
 			size_t bracketClose = 0;
 			size_t length = 0;
 			std::vector<std::vector<std::string> > serverBlocks;
+			std::string &fc = this->_filecontent;
 
-			if (count(content, '{') != count(content, '}'))
+			if (count(fc, '{') != count(fc, '}'))
 				throw std::runtime_error("Error: Brackets not closed");
 			
-			while (posBegin < content.length())
+			while (posBegin < fc.length())
 			{
-				posBegin = content.find_first_not_of(whitespaces, posBegin);
+				posBegin = fc.find_first_not_of(whitespaces, posBegin);
 				if (posBegin == std::string::npos) // end of the string (EOF)
 					break;
-				if (content.compare(posBegin, 6, "server"))
+				if (fc.compare(posBegin, 6, "server"))
 					throw std::runtime_error("config: no server block found");
-				bracketOpen = content.find_first_not_of(whitespaces, posBegin + 6);
+				bracketOpen = fc.find_first_not_of(whitespaces, posBegin + 6);
 				if (bracketOpen == std::string::npos)
 					throw std::runtime_error("config: server missing body");
-				if (content[bracketOpen] != '{')
+				if (fc[bracketOpen] != '{')
 					throw std::runtime_error("config: server missing body");
-				bracketClose = getCurlyBraceMatch(content, bracketOpen);
+				bracketClose = getCurlyBraceMatch(fc, bracketOpen);
 				length = bracketClose - posBegin + 1;
 				if (length)
 				{
-					std::string s = content.substr(posBegin, length);
+					std::string s = fc.substr(posBegin, length);
 					{
 						size_t start = s.find('{');
 						size_t end = s.rfind('}');
@@ -147,22 +150,22 @@ class Parser
 			return serverBlocks;
 		}
 
-		/*
-		** Function that converts the blocks (made in this.init()) into a ServerConfiguration.
-		** When this function finds a 'location' identifier,
-		** it goes recursive and uses the @Param config to create a LocationConfiguration.
-		** which will append to the Server after location has been fully set.
-		**
-		**
-		*/
-		size_t parse_block(std::vector<std::string> &block, Configuration &config, ServerConfiguration &server)
+		/// @brief This function loops through the lines of the block and parses them.
+		/// @param block The block that needs to be parsed.
+		/// @param config The Configuration that will be used to store the parsed data.
+		/// @param server The ServerConfiguration that will be used to store the parsed data. (Only used for the recursive call for the location identifier). If not used call this function with the same parameter for both @Param config and @Param server.
+		/// @return void
+		void parse_block(std::vector<std::string> &block, Configuration &config, ServerConfiguration &server)
 		{
+			/// Function that converts the blocks (made in this.init()) into a ServerConfiguration.
+			/// When this function finds a 'location' identifier,
+			/// it goes recursive and uses the @Param config to create a LocationConfiguration.
+			/// which will append to the Server after location has been fully set.
 			std::string identifier;
 			std::string value;
 			std::string temp;
-			size_t i = 0;
 
-			for (; i < block.size(); i++)
+			for (size_t i = 0; i < block.size(); i++)
 			{
 				size_t size;
 
@@ -228,7 +231,7 @@ class Parser
 
 					parse_block(copy, location, server);
 
-					location.combine_two_locations(config); // TODO combines the location with the parent location
+					location.combine_two_locations(config); // combines the location block data with the parent block data
 
 					i--;
 					
@@ -264,7 +267,6 @@ class Parser
 				else
 					throw std::runtime_error("config: unknown identifier " + identifier);
 			}
-			return i;
 		}
 };
 

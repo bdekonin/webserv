@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/27 18:52:28 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/28 20:17:52 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,11 @@
 
 class ServerConfiguration;
 
+/// @brief Base class for all configuration classes
 class Configuration
 {
 	public:
-		/* Constructor */
-		/*
+		/* Constructor
 		** Default constructor which is parent class of the ServerConfiguration.hpp and Configuration.hpp
 		** It includes everything a 'Server' and a 'Location Block' should have.
 		*/
@@ -74,7 +74,7 @@ class Configuration
 			return *this;
 		}
 
-		// Methods
+		/// @brief Method to clear all the data in the class
 		void clear() // clear all data
 		{
 			this->_isSet.clear();
@@ -90,34 +90,37 @@ class Configuration
 			this->_cgi.clear();
 		}
 
-		/*
-		** When there is a location block inside a config the location block will have a seperate config object.
-		** some data has to be copied into the next config object.
-		*/
+		/// @brief When there is a location block inside a config the location block will have a seperate config object. some data has to be copied into the next config object.
+		/// @param src // the config object that has to be copied into the current config object.
 		void combine_two_locations(Configuration &src) // copying <src> to *this | src is previous config level
 		{
 			if (this->_error_page.empty())
 				this->_error_page = src._error_page;
 		}
 
-		bool is_method_allowed(std::string &method)
+		/// @brief Returns a boolean if the http method is allowed. This function compares it while ignoring the uppwer/lower case.
+		/// @param method athe http method. GET POST DELETE
+		/// @return true if the method is allowed
+		bool is_method_allowed(std::string const &method) const 
 		{
-			if (method == "GET")
+			return this->is_method_allowed(method.c_str());
+		}
+		
+		/// @brief Returns a boolean if the http method is allowed. This function compares it while ignoring the uppwer/lower case.
+		/// @param method the http method. GET POST DELETE
+		/// @return true if the method is allowed
+		bool is_method_allowed(const char *method) const
+		{
+			if (strcasecmp(method, "GET") == 0)
 				return (this->_methods[0]);
-			else if (method == "POST")
+			else if (strcasecmp(method, "POST") == 0)
 				return (this->_methods[1]);
-			else if (method == "DELETE")
+			else if (strcasecmp(method, "DELETE") == 0)
 				return (this->_methods[2]);
 			else
 				return false; // only GET POST DELETE
 		}
-		bool is_method_allowed(const char *method)
-		{
-			std::string str(method);
-			return (this->is_method_allowed(str)); // 405!!!!!!!!!!!!!!!!!!!!
-		}
-		
-		// Setters
+
 		void set_error_page(std::string &s)
 		{
 			std::vector<std::string> v;
@@ -366,14 +369,16 @@ class Configuration
 		std::vector<std::string>			_index; // order of index files
 		std::map<std::string, std::string>	_cgi; // path to cgi
 
-		// isSet booleans
-		// list of bool
-
+		/// @brief This function removes the semicolon from the end of the string
+		/// @param s the string to remove the semicolon from
 		void remove_semicolen(std::string &s) // removes the semicolen at the end if it is still there
 		{
 			if (s[s.length() - 1] == ';')
 				s.erase(s.length() - 1);
 		}
+		
+		/// @brief This function checks if the string has forbidden characters
+		/// @param s the string to check
 		void has_forbidden_charachters(std::string &s)
 		{
 			if (s.find_first_of(forbidden_characters) != std::string::npos)

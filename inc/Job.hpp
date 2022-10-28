@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/27 19:03:01 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/28 20:50:08 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,22 +90,31 @@ class Job
 			return *this;
 		}
 
+		/// @brief this function checks if this job is ready to read
+		/// @return this returns true if the job is ready to read, false if not.
 		bool is_read()
 		{
 			return (this->type % 2 == 0);
 		}
+		/// @brief this function checks if this job is ready to write
+		/// @return this returns true if the job is ready to write, false if not.
 		bool is_write()
 		{
 			return (this->type % 2 == 1);
 		}
+		/// @brief This function is used to check if the job is a server. a Server type is always 'WAIT_FOR_CONNECTION'.
+		/// @return this returns true if the job is a server, false if not.
 		bool is_server()
 		{
 			return (this->type == WAIT_FOR_CONNECTION);
 		}
+		/// @brief This function is used to check if the job is a client job. a Job type is never 'WAIT_FOR_CONNECTION'.
+		/// @return this returns true if the job is a client job, false if not.
 		bool is_client()
 		{
 			return (!this->is_server());
 		}
+
 
 		Response &get_response()
 		{
@@ -116,13 +125,16 @@ class Job
 			return this->request;
 		}
 
-		void clear() // clear the request and response
+		/// @brief This clears the request and response of the job.
+		void clear()
 		{
 			this->request.clear();
 			this->response.clear();
 			this->correct_config = Configuration();
 		}
 
+		/// @brief This function makes sure that when you access the dir 'post' and you have a root of 'www'. It will return 'www/post'.
+		/// @param ConfigToChange_path 
 		void parse_request(std::string &ConfigToChange_path)
 		{
 			if (this->correct_config.get_return().size() != 0)
@@ -135,6 +147,8 @@ class Job
 			}
 		}
 
+		/// @brief This function reads from the file descriptor and saves the header in the request. and the body in the body.
+		/// @param fd The file descriptor to read from.
 		void handle_file(int fd)
 		{
 			std::string &uri = this->get_request()._uri;
@@ -149,7 +163,6 @@ class Job
 			bzero(buf, 4096 + 1);
 			while ((ret = read(fd, buf, 4096)) > 0)
 			{
-				// TODO read error
 				pointer = ft_strnstr(buf, "\r\n\r\n", ret);
 				if (pointer != NULL)
 					pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
@@ -165,6 +178,9 @@ class Job
 				pointer = NULL;
 			}
 		}
+
+		/// @brief This function creates a list of all the files in the directory. 'autoindex' and stores it into the response body.
+		/// @param config this is the config object. mainly used if there was something wrong in the config. e.g. malloc, read, etc
 		void generate_autoindex_add_respone(Configuration &config)
 		{
 			std::string temp;
@@ -174,25 +190,7 @@ class Job
 				this->set_xxx_response(config, 500);
 		}
 	
-		const char *num_to_define_name(const int num)
-		{
-			if (num == 0)
-				return ("WAIT_FOR_CONNECTION");
-			if (num == 1)
-				return ("CLIENT_RESPONSE");
-			if (num == 2)
-				return ("CLIENT_READ");
-			if (num == 3)
-				return ("FILE_WRITE");
-			if (num == 4)
-				return ("FILE_READ");
-			if (num == 5)
-				return ("CGI_WRITE");
-			if (num == 6)
-				return ("CGI_READ");
-			return ("UNSUPPORTED");
-		}
-	
+		/// @brief This function environment veriables for the CGI. This is alwasy called inside a fork otherwise it will overwrite the parent's environment. so also the shell that it got called from
 		void set_environment_variables()
 		{
 			char buffer[1024];
@@ -201,11 +199,8 @@ class Job
 			std::string				cwd = std::string(buffer) + '/';
 			
 			Request &r = this->get_request();
-			
 			this->_set_environment_variable("CONTENT_TYPE", r.get_header("content-type").c_str());
-			
 			this->_set_environment_variable("CONTENT_LENGTH", SSTR( r._content_length ).c_str());
-			
 			this->_set_environment_variable("GATEWAY_INTERFACE", "CGI/1.1");
 			this->_set_environment_variable("HTTP_ACCEPT", r.get_header("accept").c_str());
 			this->_set_environment_variable("HTTP_ACCEPT_CHARSET", r.get_header("accept-charset").c_str());
@@ -262,6 +257,8 @@ class Job
 				this->response.set_xxx_response(config, code);
 		}
 
+		/// @brief This function gets called after you are done with it. It will FD_SET the fd to write and makes sure it will be writen
+		/// @param copy_writefds this is the fd_set that will be used loop over with FD_ISSET
 		void set_client_response(fd_set *copy_writefds) // fd_sets to write fd_set. and set client_response
 		{
 			this->type = CLIENT_RESPONSE;
@@ -272,7 +269,11 @@ class Job
 		/*
 		** Function that returns information about the file. See PATH_TYPE for more information.
 		*/
-		PATH_TYPE get_path_options(std::string &uri) // TODO FOR DEBUG OPEN IN CHROME https://github.com/bdekonin/minishell/blob/master/src/execve.c#:~:text=stat.h%3E-,int%09%09%09validate_file(char%20*filepath),%7D,-void%09%09signal_exec(
+		/// @brief This function returns information about the file. See PATH_TYPE for more information. Used bdekonin minishell code for this.
+		/// https://github.com/bdekonin/minishell/blob/master/src/execve.c#:~:text=stat.h%3E-,int%09%09%09validate_file(char%20*filepath),%7D,-void%09%09signal_exec(
+		/// @param uri location of the file or directory
+		/// @return PATH_TYPE
+		PATH_TYPE get_path_options(std::string &uri)
 		{
 			std::string &path = uri;
 
