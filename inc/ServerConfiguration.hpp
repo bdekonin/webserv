@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/13 16:44:19 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/28 20:36:08 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,11 @@
 # include "LocationConfiguration.hpp"
 # include <iostream>
 
+
+/// @brief This class is used to store everything in a 'server' block.
+/// It inherits from the Configuration class. The difference between.
+/// LocationConfiguration and ServerConfiguration is that the ServerConfiguration class has a vector of LocationConfiguration objects.
+/// Everything inside a Configuration object can also exist in a ServerConfiguration object.
 class ServerConfiguration : public Configuration
 {
 	private:

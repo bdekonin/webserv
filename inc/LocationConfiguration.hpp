@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:42:51 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/07 19:06:20 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/28 20:35:05 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 # include "Configuration.hpp"
 
+
+/// @brief This class is used to store everything in a 'location' block. It inherits from the Configuration class. Everything inside a Configuration object can also exist in a LocationConfiguration object.
 class LocationConfiguration : public Configuration
 {
 	public:
