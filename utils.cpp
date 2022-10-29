@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/27 18:59:15 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/29 18:37:15 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,9 @@
 # include <cstring>
 #include <sstream>
 
+/// @brief Function that converrts a string to a integer. Throws an error if the string is not a integer.
+/// @param str String that needs to be converted to a integer.
+/// @return Returns the integer that is converted from the string.
 int ft_stoi(const std::string &str) 
 {
   std::stringstream ss(str);
@@ -23,6 +26,7 @@ int ft_stoi(const std::string &str)
   return num;
 }
 
+/// @brief Function that creates a string with x amount of spaces. Used for creating and spacing auto index files.
 static std::string get_x_spaces(int x)
 {
 	if (x < 0)
@@ -31,7 +35,13 @@ static std::string get_x_spaces(int x)
 	return (spaces);
 }
 
-// std::string create_autoindex_line(std::string &path, char *name, struct timespec ts, unsigned long bytes)
+/// @brief Function that creates one line for the autoindex generator
+/// @param path Path of the file
+/// @param name Name of the file
+/// @param ts Timestamp of the file
+/// @param bytes Bytes of the file
+/// @param is_file Boolean that checks if the file is a file or a directory
+/// @return Returns the string that is created for the autoindex generator
 std::string create_autoindex_line(const std::string &path, const char *name, time_t ts, const unsigned long bytes, bool is_file)
 {
 	size_t spaces = 0;
@@ -63,18 +73,34 @@ std::string create_autoindex_line(const std::string &path, const char *name, tim
 	return (line);
 }
 
+/// @brief Converts string to upper
+/// @param str String that needs to be converted to upper
 void to_upper(std::string &str)
 {
 	for (size_t i = 0; i < str.size(); i++)
 		str[i] = toupper(str[i]);
 }
+/// @brief Converts string to lower
+/// @param str String that needs to be converted to lower
 void to_lower(std::string &str)
 {
 	for (size_t i = 0; i < str.size(); i++)
 		str[i] = tolower(str[i]);
 }
 
-size_t		count(std::string str, char c)
+/// @brief Function that counts characters in a string
+/// @param str String that needs to be counted
+/// @param c Character that needs to be counted
+/// @return Returns the amount of characters in the string
+size_t		count(std::string const &str, char c)
+{
+	size_t count = 0;
+	for (size_t i = 0; i < str.length(); i++)
+		if (str[i] == c)
+			count++;
+	return (count);
+}
+size_t		count(std::string const str, char c)
 {
 	size_t count = 0;
 	for (size_t i = 0; i < str.length(); i++)
@@ -83,7 +109,11 @@ size_t		count(std::string str, char c)
 	return (count);
 }
 
-size_t	getCurlyBraceMatch(const std::string& str, size_t curlyBraceOpen)
+/// @brief Function that matches the '{' with the '}' in a string
+/// @param str String that needs to be checked
+/// @param curlyBraceOpen Position of the '{'
+/// @return Returns the position of the '}'
+size_t	getCurlyBraceMatch(std::string const &str, size_t curlyBraceOpen)
 {
 	size_t	pos = curlyBraceOpen;
 	int		BraceSubString = 1;
@@ -98,6 +128,11 @@ size_t	getCurlyBraceMatch(const std::string& str, size_t curlyBraceOpen)
 	}
 	return pos;
 }
+
+/// @brief Function that matches the '{' with the '}' in a string
+/// @param v Vector that needs to be checked
+/// @param curlyBraceOpen Position of the '{'
+/// @return Returns the position of the '}'
 size_t	getCurlyBraceMatch(const std::vector<std::string> &v, size_t curlyBraceOpen)
 {
 	size_t	pos = curlyBraceOpen;
@@ -116,7 +151,12 @@ size_t	getCurlyBraceMatch(const std::vector<std::string> &v, size_t curlyBraceOp
 	return pos;
 }
 
-void	split(const std::string& str, const char* delims, std::vector<std::string>& out)
+
+/// @brief Similar to the function ft_split. This function splits a string on a character and returns a vector with the split strings.
+/// @param str String that needs to be split
+/// @param delims Characters that needs to be split on
+/// @param out Vector that will be filled with the split strings
+void	split(std::string const &str, const char* delims, std::vector<std::string> &out)
 {
 	size_t	posBegin = 0;
 	size_t	posEnd;

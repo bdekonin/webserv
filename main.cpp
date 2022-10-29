@@ -6,45 +6,23 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/09/13 12:27:46 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/29 19:07:05 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
-
-
 #include <string.h>
-
-
-#include <stdio.h>
+#include <string>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <string.h>
 #include <fcntl.h>
 
-# include <iostream>
-# include <iomanip>
-# include <sstream>
-# include <fstream>
-# include <string>
-# include <limits>
-# include <cstdio>
-# include <vector>
-
-#include <arpa/inet.h>
-
-# include "inc/Configuration.hpp" // Base Class
 # include "inc/ServerConfiguration.hpp" // Derived from Configuration
-# include "inc/LocationConfiguration.hpp" // Derived from Configuration
 # include "inc/Webserv.hpp"
 # include "inc/Parser.hpp"
-
 # include "inc/Server.hpp"
 # include "inc/Job.hpp"
-# include "inc/Request.hpp"
-# include "inc/Response.hpp"
 
 int main(int argc, char const *argv[])
 {
