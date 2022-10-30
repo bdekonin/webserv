@@ -37,6 +37,18 @@
             "MIMode": "gdb"
         },
         {
+            "name": "(gdb) Launch html",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/webserv",
+            "args": ["config/html.conf"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        },
+        {
             "name": "(gdb) Launch test",
             "type": "cppdbg",
             "request": "launch",

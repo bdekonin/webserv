@@ -43,7 +43,7 @@ class Webserv
 	public:
 		/* Constructor  */
 		Webserv(std::vector<ServerConfiguration> &configs)
-		: configs(configs), _max_fd(0)
+		: configs(configs), _max_fd(0), is_running(true)
 		{
 			
 		}
@@ -69,14 +69,25 @@ class Webserv
 			this->setFdSets();
 		}
 
+		// void interruptHandler(int sig_int)
+		// {
+		// 	(void)sig_int;
+		// 	std::cout << "\b\b \b\b";
+		// 	this->is_running = false;
+		// }
+
 		void run()
 		{
+			// signal(SIGINT, interruptHandler);
+			// signal(SIGQUIT, interruptHandler);
+
+
 			std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 			Job *job;
-			while (true)
+			while (this->is_running == true)
 			{
-				fd_set copy_readfds = this->read_fds;
-				fd_set copy_writefds = this->write_fds;
+				fd_set copy_readfds = this->fds;
+				fd_set copy_writefds = this->fds;
 				if (select((int)this->_max_fd + 1, &copy_readfds, &copy_writefds, NULL, NULL) < 0)
 					throw std::runtime_error("select: failed to select.");
 				for (size_t loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
@@ -85,7 +96,7 @@ class Webserv
 					{
 						job = &this->jobs[loop_job_counter];
 						if (job->type == WAIT_FOR_CONNECTION)
-							accept_connection(job, this->jobs, &this->read_fds);
+							accept_connection(job, this->jobs, &this->fds);
 						else if (job->type == CLIENT_READ)
 						{
 							if (this->client_read(job, loop_job_counter, &copy_writefds) == 0)
@@ -97,73 +108,7 @@ class Webserv
 							this->file_read(job, &copy_writefds);
 						}
 						else if ( job->type == CGI_WRITE || job->type == CGI_READ)
-						{
-							std::vector<unsigned char>	&bodyVector = job->get_request()._body;
-							bodyVector.push_back('\0');
-							char						*body = reinterpret_cast<char*>(&bodyVector[0]);
-							size_t bodyVec_size = bodyVector.size();
-
-							std::string extension = job->get_request()._uri.substr(job->get_request()._uri.find_last_of("."));
-
-
-							std::string path = job->correct_config.get_cgi().find(extension)->second;
-
-							if (access(path.c_str(), F_OK) != 0) // File doesn't exist
-							{
-								job->set_xxx_response(job->correct_config, 404);
-							}
-							else // File Exist
-							{
-								pid_t pid;
-								int fd_out[2];
-								int fd_in[2];
-								bool post = job->get_request().is_method_post();
-								bool get = job->get_request().is_method_get();
-
-								if (pipe(fd_out) < 0)
-									throw std::runtime_error("pipe: failed to create pipe on fd_out.");
-								
-								if (post && pipe(fd_in) < 0)
-									throw std::runtime_error("pipe: failed to create pipe on fd_in.");
-
-								pid = fork();
-								if (pid < 0)
-									throw std::runtime_error("fork: failed to fork.");
-
-								if (pid == 0)
-								{
-									job->set_environment_variables();
-
-									close(fd_out[0]);
-
-									dup2(fd_out[1], 1);
-									close(fd_out[1]);
-									if (post)
-									{
-										close(fd_in[1]);
-										dup2(fd_in[0], STDIN_FILENO);
-										close(fd_in[0]);
-									}
-									char	*args[2] = {const_cast<char*>(path.c_str()), NULL};
-									execv(path.c_str(), args);
-									exit(EXIT_FAILURE);
-								}
-								close(fd_out[1]);
-								if (post)
-								{
-									close(fd_in[0]);
-									write(fd_in[1], body, bodyVec_size);
-								}
-
-								if (get == true)
-									job->handle_file(fd_out[0]);
-								else if (post == true)
-									job->handle_file(fd_out[0]);
-								else
-									throw std::runtime_error("Something went terribbly wrong");
-							}
-							job->set_client_response(&copy_writefds);
-						}
+							this->do_cgi(job, &copy_writefds);
 					}
 				}
 				for (size_t loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
@@ -197,11 +142,11 @@ class Webserv
 		std::vector<ServerConfiguration>	&configs;	// Vector of all the server configurations.
 		std::map<int, Server>				servers;	// Map of all the servers that are running. | Key = port | Value = Server
 		std::map<int, Job>					jobs;		// List of all jobs. it includes the Servers and Clients. | Key = socket | Value = Job
-		fd_set								read_fds;	// List of all file descriptors that are ready to read.
-		fd_set								write_fds;	// List of all file descriptors that are ready to write.
+		fd_set								fds;	// List of all file descriptors that are ready to read.
 
 	private:
 		int _max_fd;
+		bool is_running;
 		/* User Types Handling */
 		int client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
 		{
@@ -215,8 +160,7 @@ class Webserv
 			{
 				close(job->fd);
 				std::cerr << CLRS_GRN << "server : connection closed by client " << job->fd << CLRS_reset << std::endl;
-				FD_CLR(job->fd, &this->read_fds);
-				FD_CLR(job->fd, &this->write_fds);
+				FD_CLR(job->fd, &this->fds);
 				delete job->user;
 				this->jobs.erase(job->fd);
 				return (0);
@@ -373,7 +317,8 @@ class Webserv
 				size_t i = 0;
 				Job::PATH_TYPE copy_type;
 
-				if (config.get_autoindex() == true && job->get_request()._uri[job->get_request()._uri.size() - 1] != '/')
+				// if (config.get_autoindex() == true && job->get_request()._uri[job->get_request()._uri.size() - 1] != '/')
+				if (config.get_autoindex() == true)
 					job->generate_autoindex_add_respone(config);
 				else
 				{
@@ -388,7 +333,6 @@ class Webserv
 					{
 						Job copy = *job;
 						copy.get_request()._uri = copy.get_request()._uri + config.get_index()[i];
-
 						copy_type = copy.get_path_options();
 						if (copy_type == Job::NOT_FOUND)
 							continue;
@@ -403,7 +347,9 @@ class Webserv
 					if (copy_type != Job::FILE_FOUND  && copy_type != Job::NO_PERMISSIONS && config.get_autoindex() == true)
 						job->generate_autoindex_add_respone(config);
 					else if (copy_type != Job::FILE_FOUND && copy_type != Job::NO_PERMISSIONS)
+					{
 						job->set_xxx_response(config, 404);
+					}
 				}
 
 				// file read RECURIVE ???
@@ -461,14 +407,80 @@ class Webserv
 			{
 				close(job->fd);
 				std::cerr << CLRS_GRN << "server : connection closed by server " << job->fd << CLRS_reset << std::endl;
-				FD_CLR(job->fd, &this->read_fds);
-				FD_CLR(job->fd, &this->write_fds);
+				FD_CLR(job->fd, &this->fds);
 				delete job->user;
 				this->jobs.erase(job->fd);
 			}
 		}
 
+		void do_cgi(Job *job, fd_set *copy_writefds)
+		{
+			std::vector<unsigned char>	&bodyVector = job->get_request()._body;
+			bodyVector.push_back('\0');
+			char						*body = reinterpret_cast<char*>(&bodyVector[0]);
+			size_t bodyVec_size = bodyVector.size();
 
+			std::string extension = job->get_request()._uri.substr(job->get_request()._uri.find_last_of("."));
+
+
+			std::string path = job->correct_config.get_cgi().find(extension)->second;
+
+			if (access(path.c_str(), F_OK) != 0) // File doesn't exist
+			{
+				job->set_xxx_response(job->correct_config, 404);
+			}
+			else // File Exist
+			{
+				pid_t pid;
+				int fd_out[2];
+				int fd_in[2];
+				bool post = job->get_request().is_method_post();
+				bool get = job->get_request().is_method_get();
+
+				if (pipe(fd_out) < 0)
+					throw std::runtime_error("pipe: failed to create pipe on fd_out.");
+				
+				if (post && pipe(fd_in) < 0)
+					throw std::runtime_error("pipe: failed to create pipe on fd_in.");
+
+				pid = fork();
+				if (pid < 0)
+					throw std::runtime_error("fork: failed to fork.");
+
+				if (pid == 0)
+				{
+					job->set_environment_variables();
+
+					close(fd_out[0]);
+
+					dup2(fd_out[1], 1);
+					close(fd_out[1]);
+					if (post)
+					{
+						close(fd_in[1]);
+						dup2(fd_in[0], STDIN_FILENO);
+						close(fd_in[0]);
+					}
+					char	*args[2] = {const_cast<char*>(path.c_str()), NULL};
+					execv(path.c_str(), args);
+					exit(EXIT_FAILURE);
+				}
+				close(fd_out[1]);
+				if (post)
+				{
+					close(fd_in[0]);
+					write(fd_in[1], body, bodyVec_size);
+				}
+
+				if (get == true)
+					job->handle_file(fd_out[0]);
+				else if (post == true)
+					job->handle_file(fd_out[0]);
+				else
+					throw std::runtime_error("Something went terribbly wrong");
+			}
+			job->set_client_response(&copy_writefds);
+		}
 
 
 		/* Handle Connection */
@@ -528,14 +540,13 @@ class Webserv
 			int fd;
 			
 			// Zeroing the fd_sets.
-			FD_ZERO(&this->read_fds);
-			FD_ZERO(&this->write_fds);
+			FD_ZERO(&this->fds);
 
 			for (it = this->servers.begin(); it != this->servers.end(); it++)
 			{
 				fd = it->second.get_socket();
 				this->jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
-				FD_SET(fd, &this->read_fds);
+				FD_SET(fd, &this->fds);
 				if (fd > this->_max_fd)
 					this->_max_fd = fd;
 			}

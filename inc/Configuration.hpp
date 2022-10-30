@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/28 20:17:52 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/30 18:18:03 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,8 @@ class Configuration
 		{
 			if (this->_error_page.empty())
 				this->_error_page = src._error_page;
+			if (this->_root.empty())
+				this->_root = src._root;
 		}
 
 		/// @brief Returns a boolean if the http method is allowed. This function compares it while ignoring the uppwer/lower case.

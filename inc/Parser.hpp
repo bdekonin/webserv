@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/28 20:34:04 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/30 19:17:41 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,6 +206,11 @@ class Parser
 						value = value.substr(0, last_whitspace + 1);
 					}
 
+					if (*value.begin() != '/')
+						throw std::runtime_error("config: location value does not start with /");
+					if (*value.rbegin() != '/')
+						throw std::runtime_error("config: location value does not end with /");
+
 					block.erase(block.begin() + bracketOpen - 1, block.begin() + bracketClose + 1);
 
 					// checks is the location is nested in another location. if yes it add the parent location to the front.
@@ -215,7 +220,9 @@ class Parser
 					{
 						std::string path = location.get_path();
 						LocationConfiguration &tempLocation = dynamic_cast<LocationConfiguration&>(config);
+
 						
+
 						if (path[0] == '/')
 							location.set_path(tempLocation.get_path() + path.substr(1));
 						else
@@ -235,8 +242,6 @@ class Parser
 
 					i--;
 					
-					// // TODO maybe change to current configuration + new location
-					// // so if location block dont have a value it will be the overwritten by the server block
 					server.get_locations().push_back(location);
 					continue;
 				}

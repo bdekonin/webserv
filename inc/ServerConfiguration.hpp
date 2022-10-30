@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/28 20:36:08 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/30 18:54:06 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,12 +153,14 @@ class ServerConfiguration : public Configuration
 			std::string locations_path;
 			LocationConfiguration *best_match = NULL;
 			size_t best_match_length = 0;
+			size_t matchlength;
 
 			for (size_t i = 0; i < this->_locations.size(); i++)
 			{
 				locations_path = this->_locations[i].get_path();
 
-				size_t matchlength = getMatchLength(uri, locations_path);
+				// size_t matchlength = getMatchLength(uri, locations_path);
+				matchlength = this->match_length_with_without_backslash(uri, locations_path);
 				if (matchlength > best_match_length)
 				{
 					best_match = &this->_locations[i];
@@ -166,6 +168,24 @@ class ServerConfiguration : public Configuration
 				}
 			}
 			return best_match;
+		}
+
+		size_t match_length_with_without_backslash(std::string const &uri, std::string &l_path)
+		{
+			// size_t one;
+			// size_t two;
+
+			// std::string l_path_bslash = l_path;
+			// // if (*l_path.begin() != '/')
+			// // 	l_path_bslash.insert(l_path_bslash.begin(), '/');
+			// // if (*l_path.rbegin() != '/')
+			// // 	l_path_bslash.push_back('/');
+
+			// one = getMatchLength(uri, l_path);
+			// two = getMatchLength(uri, l_path_bslash);
+
+			// return (one > two ? one : two);
+			return getMatchLength(uri, l_path);
 		}
 
 		// Getters

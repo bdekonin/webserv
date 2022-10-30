@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/28 20:50:08 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/10/30 18:02:23 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -196,7 +196,8 @@ class Job
 			char buffer[1024];
 			getcwd(buffer, 1024);
 
-			std::string				cwd = std::string(buffer) + '/';
+			std::string				cwd(buffer);
+			cwd.push_back('/');
 			
 			Request &r = this->get_request();
 			this->_set_environment_variable("CONTENT_TYPE", r.get_header("content-type").c_str());
@@ -241,7 +242,7 @@ class Job
 		}
 		void set_500_response(Configuration &config)
 		{
-			this->set_xxx_response(config, 500);
+			this->response.set_xxx_response(config, 500);
 		}
 
 		/* Sets a response to @code with no special headers */
