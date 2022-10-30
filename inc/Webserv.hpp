@@ -479,7 +479,7 @@ class Webserv
 				else
 					throw std::runtime_error("Something went terribbly wrong");
 			}
-			job->set_client_response(&copy_writefds);
+			job->set_client_response(copy_writefds);
 		}
 
 
