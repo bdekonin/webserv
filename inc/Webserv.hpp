@@ -318,14 +318,19 @@ class Webserv
 				Job::PATH_TYPE copy_type;
 
 				// if (config.get_autoindex() == true && job->get_request()._uri[job->get_request()._uri.size() - 1] != '/')
-				if (config.get_autoindex() == true)
-					job->generate_autoindex_add_respone(config);
+				// if (config.get_autoindex() == true &&)
+				// 	job->generate_autoindex_add_respone(config);
+				// else
+				// {
+					/* Do files */
+				if (isRecursive == true)
+				{
+					// Should not go here
+					job->set_xxx_response(config, 400);
+					job->set_client_response(copy_writefds); 
+				}
 				else
 				{
-					/* Do files */
-					if (isRecursive == true)
-						throw std::runtime_error("Recursive is true, but type is D");
-
 					if (config.get_index().size() == 0)
 						config.get_index().push_back("index.html");
 
