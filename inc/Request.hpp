@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/13 16:16:55 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/03 21:39:26 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,7 +153,7 @@ class Request
 			{
 
 				it = std::search(this->_incoming_data.begin(), this->_incoming_data.end(),
-								"\r\n", "\r\n" + 2);
+								"\r\n", &"\r\n"[2]);
 				if (it == this->_incoming_data.end())
 					break;
 

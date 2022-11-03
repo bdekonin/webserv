@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/29 19:07:05 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/03 21:43:01 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,10 @@
 
 int main(int argc, char const *argv[])
 {
+	if (argc != 2) {
+		std::cerr << "Usage: ./webserv <config_file>" << std::endl;
+		return EXIT_FAILURE;
+	}
 	(void)argc;
 	std::vector<ServerConfiguration> configs;
 	std::map<int, Server> servers; // port, server

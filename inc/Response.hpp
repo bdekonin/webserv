@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/13 17:03:40 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/03 21:39:37 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,13 +76,6 @@ class Response
 		int get_status_code() const
 		{
 			return this->_status_code;
-		}
-		const char *get_status_code_str() const
-		{
-			std::string temp;
-			temp = SSTR(this->_status_code);
-			temp += " " + this->_response_codes.at(this->_status_code);
-			return temp.c_str();
 		}
 		const std::string &get_headers() const
 		{
