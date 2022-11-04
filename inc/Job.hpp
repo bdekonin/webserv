@@ -16,7 +16,6 @@
 # include "Server.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
-# include "User.hpp"
 # include <string>
 
 
@@ -58,9 +57,9 @@ class Job
 			 * @param type This will be the type of the job. Uses the #Defines above. To select the type
 			 * @param fd File descriptor of the Client or Server.
 			 * @param server A pointer to a server. Will be NULL if its a client.
-			 * @param user A pointer to a user. Will be NULL if its a server.
+			 * @param client_addr
 			 */
-			Job(int type, int fd, Server *server, User *user);
+			Job(int type, int fd, Server *server, struct sockaddr_in *client_addr);
 
 		/* Destructor */
 			virtual ~Job();
@@ -133,11 +132,10 @@ class Job
 		int				type; // Type of connection. See #defines above.
 		int				fd; // File descriptor of the connection.
 		Server			*server;
-		User			*user; // TODO: change to client class | SAME AS CLIENT
-		struct sockaddr_in *_address_info;
 		Request			request;
 		Response		response;
 		Configuration correct_config;
+		struct sockaddr_in *_address_info;
 
 
 		/* Set responses functions */
@@ -165,6 +163,7 @@ class Job
 			 * @param copy_writefds this is the fd_set that will be used loop over with FD_ISSET
 			 */
 			void set_client_response(fd_set *copy_writefds);
+			const char *get_address() const;
 	private:
 		/* Private Member Functions */
 			void	_set_environment_variable(const char *name, const char *value);

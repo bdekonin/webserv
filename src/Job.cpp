@@ -20,8 +20,8 @@ Job::Job()
 : request(Request()), response(Response()), correct_config(Configuration())
 {
 }
-Job::Job(int type, int fd, Server *server, User *user)
-: type(type), fd(fd), server(server), user(user), request(Request()), response(Response()), correct_config(Configuration())
+Job::Job(int type, int fd, Server *server, struct sockaddr_in *client_addr)
+: type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration()), _address_info(client_addr)
 {
 }
 Job::Job(const Job &src)
@@ -32,8 +32,6 @@ Job::Job(const Job &src)
 /* Destructor */
 Job::~Job()
 {
-	// if (this->is_client() == true)
-	// 	delete this->user;
 }
 
 /* Operation overload = */
@@ -42,7 +40,6 @@ Job& Job::operator = (const Job& e)
 	this->type = e.type;
 	this->fd = e.fd;
 	this->server = e.server;
-	this->user = e.user;
 	this->request = e.request;
 	this->response = e.response;
 	this->correct_config = e.correct_config;
@@ -138,7 +135,7 @@ void 			Job::set_environment_variables()
 	this->_set_environment_variable("PATH_INFO", r._uri.c_str());
 	this->_set_environment_variable("QUERY_STRING", r._query_string.c_str()); // NO QUERY STRING
 	this->_set_environment_variable("REDIRECT_STATUS", "true");
-	this->_set_environment_variable("REMOTE_ADDR", this->user->get_address().c_str());
+	this->_set_environment_variable("REMOTE_ADDR", this->get_address());
 	this->_set_environment_variable("REQUEST_METHOD", r.method_to_s());
 	this->_set_environment_variable("SCRIPT_FILENAME", cwd + r._uri);
 	this->_set_environment_variable("SCRIPT_NAME", r._uri.c_str());
@@ -278,6 +275,12 @@ int Job::generate_autoindex(Job *job, std::string &uri, std::string &body)
 	}
 	body.clear();
 	return (1);
+}
+const char *Job::get_address() const
+{
+	char buffer[512];
+	bzero(buffer, 512);
+	return inet_ntop(AF_INET, &this->_address_info->sin_addr, buffer, 512);
 }
 
 // std::ostream&	operator<<(std::ostream& out, const Job &c)

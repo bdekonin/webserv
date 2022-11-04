@@ -44,6 +44,7 @@
 
 bool g_is_running = true;
 
+
 class Webserv
 {
 	public:
@@ -83,8 +84,8 @@ class Webserv
 		}
 		void run()
 		{
-			signal(SIGINT, interruptHandler);
-			signal(SIGQUIT, interruptHandler);
+			// signal(SIGINT, interruptHandler);
+			// signal(SIGQUIT, interruptHandler);
 
 			std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 			Job *job;
@@ -149,6 +150,18 @@ class Webserv
 		std::map<int, Job>					jobs;		// List of all jobs. it includes the Servers and Clients. | Key = socket | Value = Job
 		fd_set								fds;	// List of all file descriptors that are ready to read.
 
+		int closeConnection(Job *job)
+		{
+			int copyFD;
+
+			copyFD = job->fd;
+
+			close(job->fd);
+			FD_CLR(job->fd, &this->fds);
+			// delete job->_address_info;
+			this->jobs.erase(copyFD);
+			return copyFD;
+		}
 	private:
 		int _max_fd;
 		/* User Types Handling */
@@ -162,12 +175,14 @@ class Webserv
 			bytesRead = recv(job->fd, buffer, 4096, 0);
 			if (bytesRead <= 0)
 			{
-				close(job->fd);
+
+				// close(job->fd);
 				if (DEBUG == 1)
 					std::cerr << CLRS_GRN << "server : connection closed by client " << job->fd << CLRS_reset << std::endl;
-				FD_CLR(job->fd, &this->fds);
-				delete job->user;
-				this->jobs.erase(job->fd);
+				this->closeConnection(job);
+				// FD_CLR(job->fd, &this->fds);
+				// delete job->_address_info;
+				// this->jobs.erase(job->fd);
 				return (0);
 			}
 
@@ -420,12 +435,10 @@ class Webserv
 
 			if (connection_close)
 			{
-				close(job->fd);
 				if (DEBUG == 1)
 					std::cerr << CLRS_GRN << "server : connection closed by server " << job->fd << CLRS_reset << std::endl;
-				FD_CLR(job->fd, &this->fds);
-				delete job->user;
-				this->jobs.erase(job->fd);
+				this->closeConnection(job);
+				// this->jobs.erase(job->fd);
 			}
 		}
 
@@ -529,17 +542,17 @@ class Webserv
 			int client_fd = 0;
 			size_t address_size = 0;
 
-			struct sockaddr_in *client_address = new struct sockaddr_in;
+			struct sockaddr_in client_address;
 			address_size = sizeof(struct sockaddr_in);
-			bzero(client_address, address_size);
+			bzero(&client_address, address_size);
 			
-			client_fd = accept(job->fd, (struct sockaddr*)client_address, (socklen_t*)&address_size);
+			client_fd = accept(job->fd, (struct sockaddr*)&client_address, (socklen_t*)&address_size);
 			if (client_fd < 0)
 				throw std::runtime_error("accept: failed to accept.");
 			
 			std::cout << "client_fd: " << client_fd << std::endl;
 
-			User *user = new User(client_fd, client_address); // TODO FREE WHEN JOB IS
+			// User *user = new User(client_fd, client_address); // TODO FREE WHEN JOB IS
 			fcntl(client_fd, F_SETFL, O_NONBLOCK);
 			// jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, user);
 			jobs[client_fd].setType(CLIENT_READ);
