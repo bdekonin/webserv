@@ -6,11 +6,12 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:00:19 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/03 21:27:48 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 21:21:42 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/Configuration.hpp"
+#include <strings.h>
 
 /* Constructors */
 Configuration::Configuration()

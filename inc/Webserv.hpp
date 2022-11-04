@@ -167,7 +167,7 @@ class Webserv
 				if (DEBUG == 1)
 					std::cerr << CLRS_GRN << "server : connection closed by client " << job->fd << CLRS_reset << std::endl;
 				FD_CLR(job->fd, &this->fds);
-				delete job->user;
+				// delete job->_address_info;
 				this->jobs.erase(job->fd);
 				return (0);
 			}
@@ -421,11 +421,8 @@ class Webserv
 
 			if (connection_close)
 			{
-				close(job->fd);
 				if (DEBUG == 1)
 					std::cerr << CLRS_GRN << "server : connection closed by server " << job->fd << CLRS_reset << std::endl;
-				FD_CLR(job->fd, &this->fds);
-				delete job->user;
 				this->jobs.erase(job->fd);
 			}
 		}
@@ -538,9 +535,9 @@ class Webserv
 			if (client_fd < 0)
 				throw std::runtime_error("accept: failed to accept.");
 
-			User *user = new User(client_fd, client_address); // TODO FREE WHEN JOB IS
+			// User *user = new User(client_fd, client_address); // TODO FREE WHEN JOB IS
 			fcntl(client_fd, F_SETFL, O_NONBLOCK);
-			jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, user);
+			jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, client_address);
 
 			if (client_fd >this->_max_fd)
 				this->_max_fd = client_fd;
