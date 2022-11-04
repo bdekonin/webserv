@@ -78,9 +78,8 @@ class Webserv
 		static void interruptHandler(int sig_int)
 		{
 			(void)sig_int;
-			std::cout << "\b\b \b\b";
 			g_is_running = false;
-			throw std::runtime_error("Interrupted");
+			exit(EXIT_SUCCESS);
 		}
 		void run()
 		{
@@ -537,17 +536,23 @@ class Webserv
 			client_fd = accept(job->fd, (struct sockaddr*)client_address, (socklen_t*)&address_size);
 			if (client_fd < 0)
 				throw std::runtime_error("accept: failed to accept.");
+			
+			std::cout << "client_fd: " << client_fd << std::endl;
 
 			User *user = new User(client_fd, client_address); // TODO FREE WHEN JOB IS
 			fcntl(client_fd, F_SETFL, O_NONBLOCK);
-			jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, user);
+			// jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, user);
+			jobs[client_fd].setType(CLIENT_READ);
+			jobs[client_fd].setFd(client_fd);
+			jobs[client_fd].setServer(job->server);
+			jobs[client_fd].setUser(user);
 
 			if (client_fd >this->_max_fd)
 				this->_max_fd = client_fd;
 			if (DEBUG == 1)
 			{
 				std::cerr << CLRS_GRN << "server : new connection on " << job->server->get_hostname() << ":" << job->server->get_port() << " [client: " << client_fd << "]";
-				std::cerr << " [ip: " << inet_ntoa(client_address->sin_addr) << "]" << CLRS_reset << std::endl;
+				std::cerr << CLRS_reset << std::endl;
 			}
 
 			FD_SET(client_fd, set);
@@ -565,7 +570,11 @@ class Webserv
 			for (it = this->servers.begin(); it != this->servers.end(); it++)
 			{
 				fd = it->second.get_socket();
-				this->jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
+				// this->jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
+				this->jobs[fd].setType(WAIT_FOR_CONNECTION);
+				this->jobs[fd].setFd(fd);
+				this->jobs[fd].setServer(&it->second);
+				this->jobs[fd].setUser(NULL);
 				FD_SET(fd, &this->fds);
 				if (fd > this->_max_fd)
 					this->_max_fd = fd;

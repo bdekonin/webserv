@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 13:05:12 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 23:44:05 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,6 +175,23 @@ void 			Job::set_client_response(fd_set *copy_writefds) // fd_sets to write fd_s
 {
 	this->type = CLIENT_RESPONSE;
 	FD_SET(this->fd, copy_writefds);
+}
+
+void Job::setType(int type)
+{
+	this->type = type;
+}
+void Job::setFd(int fd)
+{
+	this->fd = fd;
+}
+void Job::setServer(Server *server)
+{
+	this->server = server;
+}
+void Job::setUser(User *user)
+{
+	this->user = user;
 }
 
 /* Function that returns information about the file. See PATH_TYPE for more information. */
