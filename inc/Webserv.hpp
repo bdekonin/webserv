@@ -44,6 +44,7 @@
 
 bool g_is_running = true;
 
+
 class Webserv
 {
 	public:
@@ -99,7 +100,7 @@ class Webserv
 				{
 					if (FD_ISSET(loop_job_counter, &copy_readfds))
 					{
-						job = &this->jobs[loop_job_counter];
+						job = this->jobs[loop_job_counter];
 						if (job->type == WAIT_FOR_CONNECTION)
 							accept_connection(job, this->jobs, &this->fds);
 						else if (job->type == CLIENT_READ)
@@ -118,7 +119,7 @@ class Webserv
 				}
 				for (size_t loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
 				{
-					job = &this->jobs[loop_job_counter];
+					job = this->jobs[loop_job_counter];
 					if (FD_ISSET(loop_job_counter, &copy_writefds))
 					{
 						if (job->type == CLIENT_RESPONSE)
@@ -147,9 +148,24 @@ class Webserv
 	public:
 		std::vector<ServerConfiguration>	&configs;	// Vector of all the server configurations.
 		std::map<int, Server>				servers;	// Map of all the servers that are running. | Key = port | Value = Server
-		std::map<int, Job>					jobs;		// List of all jobs. it includes the Servers and Clients. | Key = socket | Value = Job
+		std::map<int, Job*>					jobs;		// List of all jobs. it includes the Servers and Clients. | Key = socket | Value = Job
 		fd_set								fds;	// List of all file descriptors that are ready to read.
 
+		int closeConnection(Job **ptr)
+		{
+			Job *job;
+			int copyFD;
+
+			job = *ptr;
+			copyFD = job->fd;
+
+			close(job->fd);
+			FD_CLR(job->fd, &this->fds);
+			delete job;
+			this->jobs.erase(copyFD);
+			*ptr = NULL;
+			return copyFD;
+		}
 	private:
 		int _max_fd;
 		/* User Types Handling */
@@ -163,12 +179,14 @@ class Webserv
 			bytesRead = recv(job->fd, buffer, 4096, 0);
 			if (bytesRead <= 0)
 			{
-				close(job->fd);
+
+				// close(job->fd);
 				if (DEBUG == 1)
 					std::cerr << CLRS_GRN << "server : connection closed by client " << job->fd << CLRS_reset << std::endl;
-				FD_CLR(job->fd, &this->fds);
+				this->closeConnection(&job);
+				// FD_CLR(job->fd, &this->fds);
 				// delete job->_address_info;
-				this->jobs.erase(job->fd);
+				// this->jobs.erase(job->fd);
 				return (0);
 			}
 
@@ -415,15 +433,16 @@ class Webserv
 				connection_close = true;
 
 			job->clear();
-			this->jobs[job->fd].clear();
-			this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
+			this->jobs[job->fd]->clear();
+			this->jobs[job->fd]->type = CLIENT_READ; // TODO or job->type = CLIENT_READ
 
 
 			if (connection_close)
 			{
 				if (DEBUG == 1)
 					std::cerr << CLRS_GRN << "server : connection closed by server " << job->fd << CLRS_reset << std::endl;
-				this->jobs.erase(job->fd);
+				this->closeConnection(&job);
+				// this->jobs.erase(job->fd);
 			}
 		}
 
@@ -522,7 +541,7 @@ class Webserv
 		}
 		/* Methods */
 		/* Accept a New Client */
-		int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
+		int accept_connection(Job *job, std::map<int, Job*> &jobs, fd_set *set)
 		{
 			int client_fd = 0;
 			size_t address_size = 0;
@@ -537,7 +556,7 @@ class Webserv
 
 			// User *user = new User(client_fd, client_address); // TODO FREE WHEN JOB IS
 			fcntl(client_fd, F_SETFL, O_NONBLOCK);
-			jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, client_address);
+			jobs[client_fd] = new Job(CLIENT_READ, client_fd, job->server, client_address);
 
 			if (client_fd >this->_max_fd)
 				this->_max_fd = client_fd;
@@ -562,7 +581,7 @@ class Webserv
 			for (it = this->servers.begin(); it != this->servers.end(); it++)
 			{
 				fd = it->second.get_socket();
-				this->jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
+				this->jobs[fd] = new Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
 				FD_SET(fd, &this->fds);
 				if (fd > this->_max_fd)
 					this->_max_fd = fd;
