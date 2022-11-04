@@ -14,6 +14,10 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
+#ifndef DEBUG
+# define DEBUG 0
+#endif
+
 # include <cstring>
 # include <sys/socket.h>
 # include <netinet/in.h>
@@ -38,12 +42,14 @@
 #define VAR(var) std::cerr << std::boolalpha << __FILE__ ":"<< __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
 #define PRINT(var) std::cout << var << std::endl
 
+bool g_is_running = true;
+
 class Webserv
 {
 	public:
 		/* Constructor  */
 		Webserv(std::vector<ServerConfiguration> &configs)
-		: configs(configs), _max_fd(0), is_running(true)
+		: configs(configs), _max_fd(0)
 		{
 			
 		}
@@ -69,22 +75,21 @@ class Webserv
 			this->setFdSets();
 		}
 
-		// void interruptHandler(int sig_int)
-		// {
-		// 	(void)sig_int;
-		// 	std::cout << "\b\b \b\b";
-		// 	this->is_running = false;
-		// }
-
+		static void interruptHandler(int sig_int)
+		{
+			(void)sig_int;
+			std::cout << "\b\b \b\b";
+			g_is_running = false;
+			throw std::runtime_error("Interrupted");
+		}
 		void run()
 		{
-			// signal(SIGINT, interruptHandler);
-			// signal(SIGQUIT, interruptHandler);
-
+			signal(SIGINT, interruptHandler);
+			signal(SIGQUIT, interruptHandler);
 
 			std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 			Job *job;
-			while (this->is_running == true)
+			while (g_is_running == true)
 			{
 				fd_set copy_readfds = this->fds;
 				fd_set copy_writefds = this->fds;
@@ -129,7 +134,8 @@ class Webserv
 							}
 							else
 							{
-								std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->get_request()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
+								if (DEBUG == 1)
+									std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->get_request()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
 								job->set_xxx_response(job->correct_config, 204);
 							}
 							this->client_response(job);
@@ -146,7 +152,6 @@ class Webserv
 
 	private:
 		int _max_fd;
-		bool is_running;
 		/* User Types Handling */
 		int client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
 		{
@@ -159,7 +164,8 @@ class Webserv
 			if (bytesRead <= 0)
 			{
 				close(job->fd);
-				std::cerr << CLRS_GRN << "server : connection closed by client " << job->fd << CLRS_reset << std::endl;
+				if (DEBUG == 1)
+					std::cerr << CLRS_GRN << "server : connection closed by client " << job->fd << CLRS_reset << std::endl;
 				FD_CLR(job->fd, &this->fds);
 				delete job->user;
 				this->jobs.erase(job->fd);
@@ -265,17 +271,19 @@ class Webserv
 			/* Parse Request */
 			job->parse_request(ConfigToChange_path);
 
-			// Print nice things
-			std::stringstream ss;
-			ss << CLRS_YEL;
-			ss << "server : << [method: " << job->get_request().method_to_s() << "] ";
-			ss << "[target: " << job->get_request().get_unedited_uri() << "] ";
-			ss << "[server: " << server_index << "] ";
-			ss << "[location: " << ConfigToChange_path << "] ";
-			ss << "[client fd: " << job->fd << "]";
-			ss << CLRS_reset << std::endl;
-
-			std::cerr << ss.str();
+			if (DEBUG == 1)
+			{
+				// Print nice things
+				std::stringstream ss;
+				ss << CLRS_YEL;
+				ss << "server : << [method: " << job->get_request().method_to_s() << "] ";
+				ss << "[target: " << job->get_request().get_unedited_uri() << "] ";
+				ss << "[server: " << server_index << "] ";
+				ss << "[location: " << ConfigToChange_path << "] ";
+				ss << "[client fd: " << job->fd << "]";
+				ss << CLRS_reset << std::endl;
+				std::cerr << ss.str();
+			}
 			return (0);
 		}
 
@@ -381,14 +389,17 @@ class Webserv
 			char *response_char = reinterpret_cast<char*> (&response[0]);
 
 
-			std::stringstream ss;
-			ss << CLRS_BLU;
-			bytes = ft_strnstr(response_char, "\r\n", 60) - response_char;
-			ss << "server : >> [status: " << std::string(response_char, bytes)  << "] ";
-			ss << "[length: " << response_size << "] ";
-			ss << "[client: " << job->fd << "] ";
-			ss << CLRS_reset;
-			std::cerr << ss.str() << std::endl;
+			if (DEBUG == 1)
+			{
+				std::stringstream ss;
+				ss << CLRS_BLU;
+				bytes = ft_strnstr(response_char, "\r\n", 60) - response_char;
+				ss << "server : >> [status: " << std::string(response_char, bytes)  << "] ";
+				ss << "[length: " << response_size << "] ";
+				ss << "[client: " << job->fd << "] ";
+				ss << CLRS_reset;
+				std::cerr << ss.str() << std::endl;
+			}
 
 			bytes = 0;
 			while (response_size > 0) 
@@ -411,7 +422,8 @@ class Webserv
 			if (connection_close)
 			{
 				close(job->fd);
-				std::cerr << CLRS_GRN << "server : connection closed by server " << job->fd << CLRS_reset << std::endl;
+				if (DEBUG == 1)
+					std::cerr << CLRS_GRN << "server : connection closed by server " << job->fd << CLRS_reset << std::endl;
 				FD_CLR(job->fd, &this->fds);
 				delete job->user;
 				this->jobs.erase(job->fd);
@@ -532,8 +544,11 @@ class Webserv
 
 			if (client_fd >this->_max_fd)
 				this->_max_fd = client_fd;
-			std::cerr << CLRS_GRN << "server : new connection on " << job->server->get_hostname() << ":" << job->server->get_port() << " [client: " << client_fd << "]";
-			std::cerr << " [ip: " << inet_ntoa(client_address->sin_addr) << "]" << CLRS_reset << std::endl;
+			if (DEBUG == 1)
+			{
+				std::cerr << CLRS_GRN << "server : new connection on " << job->server->get_hostname() << ":" << job->server->get_port() << " [client: " << client_fd << "]";
+				std::cerr << " [ip: " << inet_ntoa(client_address->sin_addr) << "]" << CLRS_reset << std::endl;
+			}
 
 			FD_SET(client_fd, set);
 			return (client_fd);
@@ -580,7 +595,8 @@ class Webserv
 						if (h == NULL)
 							throw std::runtime_error("strdup: failed to duplicate string.");
 						p = ports[j].second;
-						std::cerr << CLRS_GRN << "Listening on " << h << ":" << p << CLRS_reset << std::endl;
+						if (DEBUG == 1)
+							std::cerr << CLRS_GRN << "Listening on " << h << ":" << p << CLRS_reset << std::endl;
 						this->servers[ports[j].second] = Server(s, h, p, this->configs[i]);
 					}
 					else
@@ -634,6 +650,7 @@ class Webserv
 
 			host_header = job->request._headers_map["host"];
 			pos = host_header.find(":");
+			pos = (pos == std::string::npos) ? host_header.size() : pos;
 
 			for (index = 0; index < job_configs.size(); index++)
 			{
@@ -641,7 +658,9 @@ class Webserv
 				for (size_t j = 0; j < server_names.size(); j++)
 				{
 					if (host_header.substr(0, pos) == server_names[j])
+					{
 						default_server = job_configs[index];
+					}
 				}
 			}
 			i = index;
