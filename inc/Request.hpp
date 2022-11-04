@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/03 21:39:26 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 14:34:04 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <string.h>
 
 # include <iostream>
+#include <sstream>
 
 /* Sources
 ** https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding
@@ -104,6 +105,17 @@ class Request
 				{
 					if (this->_incoming_data.size() > MAX_ENTITIY_SIZE)
 						this->_type = this->MAX_ENTITY;
+
+					if (request.find("\v") != std::string::npos) //  Moet dit?
+					{
+						this->_type = this->ERROR;
+						return ;
+					}
+					if (request.find("\t") != std::string::npos) // Moet dit??
+					{
+						this->_type = this->ERROR;
+						return ;
+					}
 					return ;
 				}
 
@@ -142,7 +154,7 @@ class Request
 				this->_type = this->ERROR;
 
 			if (this->_content_length > 0)
-				this->_headers_map["content-length"] = SSTR(this->_content_length);
+				this->_headers_map["content-length"] = std::to_string(this->_content_length);
 		}
 
 		void						_parseChunk()
@@ -180,7 +192,7 @@ class Request
 					this->_type = this->DONE;
 					this->_body.push_back('\0');
 
-					this->_headers_map["Content-Length"] = SSTR(this->_body.size());
+					this->_headers_map["Content-Length"] = std::to_string(this->_body.size());
 					this->_content_length = this->_body.size();
 					this->was_chunked = true;
 					break;
@@ -578,25 +590,25 @@ class Request
 		}
 };
 
-std::ostream&	operator<<(std::ostream& out, const Request &c)
-{
-	out << c._method << " " << c._uri << " " << c._version << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = c._headers_map.begin(); it != c._headers_map.end(); it++)
-	{
-		out << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
-	}
-	out << "Body:\n"<< c._body.size() << std::endl;
-	return out;
-}
-std::ostream&	operator<<(std::ostream& out, const Request *c)
-{
-	out << c->_method << " " << c->_uri << " " << c->_version << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = c->_headers_map.begin(); it != c->_headers_map.end(); it++)
-	{
-		out << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
-	}
-	out << "Body:\n" << c->_body.size() << std::endl;
-	return out;
-}
+// std::ostream&	operator<<(std::ostream& out, const Request &c)
+// {
+// 	out << c._method << " " << c._uri << " " << c._version << std::endl;
+// 	for (std::map<std::string, std::string>::const_iterator it = c._headers_map.begin(); it != c._headers_map.end(); it++)
+// 	{
+// 		out << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
+// 	}
+// 	out << "Body:\n"<< c._body.size() << std::endl;
+// 	return out;
+// }
+// std::ostream&	operator<<(std::ostream& out, const Request *c)
+// {
+// 	out << c->_method << " " << c->_uri << " " << c->_version << std::endl;
+// 	for (std::map<std::string, std::string>::const_iterator it = c->_headers_map.begin(); it != c->_headers_map.end(); it++)
+// 	{
+// 		out << "[" << it->first << "]" << std::endl << "[" << it->second << "]" << std::endl << std::endl;
+// 	}
+// 	out << "Body:\n" << c->_body.size() << std::endl;
+// 	return out;
+// }
 
 #endif // REQUEST_HPP

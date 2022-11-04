@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/26 16:15:16 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/04 12:53:22 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 11:59:28 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,33 +121,33 @@ class Server
 		std::vector<ServerConfiguration>	_configuration; // Configurations. Used to check if a client is allowed to connect. using the host request header. 0 is always first used.
 };
 
-std::ostream&	operator<<(std::ostream& out, const Server& c)
-{
-	out << "Socket: " << c.get_socket() << "\t(hostname:port): [" << c.get_hostname() << ":" << c.get_port() << "]" << std::endl;
-	out << "Locations: " << c.get_configurations().size() << std::endl;
-	for (size_t i = 0; i < c.get_configurations().size(); i++)
-	{
-		for (size_t loc_i = 0; loc_i < c.get_configurations()[i].get_locations().size(); loc_i++)
-		{
-			out << loc_i + 1 << " - " << c.get_configurations()[i].get_locations()[loc_i] << std::endl << std::endl;
-		}
-	}
-	return out;
-}
+// std::ostream&	operator<<(std::ostream& out, const Server& c)
+// {
+// 	out << "Socket: " << c.get_socket() << "\t(hostname:port): [" << c.get_hostname() << ":" << c.get_port() << "]" << std::endl;
+// 	out << "Locations: " << c.get_configurations().size() << std::endl;
+// 	for (size_t i = 0; i < c.get_configurations().size(); i++)
+// 	{
+// 		for (size_t loc_i = 0; loc_i < c.get_configurations()[i].get_locations().size(); loc_i++)
+// 		{
+// 			out << loc_i + 1 << " - " << c.get_configurations()[i].get_locations()[loc_i] << std::endl << std::endl;
+// 		}
+// 	}
+// 	return out;
+// }
 
-std::ostream&	operator<<(std::ostream& out, const Server *c)
-{
-	// out << c->get_socket() << "\t" << c->get_hostname() << ":" << c->get_port() << std::endl;
-	out << "Socket: " << c->get_socket() << "\t(hostname:port): [" << c->get_hostname() << ":" << c->get_port() << "]" << std::endl;
-	out << "Locations: " << c->get_configurations().size() << std::endl;
-	for (size_t i = 0; i < c->get_configurations().size(); i++)
-	{
-		for (size_t loc_i = 0; loc_i < c->get_configurations()[i].get_locations().size(); loc_i++)
-		{
-			out << loc_i + 1 << " - " << c->get_configurations()[i].get_locations()[loc_i] << std::endl << std::endl;
-		}
-	}
-	return out;
-}
+// std::ostream&	operator<<(std::ostream& out, const Server *c)
+// {
+// 	// out << c->get_socket() << "\t" << c->get_hostname() << ":" << c->get_port() << std::endl;
+// 	out << "Socket: " << c->get_socket() << "\t(hostname:port): [" << c->get_hostname() << ":" << c->get_port() << "]" << std::endl;
+// 	out << "Locations: " << c->get_configurations().size() << std::endl;
+// 	for (size_t i = 0; i < c->get_configurations().size(); i++)
+// 	{
+// 		for (size_t loc_i = 0; loc_i < c->get_configurations()[i].get_locations().size(); loc_i++)
+// 		{
+// 			out << loc_i + 1 << " - " << c->get_configurations()[i].get_locations()[loc_i] << std::endl << std::endl;
+// 		}
+// 	}
+// 	return out;
+// }
 
 #endif // SERVER_HPP

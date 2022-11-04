@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/30 18:54:06 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 11:59:34 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -221,38 +221,38 @@ class ServerConfiguration : public Configuration
 		std::vector<LocationConfiguration> 				_locations; // location path, location config
 };
 
-std::ostream&	operator<<(std::ostream& out, const ServerConfiguration& c)
-{
-	{
-		out << "port:<host(ip):" << std::endl;
-		// for (std::map<size_t, std::string>::const_iterator it = c._ports.begin(); it != c._ports.end(); it++)
-		// 	out  << "\t" << it->second << ":" << it->first << std::endl;
-		for (size_t i = 0; i < c.get_listen().size(); i++)
-			out  << "\t" << c.get_listen().at(i).first << ":" << c.get_listen().at(i).second << std::endl;
-	}
-	{
-		out << "server names:" << std::endl;
-		for (size_t i = 0; i < c.get_server_names().size(); i++)
-			out << "\t" << c.get_server_names().at(i) << std::endl;
-	}
-	{
-		out << static_cast<const Configuration&>(c);
-	}
-	{
-		if (c.get_locations().size() > 0)
-		{
-			out << "                    locations:                    " << std::endl;
-			out << "--------------------------------------------------" << std::endl;
-			for (size_t i = 0; i < c.get_locations().size(); i++)
-			{
-				out << c.get_locations()[i];
-				out << "--------------------------------------------------" << std::endl;
-			}
-		}
-		else
-			out << "locations:\n\tNone" << std::endl;
-	}
-	return (out);
-}
+// std::ostream&	operator<<(std::ostream& out, const ServerConfiguration& c)
+// {
+// 	{
+// 		out << "port:<host(ip):" << std::endl;
+// 		// for (std::map<size_t, std::string>::const_iterator it = c._ports.begin(); it != c._ports.end(); it++)
+// 		// 	out  << "\t" << it->second << ":" << it->first << std::endl;
+// 		for (size_t i = 0; i < c.get_listen().size(); i++)
+// 			out  << "\t" << c.get_listen().at(i).first << ":" << c.get_listen().at(i).second << std::endl;
+// 	}
+// 	{
+// 		out << "server names:" << std::endl;
+// 		for (size_t i = 0; i < c.get_server_names().size(); i++)
+// 			out << "\t" << c.get_server_names().at(i) << std::endl;
+// 	}
+// 	{
+// 		out << static_cast<const Configuration&>(c);
+// 	}
+// 	{
+// 		if (c.get_locations().size() > 0)
+// 		{
+// 			out << "                    locations:                    " << std::endl;
+// 			out << "--------------------------------------------------" << std::endl;
+// 			for (size_t i = 0; i < c.get_locations().size(); i++)
+// 			{
+// 				out << c.get_locations()[i];
+// 				out << "--------------------------------------------------" << std::endl;
+// 			}
+// 		}
+// 		else
+// 			out << "locations:\n\tNone" << std::endl;
+// 	}
+// 	return (out);
+// }
 
 #endif // SERVERCONFIGURATION_HPP

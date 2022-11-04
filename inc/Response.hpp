@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/03 21:39:37 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 10:59:08 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,12 @@
 
 # include "Configuration.hpp"
 
-
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include "Colors.h"
+#include <unistd.h>
+#include <sstream>
 
 class Response
 {
@@ -103,7 +108,7 @@ class Response
 				;
 			}
 			
-			res += "HTTP/1.1 " + SSTR(this->_status_code) + " " + this->_response_codes[this->_status_code] + "\r\n";
+			res += "HTTP/1.1 " + std::to_string(this->_status_code) + " " + this->_response_codes[this->_status_code] + "\r\n";
 			res += this->_headers + "\r\n";
 
 			if (this->_headers.find("Content-Length") == std::string::npos)
@@ -112,7 +117,7 @@ class Response
 				res.erase(res.size() - 1);
 				// res.pop_back();
 				res.erase(res.size() - 1);
-				res += "Content-Length: " + SSTR(this->_body.size()) + "\r\n\r\n";
+				res += "Content-Length: " + std::to_string(this->_body.size()) + "\r\n\r\n";
 			}
 
 			this->_response.insert(this->_response.end(), res.c_str(), res.c_str() + res.length());
@@ -200,12 +205,12 @@ class Response
 				if (fd > 0 && ret > 0)
 					content = buffer;
 				else
-					content = SSTR(code) + " " + this->_response_codes[code] + "<br>Using default error page because the error page file couldnt be read or openen";
+					content = std::to_string(code) + " " + this->_response_codes[code] + "<br>Using default error page because the error page file couldnt be read or openen";
 				if (fd > 0 && ret >= 0)
 					close(fd);
 			}
 			else
-				content = SSTR(code) + " " + this->_response_codes[code];
+				content = std::to_string(code) + " " + this->_response_codes[code];
 			this->set_body(content.c_str(), content.size());
 		}
 	private:

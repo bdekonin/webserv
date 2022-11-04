@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 14:46:37 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/11 13:13:21 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 11:59:39 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define USER_HPP
 
 #include "Request.hpp"
+#include <arpa/inet.h>
 
 class User
 {
@@ -83,20 +84,20 @@ class User
 		std::string _address;
 };
 
-std::ostream&	operator<<(std::ostream& out, User &c)
-{
-	out << "Fd:\n" << c.get_fd() << std::endl;
-	out << "Address:\n" << c.get_address() << std::endl;
+// std::ostream&	operator<<(std::ostream& out, User &c)
+// {
+// 	out << "Fd:\n" << c.get_fd() << std::endl;
+// 	out << "Address:\n" << c.get_address() << std::endl;
 
-	return out;
-}
-std::ostream&	operator<<(std::ostream& out, User *c)
-{
-	out << "Fd:\n" << c->get_fd() << std::endl;
-	out << "Address:\n" << c->get_address() << std::endl;
-	out << "&Address:\n" << c->get_address_info() << std::endl;
+// 	return out;
+// }
+// std::ostream&	operator<<(std::ostream& out, User *c)
+// {
+// 	out << "Fd:\n" << c->get_fd() << std::endl;
+// 	out << "Address:\n" << c->get_address() << std::endl;
+// 	out << "&Address:\n" << c->get_address_info() << std::endl;
 	
-	return out;
-}
+// 	return out;
+// }
 
 #endif // USER_HPP

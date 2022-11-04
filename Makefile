@@ -19,6 +19,7 @@ FLAGS    := -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
 SRCS        :=      main.cpp \
                           utils.cpp \
 						  src/Configuration.cpp \
+						  src/Job.cpp
                           
 OBJS        := ${SRCS:.cpp=.o}
 
