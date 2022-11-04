@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 22:21:39 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 22:35:24 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,6 @@ Job::Job(const Job &src)
 /* Destructor */
 Job::~Job()
 {
-	close(this->fd);
-	if (this->_address_info)
-		delete this->_address_info;
-	std::cout << "Job destructor called" << std::endl;
 }
 
 /* Operation overload = */
