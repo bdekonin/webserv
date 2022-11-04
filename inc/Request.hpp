@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 14:34:04 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 21:15:21 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,10 +34,6 @@
 # include <algorithm>
 # include <string>
 # define MAX_ENTITIY_SIZE 16000000
-
-#define getString(n) #n
-#define VARRR(var) std::cerr << std::boolalpha << __FILE__ ":"<< __LINE__ << ":\t" << getString(var) << " = [" <<  (var) << "]" << std::noboolalpha << std::endl;
-#define PRINT(var) std::cout << var << std::endl
 
 class Request
 {
@@ -127,7 +123,7 @@ class Request
 				this->_reading_mode();
 				
 				if (this->_type == this->ERROR || this->_type == this->MAX_ENTITY)
-					return ;	
+					return ;
 
 				std::vector<unsigned char>::iterator it = this->_incoming_data.begin();
 
@@ -482,7 +478,11 @@ class Request
 				if (colon < end)
 				{
 					header = line.substr(0, colon);
-					value = line.substr(colon + 2, end - colon - 2);
+					if (line[colon + 1] == ' ')
+						value = line.substr(colon + 2, end - colon - 2);
+					else
+						value = line.substr(colon + 1, end - colon - 1);
+					// value = line.substr(colon + 2, end - colon - 2);
 
 					for (size_t i = 0; i < header.length(); i++)
 						header[i] = std::tolower(header[i]);
@@ -543,12 +543,15 @@ class Request
 
 		void add_body()
 		{
+			size_t bodySize;
+
 			this->setBody(this->_incoming_data.begin(), this->_incoming_data.size());
 			this->_incoming_data.clear();
-			if (this->_body.size() >= this->_content_length)
+			bodySize = this->_body.size();
+			if (bodySize >= this->_content_length)
 			{
 				this->_type = this->DONE;
-				if (this->_body.size() != this->_content_length)
+				if (bodySize != this->_content_length)
 					this->_type = this->ERROR;
 			}
 		}

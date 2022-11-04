@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 12:44:46 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 20:43:44 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,6 +134,7 @@ class Job
 		int				fd; // File descriptor of the connection.
 		Server			*server;
 		User			*user; // TODO: change to client class | SAME AS CLIENT
+		struct sockaddr_in *_address_info;
 		Request			request;
 		Response		response;
 		Configuration correct_config;

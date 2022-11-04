@@ -9,7 +9,7 @@
 
 NAME        := webserv
 CC         := c++
-FLAGS    := -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
+FLAGS    := -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address -D DEBUG=1
 # FLAGS    := -g -fsanitize=address
  
 ################################################################################

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 13:55:55 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 20:31:30 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,22 @@ int main(int argc, char const *argv[])
 	Webserv server(configs);
 	server.setupServers();
 
-	server.run();
-	for (std::map<int, Job>::const_iterator it = server.jobs.begin(); it != server.jobs.end(); it++)
+	try
 	{
-		std::cout << "Closing " << it->second.fd <<  std::endl;
-		close(it->second.fd);
+		server.run();
 	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+
+		for (std::map<int, Job>::const_iterator it = server.jobs.begin(); it != server.jobs.end(); it++)
+		{
+			std::cout << "Closing " << it->second.fd <<  std::endl;
+			close(it->second.fd);
+		}
+		//free all memory
+	}
+	
 
 	return 0;
 }

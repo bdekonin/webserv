@@ -6,12 +6,16 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 10:59:08 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/04 21:14:29 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
+
+#ifndef DEBUG
+# define DEBUG 0
+#endif
 
 # include <vector>
 # include <map>
@@ -152,11 +156,14 @@ class Response
 			this->set_status_code(it->first);
 			this->set_header("Location: " + it->second);
 
-			std::stringstream ss;
-			ss << CLRS_YEL;
-			ss << "INTERNAL REDIRECT : [target : " << it->second << "]";
-			ss << CLRS_reset;
-			std::cerr << ss.str() << std::endl;
+			if (DEBUG == 1)
+			{
+				std::stringstream ss;
+				ss << CLRS_YEL;
+				ss << "INTERNAL REDIRECT : [target : " << it->second << "]";
+				ss << CLRS_reset;
+				std::cerr << ss.str() << std::endl;
+			}
 
 			this->set_header("Server: Webserv (Bob Luke Rowan) 1.0");
 		}
