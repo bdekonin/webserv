@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/26 16:15:16 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 11:59:28 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 01:04:11 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,14 @@ class Server
 			this->push_back(config);
 			// this->_configuration.push_back(config);
 			(void)config;
+		}
+
+		void set(int socket, char *hostname, in_port_t port, ServerConfiguration const &config)
+		{
+			this->_socket = socket;
+			this->_hostname = hostname;
+			this->_port = port;
+			this->_configuration.push_back(config);
 		}
 		
 		/* Destructor */

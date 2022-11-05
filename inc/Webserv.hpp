@@ -51,7 +51,6 @@ class Webserv
 		Webserv(std::vector<ServerConfiguration> &configs)
 		: configs(configs), _max_fd(0)
 		{
-			
 		}
 
 		/* Destructor */
@@ -79,7 +78,8 @@ class Webserv
 		{
 			(void)sig_int;
 			g_is_running = false;
-			exit(EXIT_SUCCESS);
+			std::cout << "Interrupt signal (" << sig_int << ") received." << std::endl;
+			// exit(EXIT_SUCCESS);
 		}
 		void run()
 		{
@@ -98,9 +98,9 @@ class Webserv
 				{
 					if (FD_ISSET(loop_job_counter, &copy_readfds))
 					{
-						job = &this->jobs[loop_job_counter];
+						job = this->jobs[loop_job_counter];
 						if (job->type == WAIT_FOR_CONNECTION)
-							accept_connection(job, this->jobs, &this->fds);
+							accept_connection(job, &this->fds);
 						else if (job->type == CLIENT_READ)
 						{
 							if (this->client_read(job, loop_job_counter, &copy_writefds) == 0)
@@ -117,7 +117,7 @@ class Webserv
 				}
 				for (size_t loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
 				{
-					job = &this->jobs[loop_job_counter];
+					job = this->jobs[loop_job_counter];
 					if (FD_ISSET(loop_job_counter, &copy_writefds))
 					{
 						if (job->type == CLIENT_RESPONSE)
@@ -143,10 +143,25 @@ class Webserv
 				}
 			}
 		}
+
+		void closeConnection(Job *job, const char *connectionClosedBy)
+		{
+			int copyFD;
+
+			copyFD = job->fd;
+			if (DEBUG == 1)
+					std::cerr << CLRS_RED << "server : connection closed by " << connectionClosedBy << " " << job->fd << CLRS_reset << std::endl;
+
+			FD_CLR(copyFD, &this->fds);
+			close(job->fd);
+			this->jobs.erase(job->fd);
+			delete job->user;
+			delete job;
+		}
 	public:
 		std::vector<ServerConfiguration>	&configs;	// Vector of all the server configurations.
 		std::map<int, Server>				servers;	// Map of all the servers that are running. | Key = port | Value = Server
-		std::map<int, Job>					jobs;		// List of all jobs. it includes the Servers and Clients. | Key = socket | Value = Job
+		std::map<int, Job*>					jobs;		// List of all jobs. it includes the Servers and Clients. | Key = socket | Value = Job
 		fd_set								fds;	// List of all file descriptors that are ready to read.
 
 	private:
@@ -162,13 +177,17 @@ class Webserv
 			bytesRead = recv(job->fd, buffer, 4096, 0);
 			if (bytesRead <= 0)
 			{
-				close(job->fd);
-				if (DEBUG == 1)
-					std::cerr << CLRS_GRN << "server : connection closed by client " << job->fd << CLRS_reset << std::endl;
-				FD_CLR(job->fd, &this->fds);
-				delete job->user;
-				this->jobs.erase(job->fd);
-				return (0);
+				if (bytesRead == 0)
+					this->closeConnection(job, "client");
+				else
+					throw std::runtime_error("recv: failed to read from client.");
+				// close(job->fd);
+				// if (DEBUG == 1)
+				// 	std::cerr << CLRS_GRN << "server : connection closed by client " << job->fd << CLRS_reset << std::endl;
+				// FD_CLR(job->fd, &this->fds);
+				// delete job->user;
+				// this->jobs.erase(job->fd);
+				// return (0);
 			}
 
 			// TODO is Chunked? if so, read until 0\r
@@ -414,19 +433,12 @@ class Webserv
 				connection_close = true;
 
 			job->clear();
-			this->jobs[job->fd].clear();
-			this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
+			this->jobs[job->fd]->clear();
+			this->jobs[job->fd]->type = CLIENT_READ; // TODO or job->type = CLIENT_READ
 
 
 			if (connection_close)
-			{
-				close(job->fd);
-				if (DEBUG == 1)
-					std::cerr << CLRS_GRN << "server : connection closed by server " << job->fd << CLRS_reset << std::endl;
-				FD_CLR(job->fd, &this->fds);
-				delete job->user;
-				this->jobs.erase(job->fd);
-			}
+				this->closeConnection(job, "server");
 		}
 
 		void do_cgi(Job *job, fd_set *copy_writefds)
@@ -524,7 +536,7 @@ class Webserv
 		}
 		/* Methods */
 		/* Accept a New Client */
-		int accept_connection(Job *job, std::map<int, Job> &jobs, fd_set *set)
+		int accept_connection(Job *job, fd_set *set)
 		{
 			int client_fd = 0;
 			size_t address_size = 0;
@@ -534,18 +546,18 @@ class Webserv
 			bzero(client_address, address_size);
 			
 			client_fd = accept(job->fd, (struct sockaddr*)client_address, (socklen_t*)&address_size);
+			std::cout << "client_fd: " << client_fd << std::endl;
 			if (client_fd < 0)
 				throw std::runtime_error("accept: failed to accept.");
-			
-			std::cout << "client_fd: " << client_fd << std::endl;
 
 			User *user = new User(client_fd, client_address); // TODO FREE WHEN JOB IS
 			fcntl(client_fd, F_SETFL, O_NONBLOCK);
-			// jobs[client_fd] = Job(CLIENT_READ, client_fd, job->server, user);
-			jobs[client_fd].setType(CLIENT_READ);
-			jobs[client_fd].setFd(client_fd);
-			jobs[client_fd].setServer(job->server);
-			jobs[client_fd].setUser(user);
+			jobs[client_fd] = new Job(CLIENT_READ, client_fd, job->server, user);
+			// jobs.insert(std::pair<int, Job>(client_fd, Job()));
+			// this->jobs[client_fd].setType(CLIENT_READ);
+			// this->jobs[client_fd].setFd(client_fd);
+			// this->jobs[client_fd].setServer(job->server);
+			// this->jobs[client_fd].setUser(user);
 
 			if (client_fd >this->_max_fd)
 				this->_max_fd = client_fd;
@@ -566,15 +578,14 @@ class Webserv
 			
 			// Zeroing the fd_sets.
 			FD_ZERO(&this->fds);
-
 			for (it = this->servers.begin(); it != this->servers.end(); it++)
 			{
 				fd = it->second.get_socket();
-				// this->jobs[fd] = Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
-				this->jobs[fd].setType(WAIT_FOR_CONNECTION);
-				this->jobs[fd].setFd(fd);
-				this->jobs[fd].setServer(&it->second);
-				this->jobs[fd].setUser(NULL);
+				this->jobs[fd] = new Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
+				// this->jobs[fd].setType(WAIT_FOR_CONNECTION);
+				// this->jobs[fd].setFd(fd);
+				// this->jobs[fd].setServer(&it->second);
+				// this->jobs[fd].setUser(NULL);
 				FD_SET(fd, &this->fds);
 				if (fd > this->_max_fd)
 					this->_max_fd = fd;
@@ -606,7 +617,7 @@ class Webserv
 						p = ports[j].second;
 						if (DEBUG == 1)
 							std::cerr << CLRS_GRN << "Listening on " << h << ":" << p << CLRS_reset << std::endl;
-						this->servers[ports[j].second] = Server(s, h, p, this->configs[i]);
+						this->servers[ports[j].second].set(s, h, p, this->configs[i]);
 					}
 					else
 						it->second.push_back(this->configs[i]);
@@ -638,7 +649,7 @@ class Webserv
 
 			if (bind(socketFD, (struct sockaddr*)&sock_struct, sizeof(sock_struct)) < 0)
 				throw std::runtime_error("bind: Failed to bind.");
-			if (listen(socketFD, 10) < 0)
+			if (listen(socketFD, 128) < 0)
 				throw std::runtime_error("listen: failed to listen.");
 
 			return socketFD;
