@@ -9,14 +9,13 @@
 
 NAME        := webserv
 CC         := c++
-FLAGS    := -Wall -Wextra -Werror -g -D DEBUG=1
+FLAGS    := -Wall -Wextra -Werror 
+FLAGS += -g -fsanitize=address -D DEBUG=1
+
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
-FLAGS += -std=c++98 -fsanitize=address
-endif
-ifeq ($(UNAME), Linux)
-FLAGS += -fsanitize=address
+FLAGS += -std=c++98
 endif
 
 ################################################################################
