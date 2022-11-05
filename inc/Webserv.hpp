@@ -167,11 +167,9 @@ class Webserv
 
 			for (std::map<int, Job>::iterator it = this->jobs.begin(); it != this->jobs.end(); it++)
 			{
-				if (it->first > 2)
-				{
-					job = &it->second;
+				job = &it->second;
+				if (job && job->fd > 2 && job->fd < 100000)
 					this->closeConnection(job, "Webserv");
-				}
 			}
 		}
 	public:
@@ -194,6 +192,7 @@ class Webserv
 			if (bytesRead <= 0)
 			{
 				this->closeConnection(job, "client");
+				loop_job_counter--;
 				return (0);
 			}
 
@@ -634,6 +633,18 @@ class Webserv
 				ports.clear();
 			}
 		}
+		static unsigned int ft_inet_addr(char *str)
+		{
+			int ret;
+			int a, b, c, d;
+			char arr[4];
+			ret = sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d);
+
+			if (ret < 6)
+				throw std::runtime_error("sscanf: failed to parse address on listen. " + std::string(str));
+			arr[0] = a; arr[1] = b; arr[2] = c; arr[3] = d;
+			return *(unsigned int *)arr;
+		}
 		int		openSocket(int port, const char *hostname = "")
 		{
 			int ret;
@@ -649,11 +660,22 @@ class Webserv
 				throw std::runtime_error("Failed to set socket options.");
 
 			bzero(&sock_struct, sizeof(sock_struct));
+
 			sock_struct.sin_family = AF_INET;
 			if (strcmp(hostname, "") == 0)
+				sock_struct.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+			else if (strcmp(hostname, "localhost") == 0)
+				sock_struct.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+			else if (strcmp(hostname, "127.0.0.1") == 0)
+				sock_struct.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+			else if (strcmp(hostname, "0.0.0.0") == 0)
 				sock_struct.sin_addr.s_addr = htonl(INADDR_ANY);
 			else
-				sock_struct.sin_addr.s_addr = inet_addr(hostname);
+				throw std::runtime_error("listen: failed to parse address on.");
+
+
+
+
 			sock_struct.sin_port = htons(port);
 
 			if (bind(socketFD, (struct sockaddr*)&sock_struct, sizeof(sock_struct)) < 0)

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 11:59:34 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 19:48:08 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,21 +93,22 @@ class ServerConfiguration : public Configuration
 			{
 				split(v[i], ":", h_and_p);
 				// TODO check if the port is valid and not already used
+				if (h_and_p[0] != "localhost" && h_and_p[0] != "127.0.0.1" && h_and_p[0] != "0.0.0.0")
+					throw std::runtime_error("Error: host is not valid");
+
 				if (h_and_p.size() == 1 && h_and_p[0].find(".") != std::string::npos) // There is a lone ip address and will listen to default port 80
 				{
-					host_port_pair pair = std::make_pair(h_and_p[0], 0);
+					host_port_pair pair = std::make_pair(h_and_p[0], 80);
 					this->_ports.push_back(pair);
 				}
 				else if (h_and_p.size() == 1)
 				{
 					host_port_pair pair = std::make_pair(std::string(""), ft_stoi(h_and_p[0]));
-					// this->_ports[ft_stoi(h_and_p[0])] = "";
 					this->_ports.push_back(pair);
 				}
 				else if (h_and_p.size() == 2)
 				{
 					host_port_pair pair = std::make_pair(h_and_p[0], ft_stoi(h_and_p[1]));
-					// this->_ports[ft_stoi(h_and_p[1])] = h_and_p[0];
 					this->_ports.push_back(pair);
 				}
 				else
