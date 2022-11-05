@@ -183,7 +183,11 @@ class Webserv
 			if (bytesRead <= 0)
 			{
 				if (bytesRead == 0)
+				{
 					this->closeConnection(job, "client");
+					loop_job_counter++;
+					return (0);
+				}
 				else
 					throw std::runtime_error("recv: failed to read from client.");
 				// close(job->fd);
@@ -434,7 +438,7 @@ class Webserv
 				response_char += bytes;
 			}
 
-			if (job->get_response().get_headers().find("Connection: close") != std::string::npos)
+			if (job->get_request().get_header("connection").compare("Close") == 0)
 				connection_close = true;
 
 			job->clear();
