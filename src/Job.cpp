@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 13:05:12 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 13:43:36 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include <unistd.h>
 #include <arpa/inet.h>
+# include "../inc/Request.hpp"
 
 /* Constructors */
 Job::Job()
@@ -112,7 +113,7 @@ void 			Job::generate_autoindex_add_respone(Configuration &config)
 {
 	std::string temp;
 	if (this->generate_autoindex(this, this->request._uri, temp) == 0)
-		this->get_response().set_body(temp.c_str(), temp.size());
+		this->get_response().set_body(temp.c_str(), temp.size(), 0);
 	else
 		this->set_xxx_response(config, 500);
 }
