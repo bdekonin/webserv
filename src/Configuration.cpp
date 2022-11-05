@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:00:19 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/03 21:27:48 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 14:01:28 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,13 +77,14 @@ bool Configuration::is_method_allowed(std::string const &method) const
 {
 	return this->is_method_allowed(method.c_str());
 }
+#include <cstring>
 bool Configuration::is_method_allowed(const char *method) const
 {
-	if (strcasecmp(method, "GET") == 0)
+	if (strcmp(method, "GET") == 0)
 		return (this->_methods[0]);
-	else if (strcasecmp(method, "POST") == 0)
+	else if (strcmp(method, "POST") == 0)
 		return (this->_methods[1]);
-	else if (strcasecmp(method, "DELETE") == 0)
+	else if (strcmp(method, "DELETE") == 0)
 		return (this->_methods[2]);
 	else
 		return false; // only GET POST DELETE

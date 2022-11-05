@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/04 21:45:26 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/04 21:50:17 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/05 14:02:40 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ LocationConfiguration::LocationConfiguration(const LocationConfiguration *src)
 
 
 LocationConfiguration::LocationConfiguration(const LocationConfiguration &src)
+: Configuration()
 {
 	*this = src;
 }
