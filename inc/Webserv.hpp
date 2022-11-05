@@ -143,7 +143,12 @@ class Webserv
 				}
 			}
 		}
-
+		/**
+		 * @brief This function closes and removes a job from the program
+		 * 
+		 * @param job A pointer to a job that is to be removed.
+		 * @param connectionClosedBy Used for printing, its either "client" or "server".
+		 */
 		void closeConnection(Job *job, const char *connectionClosedBy)
 		{
 			int copyFD;
