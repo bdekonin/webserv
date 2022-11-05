@@ -11,6 +11,7 @@ NAME        := webserv
 CC         := c++
 FLAGS    := -Wall -Wextra -Werror -g -D DEBUG=1
 
+UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
 FLAGS += -std=c++98 -fsanitize=address
 endif
