@@ -9,7 +9,7 @@
 
 NAME        := webserv
 CC         := c++
-FLAGS    := -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address -D DEBUG=1
+FLAGS    := -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address -D DEBUG=0
 # FLAGS    := -g -fsanitize=address
  
 ################################################################################
@@ -19,7 +19,11 @@ FLAGS    := -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address -D DEBUG=1
 SRCS        :=      main.cpp \
                           utils.cpp \
 						  src/Configuration.cpp \
-						  src/Job.cpp
+						  src/Job.cpp \
+						  src/LocationConfiguration.cpp \
+						  src/Parser.cpp \
+						  src/Request.cpp \
+						  src/Response.cpp \
                           
 OBJS        := ${SRCS:.cpp=.o}
 
