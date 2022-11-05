@@ -9,9 +9,15 @@
 
 NAME        := webserv
 CC         := c++
-FLAGS    := -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address -D DEBUG=0
-# FLAGS    := -g -fsanitize=address
- 
+FLAGS    := -Wall -Wextra -Werror 
+FLAGS += -g -fsanitize=address -D DEBUG=1
+
+
+UNAME := $(shell uname)
+ifeq ($(UNAME), Darwin)
+FLAGS += -std=c++98
+endif
+
 ################################################################################
 #                                 PROGRAM'S SRCS                               #
 ################################################################################

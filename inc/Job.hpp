@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 13:45:11 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/05 13:54:11 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,6 +144,12 @@ class Job
 			void set_3xx_response(Configuration &config); // Redirection response
 			void set_405_response(Configuration &config); // Method now allowed
 			void set_500_response(Configuration &config); // Internal server error Malloc, read, etc error
+
+
+			void setType(int type);
+			void setFd(int fd);
+			void setServer(Server *server);
+			void setUser(User *user);
 
 			/**
 			 * @brief Set the response object

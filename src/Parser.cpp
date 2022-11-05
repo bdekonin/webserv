@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/04 21:54:10 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/05 11:31:51 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/05 13:55:20 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,7 @@ void Parser::_get_content()
 		throw std::runtime_error("parser: Failed to open config file");
 
 	this->handle_file(fd, this->_filecontent);
+	close(fd);
 }
 
 /// @brief Function that splits the filecontent into blocks and returns a vector of blocks
