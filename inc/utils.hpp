@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:26:24 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/27 18:59:24 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 11:19:23 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@
 # include <time.h>
 
 # define whitespaces " \v\t\n"
-# define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
 
 std::string create_autoindex_line(const std::string &path, const char *name, time_t ts, const unsigned long bytes, bool is_file);
 

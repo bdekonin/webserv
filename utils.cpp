@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/29 18:37:15 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 11:22:06 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ std::string create_autoindex_line(const std::string &path, const char *name, tim
 	else
 		line.replace(line.find("NAME"), 4, name);
 	line.replace(line.find("DATE"), 4, buff);
-	line.replace(line.find("BYTES"), 5, SSTR(bytes));
+	line.replace(line.find("BYTES"), 5, std::to_string(bytes));
 
 	return (line);
 }
