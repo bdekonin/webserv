@@ -515,10 +515,10 @@ class Webserv
 				else
 					throw std::runtime_error("Something went terribbly wrong");
 
-				close(fd_out[0]);
-				close(fd_out[1]);
-				close(fd_in[0]);
-				close(fd_in[1]);
+				// close(fd_out[0]);
+				// close(fd_out[1]);
+				// close(fd_in[0]);
+				// close(fd_in[1]);
 
 			}
 			job->set_client_response(copy_writefds);
