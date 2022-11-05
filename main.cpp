@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 20:31:30 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 11:51:56 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,9 +33,10 @@ int main(int argc, char const *argv[])
 	(void)argc;
 	std::vector<ServerConfiguration> configs;
 	std::map<int, Server> servers; // port, server
-	Parser parser(argv[1]);
 
-	configs = parser.init();
+	Parser *parser = new Parser(argv[1]);
+	configs = parser->init();
+	delete parser;
 
 	Webserv server(configs);
 	server.setupServers();
