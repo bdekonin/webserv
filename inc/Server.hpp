@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/26 16:15:16 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 01:04:11 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 14:23:48 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ class Server
 		/* Destructor */
 		virtual ~Server()
 		{
-			// free (this->_hostname);
+			free (this->_hostname);
 			// this->_configuration.clear();
 			// close(this->_socket); // TODO CHECK IF NESSECARY
 			// TODO FREE CONFIGATION???
