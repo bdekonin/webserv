@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/10/30 19:17:41 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 11:33:53 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,7 @@ class Parser
 				throw std::runtime_error("parser: Failed to open config file");
 
 			this->handle_file(fd, this->_filecontent);
+			close(fd);
 		}
 
 		/// @brief Function that splits the filecontent into blocks and returns a vector of blocks
