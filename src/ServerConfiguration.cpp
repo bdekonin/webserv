@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 14:53:23 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/06 12:17:00 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 12:58:03 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,6 @@ void ServerConfiguration::set_listen(std::string &s)
 	{
 		split(v[i], ":", h_and_p);
 		
-		std::cout << "h_and_p[0] = \'" << h_and_p[0] << "\'" << std::endl;
 		// TODO check if the port is valid and not already used
 		if (h_and_p[1].empty() == true && h_and_p[0].empty() == false)
 			;
