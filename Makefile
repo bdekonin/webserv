@@ -32,7 +32,6 @@ SRCS        :=      main.cpp \
 						  src/Response.cpp \
 						  src/Server.cpp \
 						  src/ServerConfiguration.cpp \
-						  src/User.cpp \
 						  src/Utils.cpp \
                           
 OBJS        := ${SRCS:.cpp=.o}
