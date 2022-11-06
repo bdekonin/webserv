@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 15:03:05 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/05 15:09:08 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 13:54:48 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,11 @@ ft::RespondCodes::RespondCodes()
 	// this->response_codes[508] = "Loop Detected";
 	// this->response_codes[510] = "Not Extended";
 	// this->response_codes[511] = "Network Authentication Required";
+}
+
+bool ft::RespondCodes::isValidRespondCode(int const &code)
+{
+	return !this->get_respond_codes()[code].empty();
 }
 
 /* Destructor */
