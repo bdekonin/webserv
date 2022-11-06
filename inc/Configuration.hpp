@@ -6,14 +6,14 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/04 11:58:50 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 15:03:40 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONFIGURATION_HPP
 # define CONFIGURATION_HPP
 
-# include "utils.hpp"
+# include "Utils.hpp"
 
 # include <iostream>
 # include <string>

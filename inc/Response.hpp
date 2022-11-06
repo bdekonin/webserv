@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/09/05 15:07:07 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 13:43:14 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/05 15:03:16 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 # include <string>
 # include <cstring>
 
-#include "utils.hpp"
+#include "Utils.hpp"
 
 # include "Configuration.hpp"
 

@@ -35,7 +35,7 @@
 # include "Server.hpp" // Class that handles a server.
 # include "Request.hpp" // Class that handles a request.
 # include "Response.hpp" // Class that handles a response.
-# include "utils.hpp"
+# include "Utils.hpp"
 
 
 #define getString(n) #n

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 13:55:37 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/05 15:03:34 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@
 # include "ServerConfiguration.hpp" // Derived from Configuration
 # include "LocationConfiguration.hpp" // Derived from Configuration
 
-# include "utils.hpp" // Utility functions
+# include "Utils.hpp" // Utility functions
 
 class Parser
 {
