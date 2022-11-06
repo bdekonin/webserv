@@ -425,8 +425,7 @@ class Webserv
 				ss << CLRS_BLU;
 				bytes = ft_strnstr(response_char, "\r\n", 60) - response_char;
 				ss << "server : >> [status: " << std::string(response_char, bytes)  << "] ";
-				if (response_size > 70000)
-					ss << "[length: " << response_size << "] ";
+				ss << "[length: " << response_size << "] ";
 				ss << "[client: " << job->fd << "] ";
 				ss << CLRS_reset;
 				std::cerr << ss.str() << std::endl;
