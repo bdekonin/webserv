@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/26 16:15:16 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 01:04:11 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/05 14:52:49 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,107 +20,37 @@ class Server
 {
 	public:
 		/* Constructor  */
-		Server()
-		: _socket(0), _hostname(NULL), _port(0)
-		{
-		}
-		Server(int socket, char *hostname, in_port_t port)
-		: _socket(socket), _hostname(hostname), _port(port)
-		{
-			this->_configuration = std::vector<ServerConfiguration>();
-		}
-		Server(int socket, char *hostname, in_port_t port, ServerConfiguration const &config)
-		: _socket(socket), _hostname(hostname), _port(port)
-		{
-			this->_configuration = std::vector<ServerConfiguration>();
-			this->push_back(config);
-			// this->_configuration.push_back(config);
-			(void)config;
-		}
+		Server();
+		Server(int socket, char *hostname, in_port_t port);
+		Server(int socket, char *hostname, in_port_t port, ServerConfiguration const &config);
 
-		void set(int socket, char *hostname, in_port_t port, ServerConfiguration const &config)
-		{
-			this->_socket = socket;
-			this->_hostname = hostname;
-			this->_port = port;
-			this->_configuration.push_back(config);
-		}
+		void set(int socket, char *hostname, in_port_t port, ServerConfiguration const &config);
 		
 		/* Destructor */
-		virtual ~Server()
-		{
-			// free (this->_hostname);
-			// this->_configuration.clear();
-			// close(this->_socket); // TODO CHECK IF NESSECARY
-			// TODO FREE CONFIGATION???
-		}
+		virtual ~Server();
 
 		/* Copy constructor */
-		Server(const Server &src)
-		{
-			*this = src;
-		}
+		Server(const Server &src);
 
 		/* Operation overload = */
-		Server& operator = (const Server& e)
-		{
-			this->_socket = e.get_socket();
-			this->_port = e.get_port();
-			this->_hostname = e.get_hostname();
-			this->_configuration = e.get_configurations();
-			return *this;
-		}
+		Server& operator = (const Server& e);
 
 		// Getters
-		int get_socket() const
-		{
-			return this->_socket;
-		}
-		int get_port() const
-		{
-			return this->_port;
-		}
-		char *get_hostname() const
-		{
-			return this->_hostname;
-		}
-		std::vector<ServerConfiguration> &get_configurations()
-		{
-			return this->_configuration;
-		}
-		const std::vector<ServerConfiguration> &get_configurations() const
-		{
-			return this->_configuration;
-		}
+		int get_socket() const;
+		int get_port() const;
+		char *get_hostname() const;
+		std::vector<ServerConfiguration> &get_configurations();
+		const std::vector<ServerConfiguration> &get_configurations() const;
 
 		// Setters
-		void set_socket(int socket)
-		{
-			this->_socket = socket;
-		}
-		void set_port(int port)
-		{
-			this->_port = port;
-		}
-		void set_hostname(const char *hostname)
-		{
-			this->_hostname = (char*)hostname;
-		}
-		void set_configurations(const std::vector<ServerConfiguration> configs)
-		{
-			this->_configuration = configs;
-		}
+		void set_socket(int socket);
+		void set_port(int port);
+		void set_hostname(const char *hostname);
+		void set_configurations(const std::vector<ServerConfiguration> configs);
 
 		// Methods
-		Server &push_back (const ServerConfiguration& val)
-		{
-			this->_configuration.push_back(ServerConfiguration(val)); // TODO OR JUST VAL?
-			return *this;
-		}
-		ServerConfiguration &operator[](int index)
-		{
-			return this->_configuration[index];
-		}
+		Server &push_back (const ServerConfiguration& val);
+		ServerConfiguration &operator[](int index);
 		
 	private:
 		int									_socket; // Server socket
