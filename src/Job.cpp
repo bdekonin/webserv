@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 16:39:35 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/06 10:18:54 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,10 @@ void 			Job::generate_autoindex_add_respone(Configuration &config)
 	if (this->generate_autoindex(this, this->request._uri, temp) == 0)
 		this->get_response().set_body(temp.c_str(), temp.size(), 0);
 	else
+	{
+		std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
 		this->set_xxx_response(config, 500);
+	}
 }
 void 			Job::set_environment_variables()
 {
