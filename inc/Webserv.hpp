@@ -340,7 +340,10 @@ class Webserv
 
 				fd = open(job->get_request()._uri.c_str(), O_RDONLY);
 				if (fd == -1)
+				{
+					std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
 					job->set_xxx_response(config, 500);
+				}
 				job->handle_file(fd);
 				close(fd);
 			}
@@ -397,7 +400,10 @@ class Webserv
 				// else 404
 			}
 			else // ERROR
+			{
+				std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
 				job->set_xxx_response(config, 500);
+			}
 			if (isRecursive == false)
 				job->set_client_response(copy_writefds); 
 			return type;
@@ -671,7 +677,7 @@ class Webserv
 			else if (strcmp(hostname, "0.0.0.0") == 0)
 				sock_struct.sin_addr.s_addr = htonl(INADDR_ANY);
 			else
-				throw std::runtime_error("listen: failed to parse address on.");
+				throw std::runtime_error("listen: failed to parse address on listen. " + std::string(hostname));
 
 
 
