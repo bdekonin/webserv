@@ -6,13 +6,28 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 09:49:05 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/06 10:43:35 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "inc/utils.hpp"
 # include <cstring>
 #include <sstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+
+int get_root_options(const char *path)
+{
+	struct stat st;
+	if (lstat(path, &st) != 0)
+		return -1;
+	else if (st.st_mode & S_IFDIR)
+		return 0;
+	else
+		return 1;
+}
 
 /// @brief Function that converrts a string to a integer. Throws an error if the string is not a integer.
 /// @param str String that needs to be converted to a integer.

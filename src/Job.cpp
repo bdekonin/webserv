@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 10:18:54 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/06 11:48:35 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,6 +111,18 @@ void 			Job::handle_file(int fd)
 void 			Job::generate_autoindex_add_respone(Configuration &config)
 {
 	std::string temp;
+
+	// check root options
+
+	int ret = get_root_options(this->request._uri.c_str());
+
+	if (ret == -1 || ret == 1)
+	{
+		this->set_xxx_response(config, 404);
+		return ;
+	}
+
+
 	if (this->generate_autoindex(this, this->request._uri, temp) == 0)
 		this->get_response().set_body(temp.c_str(), temp.size(), 0);
 	else
