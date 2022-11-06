@@ -6,11 +6,14 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:00:19 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 14:01:28 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/06 10:21:56 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/Configuration.hpp"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /* Constructors */
 Configuration::Configuration()
@@ -198,6 +201,14 @@ void Configuration::set_root(std::string &s)
 
 	this->_root = v[0];
 	this->_isSet["root"] = true;
+
+	struct stat st;
+	if (lstat(this->_root.c_str(), &st) != 0)
+		throw std::runtime_error("config: root doesnt exist: " + this->_root);
+	else if (st.st_mode & S_IFDIR)
+		;
+	else
+		throw std::runtime_error("config: root is not a directory: " + this->_root);
 
 	// if (this->_root[this->_root.size() - 1] != '/')
 	// 	this->_root += '/';
