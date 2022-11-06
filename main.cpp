@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 13:52:42 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/05 17:07:40 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,29 +41,14 @@ int main(int argc, char const *argv[])
 	Webserv server(configs);
 	server.setupServers();
 
-	// try
-	// {
+	try
+	{
 		server.run();
-		std::cout << "Closing all sockets" << std::endl;
-		for (std::map<int, Job*>::const_iterator it = server.jobs.begin(); it != server.jobs.end(); it++)
-		{
-			std::cout << "Closing " << it->second->fd <<  std::endl;
-			close(it->second->fd);
-		}
-	// }
-	// catch(const std::exception& e)
-	// {
-	// 	std::cerr << e.what() << '\n';
-
-	// 	std::cout << "Closing all sockets" << std::endl;
-	// 	// for (std::map<int, Server>::iterator it = servers.begin(); it != servers.end(); it++)
-	// 	// 	close(it->first);
-	// 	for (std::map<int, Job*>::const_iterator it = server.jobs.begin(); it != server.jobs.end(); it++)
-	// 	{
-	// 		std::cout << "Closing " << it->second->fd <<  std::endl;
-	// 		close(it->second->fd);
-	// 	}
-	// 	// free all memory
-	// }
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << "catch: "<< e.what() << '\n';
+		server.closeAll();
+	}
 	return 0;
 }

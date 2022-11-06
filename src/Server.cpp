@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 14:49:10 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/05 14:50:42 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 12:17:16 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ void Server::set(int socket, char *hostname, in_port_t port, ServerConfiguration
 /* Destructor */
 Server::~Server()
 {
-	// free (this->_hostname);
+	free (this->_hostname);
 	// this->_configuration.clear();
 	// close(this->_socket); // TODO CHECK IF NESSECARY
 	// TODO FREE CONFIGATION???

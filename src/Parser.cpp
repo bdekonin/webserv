@@ -6,11 +6,12 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/04 21:54:10 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/05 13:55:20 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/05 14:02:58 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/Parser.hpp"
+#include <cstring>
 
 Parser::Parser(std::string filename)
 : _filename(filename), _filecontent("")

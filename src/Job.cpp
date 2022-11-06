@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 13:55:58 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 11:48:35 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,8 @@ Job::Job()
 : request(Request()), response(Response()), correct_config(Configuration())
 {
 }
-Job::Job(int type, int fd, Server *server, User *user)
-: type(type), fd(fd), server(server), user(user), request(Request()), response(Response()), correct_config(Configuration())
+Job::Job(int type, int fd, Server *server)
+: type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration())
 {
 }
 Job::Job(const Job &src)
@@ -33,7 +33,7 @@ Job::Job(const Job &src)
 /* Destructor */
 Job::~Job()
 {
-	// if (this->is_client() == true)
+	// if (this->user)
 	// 	delete this->user;
 }
 
@@ -43,7 +43,6 @@ Job& Job::operator = (const Job& e)
 	this->type = e.type;
 	this->fd = e.fd;
 	this->server = e.server;
-	this->user = e.user;
 	this->request = e.request;
 	this->response = e.response;
 	this->correct_config = e.correct_config;
@@ -112,10 +111,25 @@ void 			Job::handle_file(int fd)
 void 			Job::generate_autoindex_add_respone(Configuration &config)
 {
 	std::string temp;
+
+	// check root options
+
+	int ret = get_root_options(this->request._uri.c_str());
+
+	if (ret == -1 || ret == 1)
+	{
+		this->set_xxx_response(config, 404);
+		return ;
+	}
+
+
 	if (this->generate_autoindex(this, this->request._uri, temp) == 0)
 		this->get_response().set_body(temp.c_str(), temp.size(), 0);
 	else
+	{
+		std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
 		this->set_xxx_response(config, 500);
+	}
 }
 void 			Job::set_environment_variables()
 {
@@ -139,7 +153,7 @@ void 			Job::set_environment_variables()
 	this->_set_environment_variable("PATH_INFO", r._uri.c_str());
 	this->_set_environment_variable("QUERY_STRING", r._query_string.c_str()); // NO QUERY STRING
 	this->_set_environment_variable("REDIRECT_STATUS", "true");
-	this->_set_environment_variable("REMOTE_ADDR", this->user->get_address().c_str());
+	this->_set_environment_variable("REMOTE_ADDR", this->address.c_str());
 	this->_set_environment_variable("REQUEST_METHOD", r.method_to_s());
 	this->_set_environment_variable("SCRIPT_FILENAME", cwd + r._uri);
 	this->_set_environment_variable("SCRIPT_NAME", r._uri.c_str());
@@ -190,9 +204,12 @@ void Job::setServer(Server *server)
 {
 	this->server = server;
 }
-void Job::setUser(User *user)
+void Job::setAddress(struct sockaddr_in *address)
 {
-	this->user = user;
+	char buffer[256];
+	bzero(buffer, 256);
+	inet_ntop(AF_INET, &address->sin_addr, buffer, 256);
+	this->address.insert(0, buffer);
 }
 
 /* Function that returns information about the file. See PATH_TYPE for more information. */
@@ -277,6 +294,7 @@ int Job::generate_autoindex(Job *job, std::string &uri, std::string &body)
 		body.append(endBody);
 		return (0);
 	}
+	closedir(dir);
 	body.clear();
 	return (1);
 }

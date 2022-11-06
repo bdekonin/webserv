@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 13:54:11 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/05 17:12:45 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 # include "Server.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
-# include "User.hpp"
 # include <string>
 
 
@@ -60,7 +59,7 @@ class Job
 			 * @param server A pointer to a server. Will be NULL if its a client.
 			 * @param user A pointer to a user. Will be NULL if its a server.
 			 */
-			Job(int type, int fd, Server *server, User *user);
+			Job(int type, int fd, Server *server);
 
 		/* Destructor */
 			virtual ~Job();
@@ -133,8 +132,8 @@ class Job
 		int				type; // Type of connection. See #defines above.
 		int				fd; // File descriptor of the connection.
 		Server			*server;
-		User			*user; // TODO: change to client class | SAME AS CLIENT
-		struct sockaddr_in *_address_info;
+		// User			*user; // TODO: change to client class | SAME AS CLIENT
+		std::string		address; // only set when its a user; else its empty.
 		Request			request;
 		Response		response;
 		Configuration correct_config;
@@ -149,7 +148,7 @@ class Job
 			void setType(int type);
 			void setFd(int fd);
 			void setServer(Server *server);
-			void setUser(User *user);
+			void setAddress(struct sockaddr_in *address);
 
 			/**
 			 * @brief Set the response object

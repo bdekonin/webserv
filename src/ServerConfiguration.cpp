@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 14:53:23 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/05 14:56:17 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 12:17:00 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,22 +76,27 @@ void ServerConfiguration::set_listen(std::string &s)
 	for (size_t i = 0; i < v.size(); i++)
 	{
 		split(v[i], ":", h_and_p);
+		
+		std::cout << "h_and_p[0] = \'" << h_and_p[0] << "\'" << std::endl;
 		// TODO check if the port is valid and not already used
+		if (h_and_p[1].empty() == true && h_and_p[0].empty() == false)
+			;
+		else if (h_and_p[0] != "localhost" && h_and_p[0] != "127.0.0.1" && h_and_p[0] != "0.0.0.0")
+			throw std::runtime_error("Error: host is not valid \'" + h_and_p[0] + "\'");
+
 		if (h_and_p.size() == 1 && h_and_p[0].find(".") != std::string::npos) // There is a lone ip address and will listen to default port 80
 		{
-			host_port_pair pair = std::make_pair(h_and_p[0], 0);
+			host_port_pair pair = std::make_pair(h_and_p[0], 8080);
 			this->_ports.push_back(pair);
 		}
 		else if (h_and_p.size() == 1)
 		{
 			host_port_pair pair = std::make_pair(std::string(""), ft_stoi(h_and_p[0]));
-			// this->_ports[ft_stoi(h_and_p[0])] = "";
 			this->_ports.push_back(pair);
 		}
 		else if (h_and_p.size() == 2)
 		{
 			host_port_pair pair = std::make_pair(h_and_p[0], ft_stoi(h_and_p[1]));
-			// this->_ports[ft_stoi(h_and_p[1])] = h_and_p[0];
 			this->_ports.push_back(pair);
 		}
 		else
@@ -99,6 +104,7 @@ void ServerConfiguration::set_listen(std::string &s)
 		h_and_p.clear();
 	}
 }
+
 void ServerConfiguration::set_server_names(std::string &s)
 {
 	std::vector<std::string> v;
