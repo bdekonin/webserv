@@ -30,6 +30,10 @@ SRCS        :=      main.cpp \
 						  src/Parser.cpp \
 						  src/Request.cpp \
 						  src/Response.cpp \
+						  src/Server.cpp \
+						  src/ServerConfiguration.cpp \
+						  src/User.cpp \
+						  src/Utils.cpp \
                           
 OBJS        := ${SRCS:.cpp=.o}
 
