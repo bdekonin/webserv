@@ -74,17 +74,19 @@ class Webserv
 			this->setFdSets();
 		}
 
-		// static void interruptHandler(int sig_int)
-		// {
-		// 	(void)sig_int;
-		// 	g_is_running = false;
-		// 	std::cout << "Interrupt signal (" << sig_int << ") received." << std::endl;
-		// 	// exit(EXIT_SUCCESS);
-		// }
+		static void interruptHandler(int sig_int)
+		{
+			(void)sig_int;
+			g_is_running = false;
+			std::cout << "\b\b \b\b";
+			// std::cout << "Interrupt signal (" << sig_int << ") received." << std::endl;
+			throw std::runtime_error("Interrupt signal (" + std::to_string(sig_int) + ") received.");
+			// exit(EXIT_SUCCESS);
+		}
 		void run()
 		{
-			// signal(SIGINT, interruptHandler);
-			// signal(SIGQUIT, interruptHandler);
+			signal(SIGINT, interruptHandler);
+			signal(SIGQUIT, interruptHandler);
 
 			std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 			Job *job;
@@ -256,7 +258,7 @@ class Webserv
 
 
 
-			ServerConfiguration &server_configuration = this->get_correct_server_configuration(job, server_index);
+			ServerConfiguration server_configuration = this->get_correct_server_configuration(job, server_index);
 			this->create_correct_configfile(job->request, server_configuration, job->correct_config, ConfigToChange_path);
 
 			std::string &uri = job->get_request()._uri;
@@ -696,7 +698,7 @@ class Webserv
 			return socketFD;
 		}
 		/* Server Utilities Methods */
-		ServerConfiguration &get_correct_server_configuration(Job *job, size_t &i)
+		ServerConfiguration get_correct_server_configuration(Job *job, size_t &i)
 		{
 			size_t index = 0;
 			int port = this->get_port_from_job(job);
@@ -706,7 +708,7 @@ class Webserv
 			std::string host_header;
 			size_t pos;
 
-			ServerConfiguration &default_server = job_configs[0]; // correct server of the job
+			ServerConfiguration default_server = job_configs[0]; // correct server of the job
 
 
 			host_header = job->request._headers_map["host"];
