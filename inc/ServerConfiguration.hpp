@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 21:18:36 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 12:14:16 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 13:05:04 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,6 @@ class ServerConfiguration : public Configuration
 		
 		// Setters
 		void set_listen(std::string &s);
-		void set_server_names(std::string &s);
 		void set_server_names(std::string &s);
 		size_t	getMatchLength(const std::string& URI, const std::string& locationPath);
 		
