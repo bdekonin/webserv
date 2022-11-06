@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   Request.hpp                                        :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
+/*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
-/*   Created: 2022/08/23 12:38:22 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 15:03:26 by rkieboom      ########   odam.nl         */
+/*   Created: 2022/08/23 12:38:22 by rkieboom      #+#    #+#                 */
+/*   Updated: 2022/11/06 20:25:47 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 

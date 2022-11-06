@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   Parser.hpp                                         :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
+/*   By: lsmit <lsmit@student.codam.nl>               +#+                     */
 /*                                                   +#+                      */
-/*   Created: 2022/08/22 23:01:41 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 15:03:34 by rkieboom      ########   odam.nl         */
+/*   Created: 2022/08/22 23:01:41 by lsmit         #+#    #+#                 */
+/*   Updated: 2022/11/06 20:26:13 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 

@@ -1,8 +1,9 @@
 import sys
 sys.path.append('.')
-import request_line
+# import webserv_tester.testcase.all as all
+import all
 
 # list of test cases
 case = []
 
-case.append(request_line.run)
+case.append(all.run)

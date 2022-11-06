@@ -1,8 +1,3 @@
-#  |  |  ___ \    \  |         |
-#  |  |     ) |  |\/ |   _  |  |  /   _ 
-# ___ __|  __/   |   |  (   |    <    __/ 
-#    _|  _____| _|  _| \__,_| _|\_\ \___|
-#                              by jcluzet
 ################################################################################
 #                                     CONFIG                                   #
 ################################################################################
@@ -10,7 +5,7 @@
 NAME        := webserv
 CC         := c++
 FLAGS    := -Wall -Wextra -Werror 
-FLAGS += -g -fsanitize=address -D DEBUG=1
+FLAGS += -g -fsanitize=address -D DEBUG=0
 
 
 UNAME := $(shell uname)
@@ -33,6 +28,7 @@ SRCS        :=      main.cpp \
 						  src/Server.cpp \
 						  src/ServerConfiguration.cpp \
 						  src/Utils.cpp \
+						  src/Webserv.cpp \
                           
 OBJS        := ${SRCS:.cpp=.o}
 
