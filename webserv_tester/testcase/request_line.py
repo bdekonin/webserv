@@ -28,6 +28,8 @@ def compare(request_header, expectedCode, testcase):
         print(bcolors.FAIL + '[KO] {} \t expected: {} yours {}'.format(testcase, expectedCode, http_response.status) + bcolors.ENDC)
     else:
         print(bcolors.OKGREEN + '[OK] {}'.format(http_response.status) + bcolors.ENDC)
+        # // return body
+    return (http_response.read().decode('utf-8'))
 
 def stress_test(n):
         # Stress Testing
@@ -52,7 +54,6 @@ def run():
     # multiple spaces
     request_header = 'GET  /  HTTP/1.1\r\nHost:{}\r\n\r\n'.format(host)
     compare(request_header, 400, '1. multiple spaces')
-
 
     # Takes long so commmented out
     # # too long URI
@@ -121,11 +122,11 @@ def run():
     compare(request_header, 400, '17. multiple Content-Length differing size')
 
     # redirection to http://www.google.com if host is 127.0.0.1:8080
-    request_header = 'GET /redirect/ HTTP/1.1\r\nHost:{}\r\n\r\n'.format(host)
+    request_header = 'GET /redirect/ HTTP/1.1\r\nHost:127.0.0.1:{}\r\n\r\n'.format(config.SERVER_PORT)
     compare(request_header, 301, '18. redirection to http://www.google.com if host is 127.0.0.1:8080')
 
     # redirection to https://www.codam.nl if host is 127.0.0.1:8080
-    request_header = 'GET /redirect/ HTTP/1.1\r\nHost:{}\r\n\r\n'.format(host)
+    request_header = 'GET /redirect/ HTTP/1.1\r\nHost:localhost:{}\r\n\r\n'.format(config.SERVER_PORT)
     compare(request_header, 307, '19. redirection to https://www.codam.nl if host is localhost:8080')
 
     # Get CGI request
@@ -156,16 +157,13 @@ def run():
     request_header = 'Host:{}\r\n\r\n'.format(host)
     compare(request_header, 400, '26. Some stupid stuff')
 
+    # Method is not allowed
+    request_header = 'ROWAN / HTTP/1.1\r\nHost:{}\r\n\r\n'.format(host)
+    compare(request_header, 405, '27. Method is not allowed')
 
-
-
-
-
-
-
-
-
-
+    # POST with encoding
+    request_header = 'POST /post/submission.php HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nHost:{}\r\nTransfer-Encoding: chunked\r\n\r\na\r\nname=Hoi&m\r\na\r\nessage=Bob\r\na\r\nbieee&cont\r\na\r\nact_submit\r\na\r\nted=submit\r\n0\r\n\r\n'.format(host)
+    compare(request_header, 200, '28. # POST with encoding')
 
     end = time.time()
     print('Time: {}s'.format(str(end - start)[:4]))
