@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/04 21:54:10 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/05 14:02:58 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/06 17:34:57 by lsmit         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,8 @@ void Parser::_get_content()
 {
 	if (this->_filename.empty())
 		throw std::runtime_error("parser: No filename given");
-
+	if (get_root_options(this->_filename.c_str()) <= 0)
+		throw std::runtime_error("parser: Filename is a directory or does not exist");
 	int fd = open(this->_filename.c_str(), O_RDONLY);
 	if (fd == -1)
 		throw std::runtime_error("parser: Failed to open config file");
