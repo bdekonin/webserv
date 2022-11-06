@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 14:53:23 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/06 12:58:03 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 13:27:49 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,30 +76,65 @@ void ServerConfiguration::set_listen(std::string &s)
 	for (size_t i = 0; i < v.size(); i++)
 	{
 		split(v[i], ":", h_and_p);
-		
-		// TODO check if the port is valid and not already used
-		if (h_and_p[1].empty() == true && h_and_p[0].empty() == false)
-			;
-		else if (h_and_p[0] != "localhost" && h_and_p[0] != "127.0.0.1" && h_and_p[0] != "0.0.0.0")
-			throw std::runtime_error("Error: host is not valid \'" + h_and_p[0] + "\'");
 
-		if (h_and_p.size() == 1 && h_and_p[0].find(".") != std::string::npos) // There is a lone ip address and will listen to default port 80
+		std::string host;
+		std::string port;
+
+
+
+		if (h_and_p.size() > 2 || h_and_p.size() < 1)
+			throw std::runtime_error("Error: invalid input on listen.");
+
+		if (h_and_p.size() == 1)
 		{
-			host_port_pair pair = std::make_pair(h_and_p[0], 8080);
-			this->_ports.push_back(pair);
-		}
-		else if (h_and_p.size() == 1)
-		{
-			host_port_pair pair = std::make_pair(std::string(""), ft_stoi(h_and_p[0]));
-			this->_ports.push_back(pair);
-		}
-		else if (h_and_p.size() == 2)
-		{
-			host_port_pair pair = std::make_pair(h_and_p[0], ft_stoi(h_and_p[1]));
-			this->_ports.push_back(pair);
+			host = "127.0.0.1";
+			port = h_and_p[0];
 		}
 		else
-			throw std::runtime_error("Error: port number is not valid");
+		{
+			host = h_and_p[0];
+			port = h_and_p[1];
+		}
+
+		if (host != "localhost" && host != "127.0.0.1" && host != "0.0.0.0")
+			throw std::runtime_error("Error: host is not valid \'" + host + "\'");
+		else
+		{
+			try
+			{
+				host_port_pair pair = std::make_pair(host, ft_stoi(port));
+				this->_ports.push_back(pair);
+			}
+			catch(const std::exception& e)
+			{
+				std::cerr << e.what() << '\n';
+				throw std::runtime_error("Error: port number is not valid");
+			}
+		}
+
+		// // TODO check if the port is valid and not already used
+		// if (h_and_p.size() > 1 && h_and_p[1].empty() == true && h_and_p[0].empty() == false)
+		// 	;
+		// else if (h_and_p[0] != "localhost" && h_and_p[0] != "127.0.0.1" && h_and_p[0] != "0.0.0.0")
+		// 	throw std::runtime_error("Error: host is not valid \'" + h_and_p[0] + "\'");
+
+		// if (h_and_p.size() == 1 && h_and_p[0].find(".") != std::string::npos) // There is a lone ip address and will listen to default port 80
+		// {
+		// 	host_port_pair pair = std::make_pair(h_and_p[0], 8080);
+		// 	this->_ports.push_back(pair);
+		// }
+		// else if (h_and_p.size() == 1)
+		// {
+		// 	host_port_pair pair = std::make_pair(std::string(""), ft_stoi(h_and_p[0]));
+		// 	this->_ports.push_back(pair);
+		// }
+		// else if (h_and_p.size() == 2)
+		// {
+		// 	host_port_pair pair = std::make_pair(h_and_p[0], ft_stoi(h_and_p[1]));
+		// 	this->_ports.push_back(pair);
+		// }
+		// else
+		// 	throw std::runtime_error("Error: port number is not valid");
 		h_and_p.clear();
 	}
 }

@@ -74,17 +74,17 @@ class Webserv
 			this->setFdSets();
 		}
 
-		static void interruptHandler(int sig_int)
-		{
-			(void)sig_int;
-			g_is_running = false;
-			std::cout << "Interrupt signal (" << sig_int << ") received." << std::endl;
-			// exit(EXIT_SUCCESS);
-		}
+		// static void interruptHandler(int sig_int)
+		// {
+		// 	(void)sig_int;
+		// 	g_is_running = false;
+		// 	std::cout << "Interrupt signal (" << sig_int << ") received." << std::endl;
+		// 	// exit(EXIT_SUCCESS);
+		// }
 		void run()
 		{
-			signal(SIGINT, interruptHandler);
-			signal(SIGQUIT, interruptHandler);
+			// signal(SIGINT, interruptHandler);
+			// signal(SIGQUIT, interruptHandler);
 
 			std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 			Job *job;

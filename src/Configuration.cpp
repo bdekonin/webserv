@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:00:19 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 10:47:16 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/06 13:50:54 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,6 +170,7 @@ void Configuration::set_methods(size_t i, bool b)
 }
 void Configuration::set_return(std::string &s)
 {
+	int code;
 	std::vector<std::string> v;
 	std::string path;
 
@@ -181,8 +182,16 @@ void Configuration::set_return(std::string &s)
 
 	this->has_forbidden_charachters(v[0]);
 	this->has_forbidden_charachters(v[1]);
+
+	code = ft_stoi(v[0]);
 	
-	this->_return[ft_stoi(v[0])] = v[1];
+	{
+		ft::RespondCodes codes;
+		if (codes.isValidRespondCode(code) == false)
+			throw std::runtime_error("config: return invalid http respond code.");
+	}
+
+	this->_return[code] = v[1];
 	this->_isSet["return"] = true;
 }
 void Configuration::set_root(std::string &s)
