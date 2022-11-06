@@ -517,6 +517,7 @@ class Webserv
 				{
 					close(fd_in[0]);
 					write(fd_in[1], body, bodyVec_size);
+					close(fd_in[1]);
 				}
 
 				if (get == true)
@@ -526,7 +527,7 @@ class Webserv
 				else
 					throw std::runtime_error("Something went terribbly wrong");
 
-				// close(fd_out[0]);
+				close(fd_out[0]);
 				// close(fd_out[1]);
 				// close(fd_in[0]);
 				// close(fd_in[1]);
