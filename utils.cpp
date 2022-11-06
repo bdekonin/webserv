@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:40:33 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 13:53:56 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 09:49:05 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ int ft_stoi(const std::string &str)
   std::stringstream ss(str);
   int num;
   if((ss >> num).fail())
-    throw std::invalid_argument("stoi");
+    throw std::invalid_argument("stoi: " + str);
   return num;
 }
 
