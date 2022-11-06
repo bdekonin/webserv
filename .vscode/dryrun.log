@@ -1,6 +1,0 @@
-make --dry-run --always-make --keep-going --print-directory
-make: Entering directory '/mnt/c/Users/Bob/Documents/webserv'
-make: Leaving directory '/mnt/c/Users/Bob/Documents/webserv'
- 
-make: *** No targets specified and no makefile found.  Stop.
-
