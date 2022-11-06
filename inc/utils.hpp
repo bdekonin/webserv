@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:26:24 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 12:16:24 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 13:51:15 by rkieboom      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ namespace ft
 		public:
 			/* Constructor  */
 			RespondCodes();
+			bool isValidRespondCode(int const &code);
 			/* Destructor */
 			virtual ~RespondCodes();
 
