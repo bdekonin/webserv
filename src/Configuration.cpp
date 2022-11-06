@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:00:19 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 13:50:54 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/06 15:29:27 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,8 +143,6 @@ void Configuration::set_methods(std::string &s)
 
 	this->remove_semicolen(s);
 	split(s, whitespaces, v);
-	if (v.size() == 0)
-		throw std::runtime_error("config: methods has invalid number of arguments");
 	
 	for (size_t i = 0; i < v.size(); i++)
 	{
