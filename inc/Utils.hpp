@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:26:24 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 14:20:21 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/06 17:33:45 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ std::string create_autoindex_line(const std::string &path, const char *name, tim
  * @return  0 if directory
  * @return 1 if not a directory.
  */
-int get_root_options(const char *path);
+int				get_root_options(const char *path);
 void			to_upper(std::string &str);
 void			to_lower(std::string &str);
 void			split(const std::string& str, const char* delims, std::vector<std::string>& out);

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/19 16:16:08 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 17:07:40 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/06 18:52:53 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,11 +44,12 @@ int main(int argc, char const *argv[])
 	try
 	{
 		server.run();
+		server.closeAll();
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << "catch: "<< e.what() << '\n';
 		server.closeAll();
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }

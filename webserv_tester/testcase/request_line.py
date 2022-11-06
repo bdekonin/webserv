@@ -25,11 +25,11 @@ host = config.SERVER_ADDR + ':' + str(config.SERVER_PORT)
 def compare(request_header, expectedCode, testcase):
     http_response = send_request(request_header)
     if http_response.status != expectedCode:
-        print(bcolors.FAIL + '[KO] {} \t expected: {} yours {}'.format(testcase, expectedCode, http_response.status) + bcolors.ENDC)
+        print(bcolors.FAIL + '{} [KO] {} \t expected: {} yours {}'.format(testcase[:3], testcase, expectedCode, http_response.status) + bcolors.ENDC)
     else:
-        print(bcolors.OKGREEN + '[OK] {}'.format(http_response.status) + bcolors.ENDC)
+        print(bcolors.OKGREEN + '{} [OK] {}'.format(testcase[:3], http_response.status) + bcolors.ENDC)
         # // return body
-    return (http_response.read().decode('utf-8'))
+    # return (http_response.read().decode('utf-8'))
 
 def stress_test(n):
         # Stress Testing
@@ -56,9 +56,9 @@ def run():
     compare(request_header, 400, '1. multiple spaces')
 
     # Takes long so commmented out
-    # # too long URI
-    # request_header = 'GET  /' + 'a' * (config.MAX_URI_LENGTH + 1) + ' HTTP/1.1\r\nHost:{}\r\n\r\n'.format(host)
-    # compare(request_header, 400, '2. too long URI')
+    # too long URI
+    request_header = 'GET  /' + 'a' * (config.MAX_URI_LENGTH + 1) + ' HTTP/1.1\r\nHost:{}\r\n\r\n'.format(host)
+    compare(request_header, 400, '2. too long URI')
 
     # no space between method and uri
     request_header = 'GET/ HTTP/1.1\r\nHost:{}\r\n\r\n'.format(host)
