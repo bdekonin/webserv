@@ -156,7 +156,6 @@ class Webserv
 
 			FD_CLR(job->fd, &this->fds);
 			close(job->fd);
-			// delete job->user;
 			this->jobs.erase(job->fd);
 			// delete job;
 		}
@@ -168,9 +167,15 @@ class Webserv
 			for (std::map<int, Job>::iterator it = this->jobs.begin(); it != this->jobs.end(); it++)
 			{
 				job = &it->second;
-				if (job && job->fd > 2 && job->fd < 100000)
-					this->closeConnection(job, "Webserv");
+				if (job && job->fd > 2)
+				{
+					if (DEBUG == 1)
+						std::cerr << CLRS_RED << "server : connection closed by " << "Webserv" << " " << job->fd << CLRS_reset << std::endl;
+					close(job->fd);
+				}
+				
 			}
+
 		}
 	public:
 		std::vector<ServerConfiguration>	&configs;	// Vector of all the server configurations.
