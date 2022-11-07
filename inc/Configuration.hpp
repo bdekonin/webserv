@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/20 22:03:45 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 15:03:40 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/07 22:28:42 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define CONFIGURATION_HPP
 
 # include "Utils.hpp"
+# include "Request.hpp"
 
 # include <iostream>
 # include <string>
@@ -82,6 +83,7 @@ class Configuration
 			 * @return false if the method is not allowed
 			 */
 			bool is_method_allowed(std::string const &method) const;
+			bool is_method_allowed(Request::Method const type) const;
 		
 			/**
 			 * @brief Returns a boolean if the http method is allowed. This function compares it while ignoring the uppwer/lower case.

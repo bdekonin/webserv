@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/07 15:55:35 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 22:31:46 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,19 +63,19 @@ void 					Webserv::run()
 			if (FD_ISSET(loop_job_counter, &copy_readfds))
 			{
 				job = &this->jobs[loop_job_counter];
-				if (job->type == WAIT_FOR_CONNECTION)
+				if (job->type == Job::WAIT_FOR_CONNECTION)
 					accept_connection(job, &this->fds);
-				else if (job->type == CLIENT_READ)
+				else if (job->type == Job::CLIENT_READ)
 				{
 					if (this->client_read(job, loop_job_counter, &copy_writefds) == 0)
 						continue;
 				}
-				else if (job->type == FILE_READ)
+				else if (job->type == Job::FILE_READ)
 				{
 					// check redirect
 					this->file_read(job, &copy_writefds, false, Job::NOT_FOUND);
 				}
-				else if ( job->type == CGI_WRITE || job->type == CGI_READ)
+				else if ( job->type == Job::CGI_WRITE || job->type == Job::CGI_READ)
 					this->do_cgi(job, &copy_writefds);
 			}
 		}
@@ -84,9 +84,9 @@ void 					Webserv::run()
 			job = &this->jobs[loop_job_counter];
 			if (FD_ISSET(loop_job_counter, &copy_writefds))
 			{
-				if (job->type == CLIENT_RESPONSE)
+				if (job->type == Job::CLIENT_RESPONSE)
 					this->client_response(job);
-				else if (job->type == FILE_WRITE) // DELETE
+				else if (job->type == Job::FILE_WRITE) // DELETE
 				{
 					if (remove(job->get_request()._uri.c_str()) < 0)
 					{
@@ -137,7 +137,6 @@ void 					Webserv::closeConnection(Job *job, const char *connectionClosedBy)
 }
 int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
 {
-	size_t server_index = 0;
 	std::string ConfigToChange_path = "";
 	char	buffer[4096 + 1];
 	int		bytesRead = 0;
@@ -175,6 +174,7 @@ int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_w
 	// 400 Bad Request
 	if (job->get_request().is_bad_request() == true)
 	{
+		// if (411)
 		if (job->get_request()._method == Request::UNSUPPORTED)
 			job->set_xxx_response(job->correct_config, 405);
 		else
@@ -189,6 +189,7 @@ int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_w
 		this->client_response(job);
 		return (0);
 	}
+
 	// 414 Request-URI Too Long
 	if (job->get_request()._uri.size() > 1024)
 	{
@@ -205,7 +206,7 @@ int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_w
 
 
 
-	ServerConfiguration server_configuration = this->get_correct_server_configuration(job, server_index);
+	ServerConfiguration server_configuration = this->get_correct_server_configuration(job);
 	this->create_correct_configfile(job->request, server_configuration, job->correct_config, ConfigToChange_path);
 
 	std::string &uri = job->get_request()._uri;
@@ -226,19 +227,19 @@ int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_w
 	if (del == true) // method is DELETE
 	{
 		job->set_client_response(copy_writefds);
-		job->type = FILE_WRITE;
+		job->type = Job::FILE_WRITE;
 	}
 	else if (extension != "" &&  it != job->correct_config.get_cgi().end())
 	{
 		if (get == true)
-			job->type = CGI_READ;
+			job->type = Job::CGI_READ;
 		else
-			job->type = CGI_WRITE;
+			job->type = Job::CGI_WRITE;
 	}
 	else
 	{
 		if (get == true)
-			job->type = FILE_READ;
+			job->type = Job::FILE_READ;
 		else
 		{
 			job->set_405_response(job->correct_config);
@@ -256,7 +257,6 @@ int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_w
 		ss << CLRS_YEL;
 		ss << "server : << [method: " << job->get_request().method_to_s() << "] ";
 		ss << "[target: " << job->get_request().get_unedited_uri() << "] ";
-		ss << "[server: " << server_index << "] ";
 		ss << "[location: " << ConfigToChange_path << "] ";
 		ss << "[client fd: " << job->fd << "]";
 		ss << CLRS_reset << std::endl;
@@ -385,7 +385,7 @@ void 					Webserv::client_response(Job *job)
 
 	job->clear();
 	this->jobs[job->fd].clear();
-	this->jobs[job->fd].type = CLIENT_READ; // TODO or job->type = CLIENT_READ
+	this->jobs[job->fd].type = Job::CLIENT_READ; // TODO or job->type = CLIENT_READ
 
 
 	if (connection_close)
@@ -506,7 +506,7 @@ int 					Webserv::accept_connection(Job *job, fd_set *set)
 		throw std::runtime_error("accept: failed to accept.");
 
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
-	this->jobs[client_fd].setType(CLIENT_READ);
+	this->jobs[client_fd].setType(Job::CLIENT_READ);
 	this->jobs[client_fd].setFd(client_fd);
 	this->jobs[client_fd].setServer(job->server);
 	this->jobs[client_fd].setAddress(&client_address);
@@ -533,7 +533,7 @@ void					Webserv::setFdSets()
 	{
 		fd = it->second.get_socket();
 		// this->jobs[fd] = new Job(WAIT_FOR_CONNECTION, fd, &it->second, NULL);
-		this->jobs[fd].setType(WAIT_FOR_CONNECTION);
+		this->jobs[fd].setType(Job::WAIT_FOR_CONNECTION);
 		this->jobs[fd].setFd(fd);
 		this->jobs[fd].setServer(&it->second);
 		FD_SET(fd, &this->fds);
@@ -614,7 +614,7 @@ int						Webserv::openSocket(int port, const char *hostname)
 
 	return socketFD;
 }
-ServerConfiguration 	Webserv::get_correct_server_configuration(Job *job, size_t &i)
+ServerConfiguration 	Webserv::get_correct_server_configuration(Job *job)
 {
 	size_t index = 0;
 	int port = this->get_port_from_job(job);
@@ -642,7 +642,6 @@ ServerConfiguration 	Webserv::get_correct_server_configuration(Job *job, size_t 
 			}
 		}
 	}
-	i = index;
 	return default_server;
 }
 size_t 					Webserv::get_port_from_job(Job *job)

@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 11:35:09 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/05 12:09:17 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/07 20:56:45 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ Request& Request::operator = (const Request *e)
 }
 
 // Methods
-void Request::add_incoming_data(char *incoming_buffer, size_t len)
+Request::Type Request::add_incoming_data(char *incoming_buffer, size_t len)
 {
 	this->_incoming_data.insert(this->_incoming_data.end(), incoming_buffer, incoming_buffer + len);
 	if (this->_type == this->NOT_SET)
@@ -59,14 +59,15 @@ void Request::add_incoming_data(char *incoming_buffer, size_t len)
 			if (request.find("\v") != std::string::npos) //  Moet dit?
 			{
 				this->_type = this->ERROR;
-				return ;
+				return this->_type;
 			}
 			if (request.find("\t") != std::string::npos) // Moet dit??
 			{
 				this->_type = this->ERROR;
-				return ;
+				return this->_type;
 			}
-			return ;
+			return this->_type;
+
 		}
 
 		std::string		headers = request.substr(0, start_body + 4);
@@ -77,7 +78,8 @@ void Request::add_incoming_data(char *incoming_buffer, size_t len)
 		this->_reading_mode();
 		
 		if (this->_type == this->ERROR || this->_type == this->MAX_ENTITY)
-			return ;
+			return this->_type;
+
 
 		std::vector<unsigned char>::iterator it = this->_incoming_data.begin();
 
@@ -105,6 +107,7 @@ void Request::add_incoming_data(char *incoming_buffer, size_t len)
 
 	if (this->_content_length > 0)
 		this->_headers_map["content-length"] = std::to_string(this->_content_length);
+	return this->_type;
 }
 
 void						Request::_parseChunk()

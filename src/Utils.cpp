@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 15:03:05 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/06 13:54:48 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/07 21:48:32 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ ft::RespondCodes::RespondCodes()
 	// this->response_codes[408] = "Request Timeout";
 	// this->response_codes[409] = "Conflict";
 	// this->response_codes[410] = "Gone";
-	// this->response_codes[411] = "Length Required";
+	this->response_codes[411] = "Length Required";
 	// this->response_codes[412] = "Precondition Failed";
 	this->response_codes[413] = "Request Entity Too Large";
 	this->response_codes[414] = "URI Too Long";

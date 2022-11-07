@@ -155,7 +155,7 @@ class Webserv
 		 */
 		int									openSocket(int port, const char *hostname);
 
-		ServerConfiguration					get_correct_server_configuration(Job *job, size_t &i);
+		ServerConfiguration					get_correct_server_configuration(Job *job);
 
 		/**
 		 * @brief Get the port from job object
@@ -164,6 +164,222 @@ class Webserv
 		 * @return size_t 
 		 */
 		size_t								get_port_from_job(Job *job);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			/**
+			 * @brief 
+			 * 
+			 * @param job 
+			 * @param i 
+			 * @param fds 
+			 * @return int 1 if ready to write 0 if not ready
+			 */
+			int requestRead(Job *job, fd_set *fds)
+			{
+				if (job->type != Job::READY_TO_READ)
+				{
+					// set error
+					std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
+					// TODO 
+					exit(EXIT_FAILURE);
+				}
+
+				Request::Type type;
+				char buffer[4096 + 1];
+				size_t bytes;
+				int ret;
+
+				bzero(buffer, 4096 + 1);
+				bytes = recv(job->fd, buffer, 4096, 0);
+				if (bytes <= 0)
+				{
+					this->closeConnection(job, "client");
+					return (0);
+				}
+
+				Request &req = job->get_request();
+
+				type = req.add_incoming_data(buffer, bytes);
+				if (type == Request::MAX_ENTITY) // 413 Payload Too Large
+				{
+					// 413
+					// Close Connection
+				}
+
+				if (type == Request::ERROR || req.is_complete() == false)
+					return (1);
+
+				ret = this->isError(job, req);
+
+				(void)i;
+				(void)ret;
+				(void)fds;
+				return (0);
+			}
+			void getCorrectConfigForJob(Job *job, std::string &newpath)
+			{
+				ServerConfiguration server_configuration = this->get_correct_server_configuration(job);
+				this->create_correct_configfile(job->request, server_configuration, job->correct_config, newpath);
+			}
+			int isError(Job *job, Request &request) // change name
+			{
+				std::string newpath;
+				bool get = request.is_method_get();
+				bool post = request.is_method_post();
+				bool del = request.is_method_delete();
+
+				/* Checking if a Host header exists */
+				if (request.get_header("host").empty() == true)
+				{
+					// There is no data inside the job->correct_config because it could not match a server with a configuration.
+					job->set_xxx_response(job->correct_config, 400);
+					return (0);
+				}
+
+				/* This functions finds the best configuration for the request */
+				this->getCorrectConfigForJob(job, newpath);
+
+				if (request.is_bad_request() == true)
+				{
+					if (request.get_header("content-length").empty() == true)
+						job->set_xxx_response(job->correct_config, 411);
+					else if (request._method == Request::UNSUPPORTED) // Just checks in general if its a GET POST DELETE
+						job->set_xxx_response(job->correct_config, 405);
+					else
+						job->set_xxx_response(job->correct_config, 400);
+					return (0);
+				}
+				/* 505 HTTP Version Not Supported */
+				if (request.is_http_supported() == false)
+				{
+					job->set_xxx_response(job->correct_config, 505);
+					return (0);
+				}
+				/* 414 URI Too Long */
+				if (request._uri.size() > 256)
+				{
+					job->set_xxx_response(job->correct_config, 414);
+					return (0);
+				}
+				/* 413 Payload Too Large */
+				if (post && job->correct_config.get_client_max_body_size() > request._body.size())
+				{
+					job->set_xxx_response(job->correct_config, 413);
+					return (0);
+				}
+
+				std::string extension = request._uri.substr(request._uri.find_last_of(".") + 1);
+
+				if (extension == request._uri)
+					extension.clear();
+				if (get == true && job->correct_config.is_method_allowed(Request::Method::GET) == false)
+					get = false;
+				else if (post == true && job->correct_config.is_method_allowed(Request::Method::POST) == false)
+					post = false;
+				else if (del == true && job->correct_config.is_method_allowed(Request::Method::DELETE) == false)
+					del = false;
+
+				std::map<std::string, std::string>::iterator it;
+				it = job->correct_config.get_cgi().find("." + extension);
+
+				if (del == true)
+				{
+					job->type = Job::WAIT_FOR_DELETING;
+				}
+				else if (extension.empty() != true && it != job->correct_config.get_cgi().end())
+				{
+					job->type = Job::WAIT_FOR_CGIING;
+				}
+				else
+				{
+					if (get == true)
+						job->type = Job::WAIT_FOR_READING;
+					else if (post == true)
+						job->type = Job::WAIT_FOR_WRITING;
+					else
+					{
+						job->set_xxx_response(job->correct_config, 405);
+						return (0);
+					}
+				}
+
+				job->parse_request(newpath);
+
+				if (DEBUG == 1)
+				{
+					// Print nice things
+					std::stringstream ss;
+					ss << CLRS_YEL;
+					ss << "server : << [method: " << job->get_request().method_to_s() << "] ";
+					ss << "[target: " << job->get_request().get_unedited_uri() << "] ";
+					ss << "[location: " << newpath << "] ";
+					ss << "[client fd: " << job->fd << "]";
+					ss << CLRS_reset << std::endl;
+					std::cerr << ss.str();
+				}
+				return (1);
+			}
+
+			void fileRead();
+			
+
+
+			void http_index_module(); // Function that calls functiosn below when nessecasry
+				void http_file_module();
+				void autoindex_module();
+				void http_dir_module();
+				void http_error_module();
 };
 
 #endif // WEBSERV_HPP

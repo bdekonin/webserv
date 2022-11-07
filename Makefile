@@ -5,7 +5,7 @@
 NAME        := webserv
 CC         := c++
 FLAGS    := -Wall -Wextra -Werror 
-FLAGS += -g -fsanitize=address -D DEBUG=0
+FLAGS += -D DEBUG=1
 
 
 UNAME := $(shell uname)

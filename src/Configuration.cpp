@@ -6,11 +6,12 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:00:19 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/07 15:34:04 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 22:29:20 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/Configuration.hpp"
+#include "../inc/Request.hpp"
 
 /* Constructors */
 Configuration::Configuration()
@@ -88,6 +89,16 @@ bool Configuration::is_method_allowed(const char *method) const
 		return (this->_methods[2]);
 	else
 		return false; // only GET POST DELETE
+}
+bool Configuration::is_method_allowed(Request::Method const type) const
+{
+	if (type == Request::Method::GET)
+		return (this->_methods[0]);
+	else if (type == Request::Method::POST)
+		return (this->_methods[1]);
+	else if (type == Request::Method::DELETE)
+		return (this->_methods[2]);
+	return false;
 }
 
 /* Setters */

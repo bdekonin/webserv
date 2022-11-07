@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 12:38:22 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/06 20:25:47 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 20:57:02 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ class Request
 		Request& operator = (const Request *e);
 
 		// Methods
-		void add_incoming_data(char *incoming_buffer, size_t len);
+		Request::Type add_incoming_data(char *incoming_buffer, size_t len);
 
 		void						_parseChunk();
 

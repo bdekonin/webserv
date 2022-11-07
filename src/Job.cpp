@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/07 10:11:41 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 22:55:34 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,15 @@
 
 /* Constructors */
 Job::Job()
-: request(Request()), response(Response()), correct_config(Configuration())
+: request(Request()), response(Response()), correct_config(Configuration()), _request_ref(request), _job_ref(*this), _response_ref(response)
 {
 }
 Job::Job(int type, int fd, Server *server)
-: type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration())
+: type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration()), _request_ref(request), _job_ref(*this), _response_ref(response)
 {
 }
 Job::Job(const Job &src)
+: _request_ref(request), _job_ref(*this), _response_ref(response)
 {
 	*this = src;
 }
@@ -33,8 +34,6 @@ Job::Job(const Job &src)
 /* Destructor */
 Job::~Job()
 {
-	// if (this->user)
-	// 	delete this->user;
 }
 
 /* Operation overload = */
@@ -46,6 +45,10 @@ Job& Job::operator = (const Job& e)
 	this->request = e.request;
 	this->response = e.response;
 	this->correct_config = e.correct_config;
+
+	this->_request_ref = this->request;
+	this->_job_ref = *this;
+	this->_response_ref = this->response;
 	return *this;
 }
 
@@ -68,10 +71,13 @@ void 			Job::clear()
 	this->response.clear();
 	this->correct_config = Configuration();
 }
-void 			Job::parse_request(std::string &ConfigToChange_path)
+void 			Job::parse_request(std::string &ConfigToChange_path) // config is config path file
 {
 	if (this->correct_config.get_return().size() != 0)
+	{
+		std::cout << "Redirection now\n";
 		this->get_response().set_status_code(this->correct_config.get_return().begin()->first);
+	}
 	else
 	{
 		std::string path = this->request._uri;
