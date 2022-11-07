@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/07 10:16:47 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 15:55:35 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,15 +26,15 @@ Webserv::~Webserv()
 }
 
 /* Signals */
-static void				interruptHandler(int sig_int)
-{
-	(void)sig_int;
-	g_is_running = false;
-	std::cout << "\b\b \b\b";
-	// std::cout << "Interrupt signal (" << sig_int << ") received." << std::endl;
-	throw std::runtime_error("Interrupt signal (" + std::to_string(sig_int) + ") received.");
-	// exit(EXIT_SUCCESS); // Dont use this because it will close the server without closing the connections.
-}
+// static void				interruptHandler(int sig_int)
+// {
+// 	(void)sig_int;
+// 	g_is_running = false;
+// 	std::cout << "\b\b \b\b";
+// 	// std::cout << "Interrupt signal (" << sig_int << ") received." << std::endl;
+// 	throw std::runtime_error("Interrupt signal (" + std::to_string(sig_int) + ") received.");
+// 	// exit(EXIT_SUCCESS); // Dont use this because it will close the server without closing the connections.
+// }
 
 /* Public Main Methods */
 void 					Webserv::setupServers()
@@ -47,8 +47,8 @@ void 					Webserv::setupServers()
 }
 void 					Webserv::run()
 {
-	signal(SIGINT, interruptHandler);
-	signal(SIGQUIT, interruptHandler);
+	// signal(SIGINT, interruptHandler);
+	// signal(SIGQUIT, interruptHandler);
 
 	std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 	Job *job;
@@ -576,17 +576,17 @@ void					Webserv::openingSockets()
 }
 int						Webserv::openSocket(int port, const char *hostname)
 {
-	// int ret;
+	int ret;
 	struct sockaddr_in		sock_struct;
 	int						socketFD;
 
 	socketFD = socket(AF_INET, SOCK_STREAM, 0);
 	if (socketFD < 0)
 		throw std::runtime_error("socket: failed to create socket.");
-	// int options = 1;
-	// ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));
-	// if (ret < 0)
-	// 	throw std::runtime_error("Failed to set socket options.");
+	int options = 1;
+	ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));
+	if (ret < 0)
+		throw std::runtime_error("Failed to set socket options.");
 
 	bzero(&sock_struct, sizeof(sock_struct));
 
