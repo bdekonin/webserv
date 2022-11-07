@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/05 17:12:45 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 10:11:15 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,7 @@ class Job
 			 * 
 			 * @param fd The file descriptor to read from.
 			 */
-			void handle_file(int fd);
+			void handle_file(int fd, fd_set *fds);
 
 			/**
 			 * @brief This function creates a list of all the files in the directory. 'autoindex' and stores it into the response body.

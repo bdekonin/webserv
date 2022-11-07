@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 20:58:48 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 10:16:47 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,7 +297,7 @@ char 					Webserv::file_read(Job *job, fd_set *copy_writefds, bool isRecursive, 
 			std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
 			job->set_xxx_response(config, 500);
 		}
-		job->handle_file(fd);
+		job->handle_file(fd, copy_writefds);
 		close(fd);
 	}
 	else if (type == Job::DIRECTORY) // DIRECTORY
@@ -393,6 +393,9 @@ void 					Webserv::client_response(Job *job)
 }
 void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 {
+	int ret;
+
+	ret = 0;
 	std::vector<unsigned char>	&bodyVector = job->get_request()._body;
 	bodyVector.push_back('\0');
 	char						*body = reinterpret_cast<char*>(&bodyVector[0]);
@@ -447,14 +450,19 @@ void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 		if (post)
 		{
 			close(fd_in[0]);
-			write(fd_in[1], body, bodyVec_size);
+			ret = write(fd_in[1], body, bodyVec_size);
 			close(fd_in[1]);
 		}
 
-		if (get == true)
-			job->handle_file(fd_out[0]);
+		if (ret < 0)
+		{
+			std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
+			job->set_xxx_response(job->correct_config, 500);
+		}
+		else if (get == true)
+			job->handle_file(fd_out[0], copy_writefds);
 		else if (post == true)
-			job->handle_file(fd_out[0]);
+			job->handle_file(fd_out[0], copy_writefds);
 		else
 			throw std::runtime_error("Something went terribbly wrong");
 

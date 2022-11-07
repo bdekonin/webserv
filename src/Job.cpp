@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 11:48:35 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 10:11:41 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ void 			Job::parse_request(std::string &ConfigToChange_path)
 		this->request._uri = this->correct_config.get_root() + path;
 	}
 }
-void 			Job::handle_file(int fd)
+void 			Job::handle_file(int fd, fd_set *fds)
 {
 	std::string &uri = this->get_request()._uri;
 
@@ -93,6 +93,12 @@ void 			Job::handle_file(int fd)
 	bzero(buf, 4096 + 1);
 	while ((ret = read(fd, buf, 4096)) > 0)
 	{
+		if (ret < 0)
+		{
+			this->set_500_response(this->correct_config);
+			this->set_client_response(fds);
+			return ;
+		}
 		pointer = ft_strnstr(buf, "\r\n\r\n", ret);
 		if (pointer != NULL)
 			pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;

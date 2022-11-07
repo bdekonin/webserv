@@ -6,7 +6,7 @@
 /*   By: lsmit <lsmit@student.codam.nl>               +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/04 21:54:10 by lsmit         #+#    #+#                 */
-/*   Updated: 2022/11/06 20:26:25 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 10:07:12 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,11 @@ void Parser::handle_file(int fd, std::string &content)
 	bzero(buf, 4096 + 1);
 	while ((ret = read(fd, buf, 4096)) > 0)
 	{
+		if (ret < 0)
+		{
+			throw std::runtime_error("parser: Failed to read config file");
+			return;
+		}
 		content.insert(content.end(), buf, buf + ret);
 		if (ret < 4096)
 			break;
