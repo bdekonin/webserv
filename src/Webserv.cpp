@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/07 22:31:46 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 23:01:53 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,9 @@ void 					Webserv::run()
 					accept_connection(job, &this->fds);
 				else if (job->type == Job::CLIENT_READ)
 				{
+					job->type = Job::READY_TO_READ;
+					this->requestRead(job, &this->fds);
+
 					if (this->client_read(job, loop_job_counter, &copy_writefds) == 0)
 						continue;
 				}

@@ -225,7 +225,7 @@ class Webserv
 			 * @param fds 
 			 * @return int 1 if ready to write 0 if not ready
 			 */
-			int requestRead(Job *job, fd_set *fds)
+			int requestRead(Job *job, fd_set *fds, fd_set *wr, fd_set *rd)
 			{
 				if (job->type != Job::READY_TO_READ)
 				{
@@ -262,11 +262,31 @@ class Webserv
 
 				ret = this->isError(job, req);
 
-				(void)i;
-				(void)ret;
-				(void)fds;
-				return (0);
+				// delete 
+				// do_cgi
+				// read
+				// write
+
+				if (ret == 0)
+				{
+					job->type = Job::READY_TO_WRITE;
+					FD_SET(job->fd, wr);
+					return (0);
+				}
+
+
 			}
+			void createReadingJobs();
+			void createWritingJobs();
+			void createCGIJobs();
+			void createDeletingJobs();
+
+
+
+
+
+
+
 			void getCorrectConfigForJob(Job *job, std::string &newpath)
 			{
 				ServerConfiguration server_configuration = this->get_correct_server_configuration(job);
@@ -313,7 +333,7 @@ class Webserv
 					return (0);
 				}
 				/* 413 Payload Too Large */
-				if (post && job->correct_config.get_client_max_body_size() > request._body.size())
+				if (post && request._body.size() > job->correct_config.get_client_max_body_size())
 				{
 					job->set_xxx_response(job->correct_config, 413);
 					return (0);
