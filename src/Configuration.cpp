@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:00:19 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 15:29:27 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/07 15:34:04 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,6 +125,10 @@ void Configuration::set_client_max_body_size(std::string &s)
 	v[0].erase(v[0].size() - 1);
 
 	this->has_forbidden_charachters(v[0]);
+
+	size_t ret = std::string(v[0]).find("."); //0.5
+	if (ret != std::string::npos)
+		throw std::runtime_error("config: client_max_body_size has invalid character");
 	
 	this->_client_max_body_size = ft_stoi(v[0]);
 	this->_client_max_body_size *= CLIENT_MAX_BODY_SIZE_MULTIPLIER;
