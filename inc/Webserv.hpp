@@ -624,8 +624,29 @@ class Webserv
 				return (1);
 			}
 
-			void fileRead();
-			
+			void postHandler(Job *job)
+			{
+				Request &req = job->_getRequest();
+				std::vector<unsigned char>	&bodyVector = req._body;
+				bodyVector.push_back(0);
+				char	*body = reinterpret_cast<char*>(&bodyVector[0]);
+				size_t bodyVec_size = bodyVector.size();
+
+				std::cout << "body: " << body << std::endl;
+
+				int ret = write(job->fd, body, bodyVec_size);
+				std::cout << "ret: " << ret << std::endl;
+				if (ret == 0)
+				{ // Client is done?
+					
+				}
+
+				std::cout << ret << std::endl;
+				exit(1);
+			}
+
+
+
 
 
 			void http_index_module() // Function that calls functiosn below when nessecasry

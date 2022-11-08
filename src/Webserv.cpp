@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 19:13:16 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 19:25:13 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,15 @@ void 					Webserv::run()
 					// exit(1);
 					// this->responseWrite(job, &this->fds);
 					// this->closeConnection(job, &this->fds);
+				}
+				else if (Job::WRITING)
+				{
+					// -1 means blocking
+					this->postHandler(job);
+				}
+				else if (Job::DELETING)
+				{
+					
 				}
 				// if (job->type == Job::CLIENT_RESPONSE)
 				// 	this->client_response(job);
