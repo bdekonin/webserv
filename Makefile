@@ -4,7 +4,7 @@
 
 NAME        := webserv
 CC         := c++
-FLAGS    := -Wall -Wextra -Werror 
+# FLAGS    := -Wall -Wextra -Werror 
 FLAGS += -g -D DEBUG=1
 
 
