@@ -281,10 +281,13 @@ class Webserv
 					if (job->type == Job::WAIT_FOR_READING)
 					{
 						FD_SET(ret, rd);
+						FD_SET(ret, fds);
+
 					}
 					else if (job->type == Job::WAIT_FOR_WRITING)
 					{
 						FD_SET(ret, wr);
+						FD_SET(ret, fds);
 					}
 					return (0);
 				}
@@ -430,6 +433,7 @@ class Webserv
 				if (fd < 0)
 				{
 					// Disconnect client
+					exit(1);
 					return (-1);
 				}
 				return (fd);

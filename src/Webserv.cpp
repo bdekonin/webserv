@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 20:49:29 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 21:19:41 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,8 +59,6 @@ void 					Webserv::run()
 		fd_set copy_writefds = this->fds;
 		if (select((int)this->_max_fd + 1, &copy_readfds, &copy_writefds, 0, 0) < 0)
 			throw std::runtime_error("select() failed");
-		std::cout <<"_max_fd: " << _max_fd << std::endl;
-		std::cout << "jobs.size(): " << jobs.size() << std::endl;
 		for (auto it = this->jobs.begin(); it != this->jobs.end(); it++)
 		{
 			if (FD_ISSET(it->first, &copy_readfds))
@@ -75,12 +73,12 @@ void 					Webserv::run()
 				else if (job->type == Job::READING)
 				{
 					int ret = it->second.fileReader(it->first);
-					if (ret > 0)
-					{
+					// if (ret > 0)
+					// {
 						it->second.client->type = Job::READY_TO_WRITE;
 						it->second.type = Job::TASK_REMOVE;
 						FD_SET(it->second.client->fd, &copy_writefds);
-					}
+					// }
 				}
 				else if ( job->type == Job::CGI_WRITE || job->type == Job::CGI_READ)
 					this->do_cgi(job, &copy_writefds);
@@ -133,12 +131,10 @@ void 					Webserv::run()
 			if (it->second.type == Job::TASK_REMOVE)
 			{
 				this->closeConnection(it, "TASK");
-				continue;
 			}
 			if (it->second.type == Job::CLIENT_REMOVE)
 			{
 				this->closeConnection(it, "client");
-				continue;
 			}
 		}
 	}
