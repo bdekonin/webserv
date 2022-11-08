@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 17:33:32 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 18:13:32 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,6 @@ void 			Job::clear()
 	this->response.clear();
 	this->correct_config = Configuration();
 	this->client = NULL;
-	this->server = NULL;
 }
 void 			Job::parse_request(std::string &ConfigToChange_path) // config is config path file
 {
