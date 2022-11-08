@@ -639,7 +639,7 @@ int						Webserv::openSocket(int port, const char *hostname)
 
 	if (bind(socketFD, (struct sockaddr*)&sock_struct, sizeof(sock_struct)) < 0)
 		throw std::runtime_error("bind: Failed to bind.");
-	if (listen(socketFD, 1024) < 0)
+	if (listen(socketFD, 128) < 0)
 		throw std::runtime_error("listen: failed to listen.");
 
 	return socketFD;
