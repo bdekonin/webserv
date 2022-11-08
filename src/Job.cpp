@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/07 22:55:34 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 17:33:32 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,15 +18,14 @@
 
 /* Constructors */
 Job::Job()
-: request(Request()), response(Response()), correct_config(Configuration()), _request_ref(request), _job_ref(*this), _response_ref(response)
+: request(Request()), response(Response()), correct_config(Configuration()), client(NULL)
 {
 }
-Job::Job(int type, int fd, Server *server)
-: type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration()), _request_ref(request), _job_ref(*this), _response_ref(response)
+Job::Job(int type, int fd, Server *server, Job *client)
+: type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration()), client(client)
 {
 }
 Job::Job(const Job &src)
-: _request_ref(request), _job_ref(*this), _response_ref(response)
 {
 	*this = src;
 }
@@ -46,9 +45,7 @@ Job& Job::operator = (const Job& e)
 	this->response = e.response;
 	this->correct_config = e.correct_config;
 
-	this->_request_ref = this->request;
-	this->_job_ref = *this;
-	this->_response_ref = this->response;
+	this->client = e.client;
 	return *this;
 }
 
@@ -70,6 +67,8 @@ void 			Job::clear()
 	this->request.clear();
 	this->response.clear();
 	this->correct_config = Configuration();
+	this->client = NULL;
+	this->server = NULL;
 }
 void 			Job::parse_request(std::string &ConfigToChange_path) // config is config path file
 {
@@ -87,7 +86,7 @@ void 			Job::parse_request(std::string &ConfigToChange_path) // config is config
 }
 void 			Job::handle_file(int fd, fd_set *fds)
 {
-	std::string &uri = this->get_request()._uri;
+	std::string &uri = this->_getRequest()._uri;
 
 	this->get_response().set_status_code(200);
 	this->get_response().set_default_headers(uri.substr(uri.find_last_of(".") + 1));
@@ -216,6 +215,10 @@ void Job::setServer(Server *server)
 {
 	this->server = server;
 }
+void Job::setClient(Job *client)
+{
+	this->client = client;
+}
 void Job::setAddress(struct sockaddr_in *address)
 {
 	char buffer[256];
@@ -223,17 +226,18 @@ void Job::setAddress(struct sockaddr_in *address)
 	inet_ntop(AF_INET, &address->sin_addr, buffer, 256);
 	this->address.insert(0, buffer);
 }
-
-/* Function that returns information about the file. See PATH_TYPE for more information. */
-Job::PATH_TYPE Job::get_path_options(std::string &uri)
+void Job::setAddress(std::string const &address)
 {
-	std::string &path = uri;
-
+	this->address = address;
+}
+/* Function that returns information about the file. See PATH_TYPE for more information. */
+Job::PATH_TYPE Job::get_path_options(std::string const &uri)
+{
 	struct stat	sb;
 	int			ret;
 	int			returnstat;
 
-	ret = stat(path.c_str(), &sb);
+	ret = stat(uri.c_str(), &sb);
 	if (ret < 0)
 		return this->NOT_FOUND; // NOT FOUND
 	if (S_ISDIR(sb.st_mode) && uri[uri.size() - 1] == '/')

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/07 22:53:25 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 17:51:45 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ class Job
 			 * @param server A pointer to a server. Will be NULL if its a client.
 			 * @param user A pointer to a user. Will be NULL if its a server.
 			 */
-			Job(int type, int fd, Server *server);
+			Job(int type, int fd, Server *server, Job *client);
 
 		/* Destructor */
 			virtual ~Job();
@@ -75,7 +75,7 @@ class Job
 			 * @param uri location of the file or directory
 			 * @return PATH_TYPE 
 			 */
-			PATH_TYPE get_path_options(std::string &uri);
+			Job::PATH_TYPE get_path_options(std::string const &uri);
 			PATH_TYPE get_path_options(); // Uses this->request->urij
 
 			/**
@@ -136,7 +136,9 @@ class Job
 			void setType(int type);
 			void setFd(int fd);
 			void setServer(Server *server);
+			void setClient(Job *client);
 			void setAddress(struct sockaddr_in *address);
+			void setAddress(std::string const &address);
 
 			/**
 			 * @brief Set the response object
@@ -193,7 +195,7 @@ class Job
 
 
 
-
+		// 	void 	setRefs(Request &req, Job &job, Response &resp);
 		public:
 			enum JOB_TYPE
 			{
@@ -221,21 +223,52 @@ class Job
 				WRITING, // Task type (Task is writing)
 				DELETING, // Task type (Task is deleting)
 				CGIING, // Task type (Task is CGI)
+
+				CLIENT_REMOVE, // Client type (Client is REMOVEing)
+				TASK_REMOVE, // Task type (Task is REMOVEing)
 			};
 
+			const char *job_type_to_char()
+			{
+				return this->job_type_to_char((JOB_TYPE)this->type);
+			}
+			const char *job_type_to_char(JOB_TYPE type)
+			{
+				switch (type)
+				{
+					case WAIT_FOR_CONNECTION: return "SERVER: WAIT_FOR_CONNECTION";
+					case WAIT_FOR_READING: return "CLIENT: WAIT_FOR_READING";
+					case WAIT_FOR_WRITING: return "CLIENT: WAIT_FOR_WRITING";
+					case WAIT_FOR_DELETING: return "CLIENT: WAIT_FOR_DELETING";
+					case WAIT_FOR_CGIING: return "CLIENT: WAIT_FOR_CGIING";
+					case READY_TO_READ: return "CLIENT: READY_TO_READ";
+					case READY_TO_WRITE: return "CLIENT: READY_TO_WRITE";
+					case READY_TO_DELETE: return "CLIENT: READY_TO_DELETE";
+					case READY_TO_CGI: return "CLIENT: READY_TO_CGI";
+					case READING: return "TASK: READING";
+					case WRITING: return "TASK: WRITING";
+					case DELETING: return "TASK: DELETING";
+					case CGIING: return "TASK: CGIING";
+					case CLIENT_REMOVE: return "CLIENT: CLIENT_REMOVE";
+					case TASK_REMOVE: return "TASK: TASK_REMOVE";
+				}
+				std::cout << "job_type_to_char: " << type << std::endl;
+				return "UNKNOWN";
+			}
+
 			// If the type is a FILE_READ 
-			Request		&_request_ref;
-
-			// Defaults to this. else its the user's job
-			Job			&_job_ref;
-
-			Response &_response_ref;
+			Job *client;
 
 			bool isClient() const {
 				return (!this->isTask() && !this->isServer());
 			}
 			bool isTask() const {
-				return (this->type == Job::READING || this->type == Job::WRITING);
+				return (
+					this->type == Job::READING ||
+					this->type == Job::WRITING ||
+					this->type == Job::DELETING ||
+					this->type == Job::CGIING
+				);
 			}
 			bool isServer() const {
 				return this->type == Job::WAIT_FOR_CONNECTION;
@@ -245,20 +278,97 @@ class Job
 			{
 				if (this->isClient()) // If it is the user then return main otherwise return reference
 					return this->request;
-				return this->_request_ref;
-			}
-			Job		&_getJob()
-			{
-				if (this->isClient()) // If it is the user then return main otherwise return reference
-					return *this;
-				return this->_job_ref;
+				if (this->client)
+					return this->client->get_request();
+				throw std::runtime_error("Job::_getRequest() - No request found");
 			}
 			Response		&_getResponse()
 			{
 				if (this->isClient()) // If it is the user then return main otherwise return reference
 					return this->response;
-				return this->_response_ref;
+				if (this->client)
+					return this->client->get_response();
+				throw std::runtime_error("Job::_getResponse() - No request found");
 			}
+
+
+
+			int fileReader(int fd)
+			{
+				Response &res = this->_getResponse();
+				Request &req = this->_getRequest();
+				std::string &uri = req._uri;
+
+				// std::cout << "fileReader uri: " << uri << std::endl;
+				// pos = uri.find_last_of(".") + 1;
+				// extension = uri.substr();
+				// std::cout << "fileReader extension: " << extension << std::endl;
+				// res.set_status_code(200);
+				// if (extension.empty() == true)
+				// 	res.set_default_headers("txt");
+				// else
+				// 	res.set_default_headers(extension);
+
+				int ret, pos = 0;
+				char *pointer = NULL;
+				char buf[4096 + 1];
+				
+				bzero(buf, 4096 + 1);
+				while ((ret = read(fd, buf, 4096)) > 0)
+				{
+					if (ret == 0)
+					{
+						// blocking
+						return (0);
+					}
+					if (ret < 0)
+					{
+						return (-1);
+					}
+					// pointer = ft_strnstr(buf, "\r\n\r\n", ret);
+					// if (pointer != NULL)
+					// 	pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
+					// else
+					// 	pos = 0;
+					// if (pointer != NULL && pos > 0)
+					// 	res.set_header(std::string(buf, pos));
+					res.set_body(buf, ret, pos);
+					if (ret < 4096)
+						break;
+					bzero(buf, 4096);
+					pos = 0;
+					pointer = NULL;
+				}
+				return (1);
+			}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
 
 // std::ostream&	operator<<(std::ostream& out, const Job &c);

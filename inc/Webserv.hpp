@@ -40,6 +40,7 @@
 class Webserv
 {
 	public:
+		typedef std::map<int, Job>::iterator	iterator;
 		/* Constructor  */
 		Webserv(std::vector<ServerConfiguration> &configs);
 
@@ -70,13 +71,8 @@ class Webserv
 		fd_set								fds;	// List of all file descriptors that are ready to read.
 		int									_max_fd; // max fd. this is used so select doesnt have to check all fds. but only til max fd
 
-		/**
-		 * @brief This function closes a seperate connection based by the job param
-		 * 
-		 * @param job Connection to be closed. Has to be pointer to this job.
-		 * @param connectionClosedBy Who closes it? Server, Client, Webserv?
-		 */
-		void								closeConnection(Job *job, const char *connectionClosedBy);
+
+		iterator						closeConnection(iterator it, const char *connectionClosedBy);
 		
 		/**
 		 * @brief Main function that reads from a connection using recv,
@@ -155,7 +151,7 @@ class Webserv
 		 */
 		int									openSocket(int port, const char *hostname);
 
-		ServerConfiguration					get_correct_server_configuration(Job *job);
+		ServerConfiguration					&get_correct_server_configuration(Job *job);
 
 		/**
 		 * @brief Get the port from job object
@@ -214,9 +210,6 @@ class Webserv
 
 
 
-
-
-
 			/**
 			 * @brief 
 			 * 
@@ -225,8 +218,11 @@ class Webserv
 			 * @param fds 
 			 * @return int 1 if ready to write 0 if not ready
 			 */
-			int requestRead(Job *job, fd_set *fds, fd_set *wr, fd_set *rd)
+			int requestRead(iterator it, fd_set *fds, fd_set *wr, fd_set *rd)
 			{
+				Job *job;
+
+				job = &it->second;
 				if (job->type != Job::READY_TO_READ)
 				{
 					// set error
@@ -244,7 +240,8 @@ class Webserv
 				bytes = recv(job->fd, buffer, 4096, 0);
 				if (bytes <= 0)
 				{
-					this->closeConnection(job, "client");
+					// this->closeConnection(job, "client");
+					job->type = Job::CLIENT_REMOVE;
 					return (0);
 				}
 
@@ -255,42 +252,273 @@ class Webserv
 				{
 					// 413
 					// Close Connection
+					job->set_xxx_response(job->correct_config, 413);
+					job->get_response().set_header("Connection: close");
+					job->type = Job::READY_TO_WRITE;
+					FD_SET(job->fd, wr);
+					return (0);
 				}
 
 				if (type == Request::ERROR || req.is_complete() == false)
 					return (1);
 
 				ret = this->isError(job, req);
-
-				// delete 
-				// do_cgi
-				// read
-				// write
-
 				if (ret == 0)
 				{
 					job->type = Job::READY_TO_WRITE;
 					FD_SET(job->fd, wr);
 					return (0);
 				}
+				ret = this->setupNewJobs(job, (Job::JOB_TYPE)job->type, fds, wr, rd);
+				if (ret == 0) // means somethinig to be written as error or autoindex?
+				{
+					job->type = Job::READY_TO_WRITE;
+					FD_SET(job->fd, wr);
+					return (0);
+				}
+				if (ret > 0)
+				{
+					if (job->type == Job::WAIT_FOR_READING)
+					{
+						FD_SET(ret, rd);
+					}
+					else if (job->type == Job::WAIT_FOR_WRITING)
+					{
+						FD_SET(ret, wr);
+					}
+					return (0);
+				}
+				else
+				{
+					// Disconnect client from server
+					std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
+					// TODO 
+					exit(EXIT_FAILURE);
+				}
 
-
+				return 1;
 			}
-			void createReadingJobs();
-			void createWritingJobs();
-			void createCGIJobs();
-			void createDeletingJobs();
+
+			int setupNewJobs(Job *job, Job::JOB_TYPE type, fd_set *fds, fd_set *wr, fd_set *rd)
+			{
+				int fd;
+
+				fd = 0;
+				Job::JOB_TYPE taskType;
+				if (type == Job::WAIT_FOR_READING)
+				{
+					fd = this->createReadingJobs(job);
+					taskType = Job::READING;
+				}
+				else if (type == Job::WAIT_FOR_WRITING)
+				{
+					fd = this->createWritingJobs(job);
+					taskType = Job::WRITING;
+				}
+				else if (type == Job::WAIT_FOR_DELETING)
+				{
+					this->createDeletingJobs();
+					return (job->fd);
+				}
+				else if (type == Job::WAIT_FOR_CGIING)
+				{
+					this->createCGIJobs();
+					return (job->fd);
+				}
+				else
+				{
+					std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
+					// TODO 
+					exit(EXIT_FAILURE);
+				}
+				if (fd < 0)
+					return (fd);
+				if (fd == 0)
+					return (fd);
+
+				fcntl(fd, F_SETFL, O_NONBLOCK);
+				this->jobs[fd].setType(taskType);
+				this->jobs[fd].setFd(fd);
+				this->jobs[fd].setServer(NULL);
+				this->jobs[fd].setAddress("");
+				this->jobs[fd].setClient(job);
+				return (fd);
+			}
+			int createReadingJobs(Job *job)
+			{
+				Job::PATH_TYPE type;
+
+				type = job->get_path_options();
+				if (type == Job::NOT_FOUND)
+				{
+					bool autoindex;
+					bool endsWithSlash;
+
+					endsWithSlash = job->_getRequest()._uri.rbegin()[0] == '/';
+					autoindex = job->correct_config.get_autoindex();
+					if (autoindex == true && endsWithSlash == true)
+						this->autoindex_module();
+					else
+						job->set_xxx_response(job->correct_config, 404);
+					return (0);
+				}
+				else if (type == Job::NO_PERMISSIONS)
+				{
+					job->set_xxx_response(job->correct_config, 403);
+					return (0);
+				}
+				else if (type == Job::FILE_FOUND)
+				{
+					std::string ext;
+
+					ext = job->_getRequest()._uri.substr(job->_getRequest()._uri.find_last_of(".") + 1);
+					job->_getResponse().set_status_code(200);
+					job->_getResponse().set_default_headers(ext);
+
+					return this->openFileForReading(job->_getRequest()._uri);
+				}
+				else if (type == Job::DIRECTORY)
+				{
+					Configuration &config = job->correct_config;
+					if (config.get_index().size() == 0)
+						config.get_index().push_back("index.html");
+
+					for (size_t i = 0; i < config.get_index().size(); i++)
+					{
+						std::string newpath = job->_getRequest()._uri + config.get_index()[i];
+
+						type = job->get_path_options(newpath);
+						if (type == Job::NOT_FOUND)
+							continue;
+						else if (type == Job::NO_PERMISSIONS)
+						{
+							job->set_xxx_response(job->correct_config, 403);
+							return (0);
+						}
+						else if (type == Job::FILE_FOUND)
+						{
+								std::string ext;
+
+								ext = newpath.substr(newpath.find_last_of(".") + 1);
+								job->_getResponse().set_status_code(200);
+								job->_getResponse().set_default_headers(ext);
+
+							return this->openFileForReading(newpath);
+						}
+					}
+					if (config.get_autoindex() == true)
+						this->autoindex_module();
+					else
+						job->set_xxx_response(config, 404);
+					return (0);
+				}
+				else
+				{
+					std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
+					job->set_xxx_response(job->correct_config, 500);
+					return (0);
+				}
+			}
+			int openFileForReading(std::string const &path)
+			{
+				int fd;
+
+				fd = open(path.c_str(), O_RDONLY);
+				if (fd >this->_max_fd)
+					this->_max_fd = fd;
+				if (fd < 0)
+				{
+					// Disconnect client
+					return (-1);
+				}
+				return (fd);
+			}
+			void searchInDirectory();
+
+			int readFile(int fd, std::string const &uri, Response &resp)
+			{
+				resp.set_status_code(200);
+				resp.set_default_headers(uri.substr(uri.find_last_of(".") + 1));
+
+				int ret, pos = 0;
+				char *pointer = NULL;
+				char buf[4096 + 1];
+				
+				bzero(buf, 4096 + 1);
+				while ((ret = read(fd, buf, 4096)) > 0)
+				{
+					if (ret < 0)
+						return 1;
+					pointer = ft_strnstr(buf, "\r\n\r\n", ret);
+					if (pointer != NULL)
+						pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
+					else
+						pos = 0;
+					if (pointer != NULL && pos > 0)
+						resp.set_header(std::string(buf, pos));
+					resp.set_body(buf, ret, pos);
+					if (ret < 4096)
+						break;
+					bzero(buf, 4096);
+					pos = 0;
+					pointer = NULL;
+				}
+				return (0);
+			}
+
+
+			int createWritingJobs(Job *job)
+			{
+				int fd;
+				Job::PATH_TYPE type;
+				std::string const &uri = job->_getRequest()._uri;
+
+				type = job->get_path_options();
+
+				if (type == Job::PATH_TYPE::NO_PERMISSIONS)
+				{
+					job->set_xxx_response(job->correct_config, 403);
+					return (0);
+				}
+				if (type == Job::PATH_TYPE::DIRECTORY || job->get_path_options(uri + "/") == Job::PATH_TYPE::DIRECTORY)
+				{
+					job->set_xxx_response(job->correct_config, 400);
+					return (0);
+				}
+				fd = this->openFileForWriting(uri);
+				return (fd);
+			}
+			void createCGIJobs()
+			{
+				std::cout << "CGI jobs" << std::endl;
+			}
+			void createDeletingJobs()
+			{
+				std::cout << "Deleting jobs" << std::endl;
+			}
 
 
 
 
 
+			int openFileForWriting(std::string const &path)
+			{
+				int fd;
 
-
+				fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+				if (fd >this->_max_fd)
+					this->_max_fd = fd;
+				if (fd < 0)
+				{
+					// Disconnect client
+					return (-1);
+				}
+				return (fd);
+			}
 			void getCorrectConfigForJob(Job *job, std::string &newpath)
 			{
-				ServerConfiguration server_configuration = this->get_correct_server_configuration(job);
-				this->create_correct_configfile(job->request, server_configuration, job->correct_config, newpath);
+				ServerConfiguration &ref = this->get_correct_server_configuration(job);
+				this->create_correct_configfile(job->request, ref, job->correct_config, newpath);
 			}
 			int isError(Job *job, Request &request) // change name
 			{
@@ -388,6 +616,11 @@ class Webserv
 					ss << CLRS_reset << std::endl;
 					std::cerr << ss.str();
 				}
+
+				if (job->get_response().get_status_code() != 0)
+				{
+					job->set_3xx_response(job->correct_config);
+				}
 				return (1);
 			}
 
@@ -395,11 +628,52 @@ class Webserv
 			
 
 
-			void http_index_module(); // Function that calls functiosn below when nessecasry
-				void http_file_module();
-				void autoindex_module();
-				void http_dir_module();
-				void http_error_module();
+			void http_index_module() // Function that calls functiosn below when nessecasry
+			{
+				std::cout << "http_index_module" << std::endl;
+			}
+			void http_file_module()
+			{
+				std::cout << "http_file_module" << std::endl;
+			}
+			void autoindex_module()
+			{
+				std::cout << "autoindex_module" << std::endl;
+			}
+			void http_dir_module()
+			{
+				std::cout << "http_dir_module" << std::endl;
+			}
+			void http_error_module()
+			{
+				std::cout << "http_error_module" << std::endl;
+			}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
 
 #endif // WEBSERV_HPP

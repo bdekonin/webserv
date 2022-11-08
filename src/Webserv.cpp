@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/07 23:01:53 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 17:33:41 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,62 +50,94 @@ void 					Webserv::run()
 	// signal(SIGINT, interruptHandler);
 	// signal(SIGQUIT, interruptHandler);
 
+
 	std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 	Job *job;
 	while (g_is_running == true)
 	{
 		fd_set copy_readfds = this->fds;
 		fd_set copy_writefds = this->fds;
-		if (select((int)this->_max_fd + 1, &copy_readfds, &copy_writefds, NULL, NULL) < 0)
+		if (select((int)this->_max_fd + 1, &copy_readfds, &copy_writefds, 0, 0) < 0)
 			throw std::runtime_error("select() failed");
-		for (size_t loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
+		for (auto it = this->jobs.begin(); it != this->jobs.end(); it++)
 		{
-			if (FD_ISSET(loop_job_counter, &copy_readfds))
+			if (FD_ISSET(it->first, &copy_readfds))
 			{
-				job = &this->jobs[loop_job_counter];
+				job = &it->second;
 				if (job->type == Job::WAIT_FOR_CONNECTION)
 					accept_connection(job, &this->fds);
-				else if (job->type == Job::CLIENT_READ)
+				else if (job->type == Job::READY_TO_READ)
 				{
-					job->type = Job::READY_TO_READ;
-					this->requestRead(job, &this->fds);
-
-					if (this->client_read(job, loop_job_counter, &copy_writefds) == 0)
-						continue;
+					for (auto newit = this->jobs.begin(); newit != this->jobs.end(); newit++)
+					{
+						std::cout << "1newit->type: " << newit->second.job_type_to_char() << std::endl;
+					}
+					std::cout << std::endl;
+					this->requestRead(it, &this->fds, &copy_writefds, &copy_readfds);
+					for (auto newit = this->jobs.begin(); newit != this->jobs.end(); newit++)
+					{
+						std::cout << "2newit->type: " << newit->second.job_type_to_char() << std::endl;
+						if (newit->second.type == Job::READY_TO_WRITE)
+							std::cout << newit->second.response.get_status_code() << std::endl;
+					}
 				}
-				else if (job->type == Job::FILE_READ)
+				else if (job->type == Job::READING)
 				{
-					// check redirect
-					this->file_read(job, &copy_writefds, false, Job::NOT_FOUND);
+					int ret = it->second.fileReader(it->first);
+					if (ret > 0)
+					{
+						it->second.client->type = Job::READY_TO_WRITE;
+						it->second.type = Job::TASK_REMOVE;
+						FD_SET(it->second.client->fd, &copy_writefds);
+					}
 				}
 				else if ( job->type == Job::CGI_WRITE || job->type == Job::CGI_READ)
 					this->do_cgi(job, &copy_writefds);
 			}
 		}
-		for (size_t loop_job_counter = 0; loop_job_counter < this->jobs.size(); loop_job_counter++)
+		for (auto it = this->jobs.begin(); it != this->jobs.end(); it++)
 		{
-			job = &this->jobs[loop_job_counter];
-			if (FD_ISSET(loop_job_counter, &copy_writefds))
+			if (FD_ISSET(it->first, &copy_writefds))
 			{
-				if (job->type == Job::CLIENT_RESPONSE)
-					this->client_response(job);
-				else if (job->type == Job::FILE_WRITE) // DELETE
+				job = &it->second;
+				if (job->type == Job::READY_TO_WRITE)
 				{
-					if (remove(job->get_request()._uri.c_str()) < 0)
-					{
-						if (errno == EACCES)
-							job->set_xxx_response(job->correct_config, 403);
-						else
-							job->set_xxx_response(job->correct_config, 404);
-					}
-					else
-					{
-						if (DEBUG == 1)
-							std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->get_request()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
-						job->set_xxx_response(job->correct_config, 204);
-					}
+					std::cout << "READY_TO_WRITE" << std::endl;
 					this->client_response(job);
+					// exit(1);
+					// this->responseWrite(job, &this->fds);
+					// this->closeConnection(job, &this->fds);
 				}
+				// if (job->type == Job::CLIENT_RESPONSE)
+				// 	this->client_response(job);
+				// else if (job->type == Job::FILE_WRITE) // DELETE
+				// {
+				// 	if (remove(job->get_request()._uri.c_str()) < 0)
+				// 	{
+				// 		if (errno == EACCES)
+				// 			job->set_xxx_response(job->correct_config, 403);
+				// 		else
+				// 			job->set_xxx_response(job->correct_config, 404);
+				// 	}
+				// 	else
+				// 	{
+				// 		if (DEBUG == 1)
+				// 			std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->get_request()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
+				// 		job->set_xxx_response(job->correct_config, 204);
+				// 	}
+				// 	this->client_response(job);
+				// }
+			}
+		}
+		for (auto it = this->jobs.begin(); it != this->jobs.end(); it++)
+		{
+			if (it->second.type == Job::TASK_REMOVE)
+			{
+				it = this->closeConnection(it, "TASK");
+			}
+			if (it->second.type == Job::CLIENT_REMOVE)
+			{
+				it = this->closeConnection(it, "client");
 			}
 		}
 	}
@@ -123,20 +155,18 @@ void 					Webserv::closeAll()
 				std::cerr << CLRS_RED << "server : connection closed by " << "Webserv" << " " << job->fd << CLRS_reset << std::endl;
 			close(job->fd);
 		}
-		
 	}
 }
 
 /* Private Main Methods */
-void 					Webserv::closeConnection(Job *job, const char *connectionClosedBy)
+std::map<int, Job>::iterator			Webserv::closeConnection(iterator it, const char *connectionClosedBy)
 {
-	if (DEBUG == 1)
-			std::cerr << CLRS_RED << "server : connection closed by " << connectionClosedBy << " " << job->fd << CLRS_reset << std::endl;
+	if (DEBUG == 1 && connectionClosedBy)
+			std::cerr << CLRS_RED << "server : connection closed by " << connectionClosedBy << " " << it->first << CLRS_reset << std::endl;
 
-	FD_CLR(job->fd, &this->fds);
-	close(job->fd);
-	this->jobs.erase(job->fd);
-	// delete job;
+	FD_CLR(it->first, &this->fds);
+	close(it->first);
+	return this->jobs.erase(it);
 }
 int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
 {
@@ -147,7 +177,7 @@ int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_w
 	bytesRead = recv(job->fd, buffer, 4096, 0);
 	if (bytesRead <= 0)
 	{
-		this->closeConnection(job, "client");
+		// this->closeConnection(job, "client");
 		loop_job_counter--;
 		return (0);
 	}
@@ -356,7 +386,7 @@ void 					Webserv::client_response(Job *job)
 	bool connection_close = false;
 	int bytes;
 	job->response.build_response_text();
-	std::vector<unsigned char> &response = job->response.get_response();
+	std::vector<unsigned char> &response = job->_getResponse().get_response();
 	size_t response_size = response.size();
 	char *response_char = reinterpret_cast<char*> (&response[0]);
 
@@ -388,11 +418,10 @@ void 					Webserv::client_response(Job *job)
 
 	job->clear();
 	this->jobs[job->fd].clear();
-	this->jobs[job->fd].type = Job::CLIENT_READ; // TODO or job->type = CLIENT_READ
-
+	this->jobs[job->fd].type = Job::READY_TO_READ; // READY_TO_READ
 
 	if (connection_close)
-		this->closeConnection(job, "server");
+		job->type = Job::CLIENT_REMOVE;
 }
 void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 {
@@ -473,22 +502,6 @@ void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 	}
 	job->set_client_response(copy_writefds);
 }
-int						Webserv::create_correct_configfile(Request &request, ServerConfiguration &config, Configuration &ConfigToChange, std::string &ConfigToChange_path)
-{
-	LocationConfiguration *location;
-
-	location = config.get_location_by_uri(request._uri);
-	if (location == NULL) // nullpointer doesnt work
-	{
-		/* No Location Block found: use default config */
-		ConfigToChange = config;
-		ConfigToChange_path.clear();
-		return (1);
-	}
-	ConfigToChange = *location;
-	ConfigToChange_path = location->get_path();
-	return (0);
-}
 size_t					Webserv::method_handling(Request &request, Configuration &config)
 {
 	if (config.is_method_allowed(request.method_to_s()) == false)
@@ -509,7 +522,7 @@ int 					Webserv::accept_connection(Job *job, fd_set *set)
 		throw std::runtime_error("accept: failed to accept.");
 
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
-	this->jobs[client_fd].setType(Job::CLIENT_READ);
+	this->jobs[client_fd].setType(Job::READY_TO_READ);
 	this->jobs[client_fd].setFd(client_fd);
 	this->jobs[client_fd].setServer(job->server);
 	this->jobs[client_fd].setAddress(&client_address);
@@ -617,18 +630,37 @@ int						Webserv::openSocket(int port, const char *hostname)
 
 	return socketFD;
 }
-ServerConfiguration 	Webserv::get_correct_server_configuration(Job *job)
+
+int						Webserv::create_correct_configfile(Request &request, ServerConfiguration &config, Configuration &ConfigToChange, std::string &ConfigToChange_path)
+{
+	LocationConfiguration *location;
+
+	location = config.get_location_by_uri(request._uri);
+	if (location == NULL) // nullpointer doesnt work
+	{
+		/* No Location Block found: use default config */
+		ConfigToChange = config;
+		ConfigToChange_path.clear();
+		return (1);
+	}
+	ConfigToChange = *location;
+	ConfigToChange_path = location->get_path();
+	return (0);
+}
+
+ServerConfiguration 	&Webserv::get_correct_server_configuration(Job *job)
 {
 	size_t index = 0;
+	size_t match = 0;
 	int port = this->get_port_from_job(job);
 	std::vector<ServerConfiguration> &job_configs = this->servers[port].get_configurations();
 
-	std::vector<std::string> server_names;
+
+	std::cout << "job_configs.size() = " << job_configs.size() << std::endl;
+
+	std::vector<std::string> &server_names = job_configs[0].get_server_names();
 	std::string host_header;
 	size_t pos;
-
-	ServerConfiguration default_server = job_configs[0]; // correct server of the job
-
 
 	host_header = job->request._headers_map["host"];
 	pos = host_header.find(":");
@@ -641,11 +673,15 @@ ServerConfiguration 	Webserv::get_correct_server_configuration(Job *job)
 		{
 			if (host_header.substr(0, pos) == server_names[j])
 			{
-				default_server = job_configs[index];
+				match = index;
+				break;
 			}
 		}
 	}
-	return default_server;
+
+	ServerConfiguration &ref = (match == 0) ? job_configs[0] : job_configs[match];
+
+	return ref;
 }
 size_t 					Webserv::get_port_from_job(Job *job)
 {
