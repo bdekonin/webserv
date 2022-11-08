@@ -90,7 +90,8 @@ void 					Webserv::run()
 				job = &it->second;
 				if (job->type == Job::READY_TO_WRITE)
 				{
-					this->client_response(job);
+					// this->client_response(job);
+					this->betterClientResponse(job);
 					// exit(1);
 					// this->responseWrite(job, &this->fds);
 					// this->closeConnection(job, &this->fds);
@@ -413,7 +414,7 @@ void 					Webserv::client_response(Job *job)
 	while (response_size > 0) 
 	{
 		bytes = send(job->fd, response_char, response_size, 0);
-		// std::cout << "bytes: " << bytes << std::endl;
+		std::cout << "bytes: " << bytes << std::endl;
 		if (bytes == -1)
 		{
 			job->type = Job::CLIENT_REMOVE;
@@ -433,6 +434,9 @@ void 					Webserv::client_response(Job *job)
 	if (connection_close)
 		job->type = Job::CLIENT_REMOVE;
 }
+
+
+
 void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 {
 	int ret;
@@ -531,7 +535,7 @@ int 					Webserv::accept_connection(Job *job, fd_set *set)
 	if (client_fd < 0)
 		throw std::runtime_error("accept: failed to accept.");
 
-	std::cout << client_address.sin_port << std::endl;
+	// std::cout << client_address.sin_port << std::endl;
 
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
 	this->jobs[client_fd].setType(Job::READY_TO_READ);
