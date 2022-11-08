@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 22:07:10 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 22:40:20 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -530,8 +530,6 @@ int 					Webserv::accept_connection(Job *job, fd_set *set)
 	client_fd = accept(job->fd, (struct sockaddr*)&client_address, (socklen_t*)&address_size);
 	if (client_fd < 0)
 		throw std::runtime_error("accept: failed to accept.");
-
-	std::cout << client_address.sin_port << std::endl;
 
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
 	this->jobs[client_fd].setType(Job::READY_TO_READ);

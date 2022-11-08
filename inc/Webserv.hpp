@@ -207,9 +207,6 @@ class Webserv
 
 
 
-
-
-
 			/**
 			 * @brief 
 			 * 
@@ -233,12 +230,20 @@ class Webserv
 
 				Request::Type type;
 				char buffer[4096 + 1];
-				size_t bytes;
+				int bytes;
 				int ret;
 
 				bzero(buffer, 4096 + 1);
 				bytes = recv(job->fd, buffer, 4096, 0);
-				if (bytes <= 0)
+				// /* Blocking */
+				if (bytes < 0)
+				{
+					// this->closeConnection(it, "client");
+					job->type = Job::CLIENT_REMOVE;
+					return (0);
+				}
+				/* Keep reading */
+				if (bytes == 0)
 				{
 					// this->closeConnection(it, "client");
 					job->type = Job::CLIENT_REMOVE;
