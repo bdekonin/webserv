@@ -18,11 +18,11 @@
 
 /* Constructors */
 Job::Job()
-: request(Request()), response(Response()), correct_config(Configuration()), client(NULL)
+: request(Request()), response(Response()), correct_config(Configuration()), client(NULL), bytes_sent(0)
 {
 }
 Job::Job(int type, int fd, Server *server, Job *client)
-: type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration()), client(client)
+: type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration()), client(client), bytes_sent(0)
 {
 }
 Job::Job(const Job &src)
@@ -68,6 +68,7 @@ void 			Job::clear()
 	this->response.clear();
 	this->correct_config.clear();
 	this->client = NULL;
+	this->bytes_sent = 0;
 }
 void 			Job::parse_request(std::string &ConfigToChange_path) // config is config path file
 {
