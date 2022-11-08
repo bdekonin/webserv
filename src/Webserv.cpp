@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 21:19:41 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 22:07:10 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,6 @@ void 					Webserv::run()
 	// signal(SIGINT, interruptHandler);
 	// signal(SIGQUIT, interruptHandler);
 
-
 	std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 	Job *job;
 	while (g_is_running == true)
@@ -73,12 +72,12 @@ void 					Webserv::run()
 				else if (job->type == Job::READING)
 				{
 					int ret = it->second.fileReader(it->first);
-					// if (ret > 0)
-					// {
+					if (ret > 0)
+					{
 						it->second.client->type = Job::READY_TO_WRITE;
 						it->second.type = Job::TASK_REMOVE;
 						FD_SET(it->second.client->fd, &copy_writefds);
-					// }
+					}
 				}
 				else if ( job->type == Job::CGI_WRITE || job->type == Job::CGI_READ)
 					this->do_cgi(job, &copy_writefds);
@@ -126,17 +125,28 @@ void 					Webserv::run()
 				// }
 			}
 		}
-		for (std::map<int, Job>::iterator it = this->jobs.begin(); it != this->jobs.end(); it++)
+
+
+
+		std::map<int, Job>::iterator it = this->jobs.begin();
+		while(it != this->jobs.end())
 		{
 			if (it->second.type == Job::TASK_REMOVE)
 			{
 				this->closeConnection(it, "TASK");
+				this->jobs.erase(it++);
 			}
-			if (it->second.type == Job::CLIENT_REMOVE)
+			else if (it->second.type == Job::CLIENT_REMOVE)
 			{
 				this->closeConnection(it, "client");
+				this->jobs.erase(it++);
+			}
+			else
+			{
+				++it;
 			}
 		}
+
 	}
 }
 void 					Webserv::closeAll()
@@ -163,7 +173,6 @@ void					Webserv::closeConnection(iterator &it, const char *connectionClosedBy)
 
 	FD_CLR(it->first, &this->fds);
 	close(it->first);
-	it = this->jobs.erase(it);
 }
 int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
 {
@@ -404,7 +413,7 @@ void 					Webserv::client_response(Job *job)
 	while (response_size > 0) 
 	{
 		bytes = send(job->fd, response_char, response_size, 0);
-		std::cout << "bytes: " << bytes << std::endl;
+		// std::cout << "bytes: " << bytes << std::endl;
 		if (bytes == -1)
 		{
 			job->type = Job::CLIENT_REMOVE;
@@ -522,6 +531,8 @@ int 					Webserv::accept_connection(Job *job, fd_set *set)
 	if (client_fd < 0)
 		throw std::runtime_error("accept: failed to accept.");
 
+	std::cout << client_address.sin_port << std::endl;
+
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
 	this->jobs[client_fd].setType(Job::READY_TO_READ);
 	this->jobs[client_fd].setFd(client_fd);
@@ -626,7 +637,7 @@ int						Webserv::openSocket(int port, const char *hostname)
 
 	if (bind(socketFD, (struct sockaddr*)&sock_struct, sizeof(sock_struct)) < 0)
 		throw std::runtime_error("bind: Failed to bind.");
-	if (listen(socketFD, 128) < 0)
+	if (listen(socketFD, 1024) < 0)
 		throw std::runtime_error("listen: failed to listen.");
 
 	return socketFD;
