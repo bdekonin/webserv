@@ -6,7 +6,7 @@
 /*   By: lsmit <lsmit@student.codam.nl>               +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/04 21:54:10 by lsmit         #+#    #+#                 */
-/*   Updated: 2022/11/07 10:07:12 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 12:18:29 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,14 +41,14 @@ Parser& Parser::operator = (const Parser& e)//Nog gemaakt worden
 std::vector<ServerConfiguration> Parser::init()
 {
 	std::vector<std::vector<std::string> > blocks; // vector of blocks, will be used temporarily to store the blocks
-	ServerConfiguration temp_server;
+	ServerConfiguration temp_server = ServerConfiguration();
 	std::vector<ServerConfiguration> servers;
 	
 	this->_get_content();
 	blocks = this->splitServer();
 	for (size_t i = 0; i < blocks.size(); i++)
 	{
-		temp_server = ServerConfiguration();
+		temp_server.clean();
 		this->parse_block(blocks[i], temp_server, temp_server);
 		servers.push_back(temp_server);
 	}
@@ -154,6 +154,8 @@ void Parser::parse_block(std::vector<std::string> &block, Configuration &config,
 	std::string identifier;
 	std::string value;
 	std::string temp;
+	bool &ismethodon = config._isSet["methods"];
+	bool &ismethodontwo = config.methodSet;
 
 	for (size_t i = 0; i < block.size(); i++)
 	{
