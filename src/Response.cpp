@@ -84,7 +84,7 @@ void Response::build_response_text()
 
 	if (this->_is_build == true)
 	{
-		;
+		return ;
 	}
 	
 	res += "HTTP/1.1 " + std::to_string(this->_status_code) + " " + this->_response_codes[this->_status_code] + "\r\n";
