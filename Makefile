@@ -5,8 +5,13 @@
 NAME        := webserv
 CC         := c++
 # FLAGS    := -Wall -Wextra -Werror 
-FLAGS += -g -D DEBUG=1
+FLAGS += -g
 
+ifeq ($(DEBUG),1)
+FLAGS += -D DEBUG=1
+else
+FLAGS += -D DEBUG=0
+endif
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
