@@ -6,12 +6,13 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:00:19 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/07 22:29:20 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 14:15:33 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/Configuration.hpp"
 #include "../inc/Request.hpp"
+#include <cstring>
 
 /* Constructors */
 Configuration::Configuration()
@@ -22,6 +23,8 @@ Configuration::Configuration()
 	this->_methods[1] = true; // ??
 	this->_methods[2] = true; // ??
 	this->_autoindex = false;
+	this->_isSet["methods"] = false;
+	this->methodSet = false;
 }
 Configuration::Configuration(const Configuration &src)
 {
@@ -49,6 +52,7 @@ Configuration& Configuration::operator = (const Configuration& src)
 	this->_cgi = src._cgi;
 
 	this->_isSet = src._isSet;
+	this->methodSet = src.methodSet;
 	return *this;
 }
 
@@ -66,6 +70,7 @@ void Configuration::clear() // clear all data
 	this->_autoindex = false;
 	this->_index.clear();
 	this->_cgi.clear();
+	this->methodSet = false;
 }
 void Configuration::combine_two_locations(Configuration &src) // copying <src> to *this | src is previous config level
 {
@@ -78,7 +83,6 @@ bool Configuration::is_method_allowed(std::string const &method) const
 {
 	return this->is_method_allowed(method.c_str());
 }
-#include <cstring>
 bool Configuration::is_method_allowed(const char *method) const
 {
 	if (strcmp(method, "GET") == 0)
@@ -361,3 +365,4 @@ void Configuration::has_forbidden_charachters(std::string &s)
 	if (s.find_first_of(forbidden_characters) != std::string::npos)
 		throw std::runtime_error("config: forbidden characters in string");
 }
+
