@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 18:44:50 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 19:13:16 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,18 +68,7 @@ void 					Webserv::run()
 					accept_connection(job, &this->fds);
 				else if (job->type == Job::READY_TO_READ)
 				{
-					for (auto newit = this->jobs.begin(); newit != this->jobs.end(); newit++)
-					{
-						std::cout << "1newit->type: " << newit->second.job_type_to_char() << std::endl;
-					}
-					std::cout << std::endl;
 					this->requestRead(it, &this->fds, &copy_writefds, &copy_readfds);
-					for (auto newit = this->jobs.begin(); newit != this->jobs.end(); newit++)
-					{
-						std::cout << "2newit->type: " << newit->second.job_type_to_char() << std::endl;
-						if (newit->second.type == Job::READY_TO_WRITE)
-							std::cout << newit->second.response.get_status_code() << std::endl;
-					}
 				}
 				else if (job->type == Job::READING)
 				{
@@ -406,13 +395,13 @@ void 					Webserv::client_response(Job *job)
 	bytes = 0;
 	while (response_size > 0) 
 	{
-		if (response_size > 100000)
-			bytes = send(job->fd, response_char, 100000, 0);
-		else
-			bytes = send(job->fd, response_char, response_size, 0);
-		// bytes = send(job->fd, response_char, response_size, 0);
-		if (bytes < 0) 
-			throw std::runtime_error("Error sending response to client");
+		bytes = send(job->fd, response_char, response_size, 0);
+		std::cout << "bytes: " << bytes << std::endl;
+		if (bytes == -1)
+		{
+			job->type = Job::CLIENT_REMOVE;
+			return ; 
+		}
 		response_size -= bytes;
 		response_char += bytes;
 	}
