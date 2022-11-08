@@ -72,7 +72,7 @@ class Webserv
 		int									_max_fd; // max fd. this is used so select doesnt have to check all fds. but only til max fd
 
 
-		iterator						closeConnection(iterator it, const char *connectionClosedBy);
+		void						closeConnection(iterator &it, const char *connectionClosedBy);
 		
 		/**
 		 * @brief Main function that reads from a connection using recv,
@@ -218,7 +218,7 @@ class Webserv
 			 * @param fds 
 			 * @return int 1 if ready to write 0 if not ready
 			 */
-			int requestRead(iterator it, fd_set *fds, fd_set *wr, fd_set *rd)
+			int requestRead(iterator &it, fd_set *fds, fd_set *wr, fd_set *rd)
 			{
 				Job *job;
 
@@ -240,7 +240,7 @@ class Webserv
 				bytes = recv(job->fd, buffer, 4096, 0);
 				if (bytes <= 0)
 				{
-					// this->closeConnection(job, "client");
+					// this->closeConnection(it, "client");
 					job->type = Job::CLIENT_REMOVE;
 					return (0);
 				}
@@ -342,6 +342,7 @@ class Webserv
 				this->jobs[fd].setServer(NULL);
 				this->jobs[fd].setAddress("");
 				this->jobs[fd].setClient(job);
+				std::cout << "opened fd: " << fd << std::endl;
 				return (fd);
 			}
 			int createReadingJobs(Job *job)

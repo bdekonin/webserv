@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 18:13:32 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 20:27:38 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ void 			Job::clear()
 {
 	this->request.clear();
 	this->response.clear();
-	this->correct_config = Configuration();
+	this->correct_config.clear();
 	this->client = NULL;
 }
 void 			Job::parse_request(std::string &ConfigToChange_path) // config is config path file
@@ -241,7 +241,7 @@ Job::PATH_TYPE Job::get_path_options(std::string const &uri)
 		return this->NOT_FOUND; // NOT FOUND
 	if (S_ISDIR(sb.st_mode) && uri[uri.size() - 1] == '/')
 	{
-		returnstat = sb.st_mode & S_IXUSR;
+		returnstat = sb.st_mode & S_IRUSR | S_IRGRP | S_IROTH;
 		if (returnstat == 0)
 			return this->NO_PERMISSIONS; // NO PERMISSIONS
 		else
@@ -249,7 +249,7 @@ Job::PATH_TYPE Job::get_path_options(std::string const &uri)
 	}
 	else if (ret == 0)
 	{
-		returnstat = sb.st_mode & S_IXUSR;
+		returnstat = sb.st_mode & S_IRUSR | S_IRGRP | S_IROTH;
 		if (returnstat == 0)
 			return this->NO_PERMISSIONS; // NO PERMISSIONS
 		else if (S_ISDIR(sb.st_mode) == false)

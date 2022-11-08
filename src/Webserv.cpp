@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 19:25:13 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 20:49:29 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,8 @@ void 					Webserv::run()
 		fd_set copy_writefds = this->fds;
 		if (select((int)this->_max_fd + 1, &copy_readfds, &copy_writefds, 0, 0) < 0)
 			throw std::runtime_error("select() failed");
+		std::cout <<"_max_fd: " << _max_fd << std::endl;
+		std::cout << "jobs.size(): " << jobs.size() << std::endl;
 		for (auto it = this->jobs.begin(); it != this->jobs.end(); it++)
 		{
 			if (FD_ISSET(it->first, &copy_readfds))
@@ -91,18 +93,17 @@ void 					Webserv::run()
 				job = &it->second;
 				if (job->type == Job::READY_TO_WRITE)
 				{
-					std::cout << "READY_TO_WRITE" << std::endl;
 					this->client_response(job);
 					// exit(1);
 					// this->responseWrite(job, &this->fds);
 					// this->closeConnection(job, &this->fds);
 				}
-				else if (Job::WRITING)
+				else if (job->type == Job::WRITING)
 				{
 					// -1 means blocking
 					this->postHandler(job);
 				}
-				else if (Job::DELETING)
+				else if (job->type == Job::DELETING)
 				{
 					
 				}
@@ -127,15 +128,17 @@ void 					Webserv::run()
 				// }
 			}
 		}
-		for (auto it = this->jobs.begin(); it != this->jobs.end(); it++)
+		for (std::map<int, Job>::iterator it = this->jobs.begin(); it != this->jobs.end(); it++)
 		{
 			if (it->second.type == Job::TASK_REMOVE)
 			{
-				it = this->closeConnection(it, "TASK");
+				this->closeConnection(it, "TASK");
+				continue;
 			}
 			if (it->second.type == Job::CLIENT_REMOVE)
 			{
-				it = this->closeConnection(it, "client");
+				this->closeConnection(it, "client");
+				continue;
 			}
 		}
 	}
@@ -157,14 +160,14 @@ void 					Webserv::closeAll()
 }
 
 /* Private Main Methods */
-std::map<int, Job>::iterator			Webserv::closeConnection(iterator it, const char *connectionClosedBy)
+void					Webserv::closeConnection(iterator &it, const char *connectionClosedBy)
 {
 	if (DEBUG == 1 && connectionClosedBy)
 			std::cerr << CLRS_RED << "server : connection closed by " << connectionClosedBy << " " << it->first << CLRS_reset << std::endl;
 
 	FD_CLR(it->first, &this->fds);
 	close(it->first);
-	return this->jobs.erase(it);
+	it = this->jobs.erase(it);
 }
 int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
 {
@@ -656,9 +659,6 @@ ServerConfiguration 	&Webserv::get_correct_server_configuration(Job *job)
 	size_t match = 0;
 	int port = this->get_port_from_job(job);
 	std::vector<ServerConfiguration> &job_configs = this->servers[port].get_configurations();
-
-
-	std::cout << "job_configs.size() = " << job_configs.size() << std::endl;
 
 	std::vector<std::string> &server_names = job_configs[0].get_server_names();
 	std::string host_header;
