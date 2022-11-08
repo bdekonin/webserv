@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 17:33:41 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 18:44:50 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -406,7 +406,11 @@ void 					Webserv::client_response(Job *job)
 	bytes = 0;
 	while (response_size > 0) 
 	{
-		bytes = send(job->fd, response_char, response_size, 0);
+		if (response_size > 100000)
+			bytes = send(job->fd, response_char, 100000, 0);
+		else
+			bytes = send(job->fd, response_char, response_size, 0);
+		// bytes = send(job->fd, response_char, response_size, 0);
 		if (bytes < 0) 
 			throw std::runtime_error("Error sending response to client");
 		response_size -= bytes;
