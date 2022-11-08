@@ -101,6 +101,64 @@ class Webserv
 		 * @param job The connection that needs to be written to.
 		 */
 		void								client_response(Job *job);
+		void								betterClientResponse(Job *job)
+		{
+			bool connection_close = false;
+			int bytes;
+			job->_getResponse().build_response_text();
+			// job->response.build_response_text();
+			std::vector<unsigned char> &response = job->_getResponse().get_response();
+			size_t response_size = response.size();
+			char *response_char = reinterpret_cast<char*> (&response[0]);
+
+			// if (job->bytes_sent >= response_size)
+			// {
+			// 	if (job->get_request().get_header("connection").compare("Close") == 0)
+			// 		connection_close = true;
+
+			// 	job->clear();
+			// 	this->jobs[job->fd].clear();
+			// 	this->jobs[job->fd].type = Job::READY_TO_READ;
+
+			// 	if (connection_close)
+			// 		job->type = Job::CLIENT_REMOVE;
+			// }
+
+			// if (DEBUG == 1)
+			// {
+			// 	std::stringstream ss;
+			// 	ss << CLRS_BLU;
+			// 	bytes = strstr(response_char, "\r\n\r\n") - response_char;
+			// 	ss << "server : >> [status: " << std::string(response_char, bytes)  << "] ";
+			// 	ss << "[length: " << response_size - job->bytes_sent << "] ";
+			// 	ss << "[client: " << job->fd << "] ";
+			// 	ss << CLRS_reset;
+			// 	std::cerr << ss.str() << std::endl;
+			// }
+			// std::cout << "Bytes are now [" << job->bytes_sent << "]\n";
+			// std::cout << "Total size = " << response_size << std::endl;
+			bytes = send(job->fd, response_char + job->bytes_sent, response_size - job->bytes_sent, MSG_NOSIGNAL);
+			// perror("send");
+			// std::cout << "bytes: " << bytes << std::endl;
+			if (bytes == -1)
+			{
+				job->type = Job::CLIENT_REMOVE;
+				return ; 
+			}
+			job->bytes_sent += bytes;
+			if (job->bytes_sent >= response_size)
+			{
+				if (job->get_request().get_header("connection").compare("Close") == 0)
+					connection_close = true;
+
+				job->clear();
+				this->jobs[job->fd].clear();
+				this->jobs[job->fd].type = Job::READY_TO_READ;
+
+				if (connection_close)
+					job->type = Job::CLIENT_REMOVE;
+			}
+		}
 		
 		/**
 		 * @brief The CGI Function that handles CGI requests.
