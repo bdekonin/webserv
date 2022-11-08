@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 17:51:45 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 22:07:18 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,6 +117,7 @@ class Job
 			 */
 			void set_environment_variables();
 	public:
+		size_t			bytes_sent;
 		int				type; // Type of connection. See #defines above.
 		int				fd; // File descriptor of the connection.
 		Server			*server;
@@ -299,16 +300,6 @@ class Job
 				Request &req = this->_getRequest();
 				std::string &uri = req._uri;
 
-				// std::cout << "fileReader uri: " << uri << std::endl;
-				// pos = uri.find_last_of(".") + 1;
-				// extension = uri.substr();
-				// std::cout << "fileReader extension: " << extension << std::endl;
-				// res.set_status_code(200);
-				// if (extension.empty() == true)
-				// 	res.set_default_headers("txt");
-				// else
-				// 	res.set_default_headers(extension);
-
 				int ret, pos = 0;
 				char *pointer = NULL;
 				char buf[4096 + 1];
@@ -341,6 +332,29 @@ class Job
 				}
 				return (1);
 			}
+
+			// int fileReader(int fd)
+			// {
+			// 	Response &res = this->_getResponse();
+			// 	Request &req = this->_getRequest();
+			// 	std::string &uri = req._uri;
+				
+			// 	char buf[4096 + 1];
+				
+			// 	bzero(buf, 4096 + 1);
+
+			// 	int ret = read(fd, buf, 4096);
+			// 	if (ret < 0)
+			// 	{
+			// 		return (-1);
+			// 	}
+			// 	if (ret == 0)
+			// 	{
+			// 		// blocking
+			// 		return (0);
+			// 	}
+			// 	res.set_body(buf, ret, 0);
+			// }
 
 
 
