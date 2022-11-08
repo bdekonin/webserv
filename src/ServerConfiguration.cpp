@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 14:53:23 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/06 13:27:49 by rkieboom      ########   odam.nl         */
+/*   Updated: 2022/11/08 12:18:41 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ ServerConfiguration& ServerConfiguration::operator = (const ServerConfiguration 
 // Methods
 void ServerConfiguration::clean()
 {
-	Configuration::clear();
+	this->clear();
 	this->_ports.clear();
 	this->_names.clear();
 	this->_locations.clear();
