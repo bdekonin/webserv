@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/23 11:26:24 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/06 17:33:45 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 13:26:56 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,8 @@ namespace ft
 
 			/* Get the mime type for a given extension */
 			std::string getMimeType(std::string extension);
+			std::string getExention(std::string const &content_type);
+
 
 		public:
 			std::map<std::string, std::string> mimes;

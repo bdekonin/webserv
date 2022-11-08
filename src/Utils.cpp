@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 15:03:05 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/07 21:48:32 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/08 13:51:07 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,6 +99,7 @@ std::map<int, std::string> ft::RespondCodes::get_respond_codes()
 
 ft::MimeTypes::MimeTypes()
 {
+	this->mimes["txt"] = "text/plain";
 	this->mimes["*3gpp"] = "audio/3gpp";
 	this->mimes["*jpm"] = "video/jpm";
 	this->mimes["*mp3"] = "audio/mp3";
@@ -391,7 +392,6 @@ ft::MimeTypes::MimeTypes()
 	this->mimes["ttc"] = "font/collection";
 	this->mimes["ttf"] = "font/ttf";
 	this->mimes["ttl"] = "text/turtle";
-	this->mimes["txt"] = "text/plain";
 	this->mimes["u8dsn"] = "message/global-delivery-status";
 	this->mimes["u8hdr"] = "message/global-headers";
 	this->mimes["u8mdn"] = "message/global-disposition-notification";
@@ -459,8 +459,21 @@ std::string ft::MimeTypes::getMimeType(std::string extension)
 	std::string mime = this->mimes[extension];
 	if (mime.empty())
 	{
-		// mime = "application/octet-stream";
-		mime = "text/plain";
+		mime = "application/octet-stream";
+		// mime = "text/plain";
 	}
 	return mime;
+}
+
+std::string ft::MimeTypes::getExention(std::string const &content_type)
+{
+	if (content_type.empty() == false)
+	{
+		for (std::map<std::string, std::string>::iterator it = this->mimes.begin(); it != this->mimes.end(); it++)
+		{
+			if (it->second == content_type)
+				return it->first;
+		}
+	}
+	return "";
 }
