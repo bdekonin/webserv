@@ -58,7 +58,7 @@ void 					Webserv::run()
 		fd_set copy_writefds = this->fds;
 		if (select((int)this->_max_fd + 1, &copy_readfds, &copy_writefds, 0, 0) < 0)
 			throw std::runtime_error("select() failed");
-		for (auto it = this->jobs.begin(); it != this->jobs.end(); it++)
+		for (iterator it = this->jobs.begin(); it != this->jobs.end(); it++)
 		{
 			if (FD_ISSET(it->first, &copy_readfds))
 			{
@@ -83,7 +83,7 @@ void 					Webserv::run()
 					this->do_cgi(job, &copy_writefds);
 			}
 		}
-		for (auto it = this->jobs.begin(); it != this->jobs.end(); it++)
+		for (iterator it = this->jobs.begin(); it != this->jobs.end(); it++)
 		{
 			if (FD_ISSET(it->first, &copy_writefds))
 			{
