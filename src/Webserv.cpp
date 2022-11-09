@@ -72,7 +72,12 @@ void 					Webserv::run()
 				else if (job->type == Job::READING)
 				{
 					int ret = it->second.fileReader(it->first);
-					if (ret > 0)
+					if (ret == -1)
+					{
+						it->second.client->type = Job::CLIENT_REMOVE;
+						it->second.type = Job::TASK_REMOVE;
+					}
+					if (ret > 0)//Client is done
 					{
 						it->second.client->type = Job::READY_TO_WRITE;
 						it->second.type = Job::TASK_REMOVE;
@@ -98,7 +103,6 @@ void 					Webserv::run()
 				}
 				else if (job->type == Job::WRITING)
 				{
-					// -1 means blocking
 					this->postHandler(job);
 				}
 				else if (job->type == Job::DELETING)
@@ -442,7 +446,7 @@ void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 	int ret;
 
 	ret = 0;
-	std::vector<unsigned char>	&bodyVector = job->get_request()._body;
+	std::vector<unsigned char>	&bodyVector = job->get_request()._body;//! _get_request gebruiken
 	bodyVector.push_back('\0');
 	char						*body = reinterpret_cast<char*>(&bodyVector[0]);
 	size_t bodyVec_size = bodyVector.size();
