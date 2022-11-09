@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 15:35:15 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 17:05:58 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -505,7 +505,11 @@ void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 		job->set_xxx_response(job->correct_config, 500);
 	}
 	else if (get == true || post == true)
-		ret = job->fileReader(fd_out[0]);
+	{
+		ret = 0;
+		while (!ret)
+			ret = job->fileReader2(fd_out[0]);
+	}
 	else
 	{
 		std::cerr << "Removing client in " << __FILE__ << ":" << __LINE__ << std::endl;

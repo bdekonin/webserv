@@ -405,7 +405,6 @@ class Webserv
 				this->jobs[fd].setServer(NULL);
 				this->jobs[fd].setAddress("");
 				this->jobs[fd].setClient(job);
-				std::cout << this->jobs[fd].job_type_to_char() << " job created" << std::endl;
 				return (fd);
 			}
 			int createReadingJobs(Job *job)
