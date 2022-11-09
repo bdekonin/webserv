@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 09:37:37 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 15:35:15 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,8 +84,6 @@ void 					Webserv::run()
 						FD_SET(it->second.client->fd, &copy_writefds);
 					}
 				}
-				else if ( job->type == Job::CGI_WRITE || job->type == Job::CGI_READ)
-					this->do_cgi(job, &copy_writefds);
 			}
 		}
 		for (iterator it = this->jobs.begin(); it != this->jobs.end(); it++)
@@ -93,41 +91,33 @@ void 					Webserv::run()
 			if (FD_ISSET(it->first, &copy_writefds))
 			{
 				job = &it->second;
-				if (job->type == Job::READY_TO_WRITE)
+				if (job->type == Job::WAIT_FOR_DELETING)
 				{
-					// this->client_response(job);
+					if (remove(job->_getRequest()._uri.c_str()) < 0)
+ 					{
+ 						if (errno == EACCES)
+ 							job->set_xxx_response(job->correct_config, 403);
+ 						else
+ 							job->set_xxx_response(job->correct_config, 404);
+ 					}
+ 					else
+ 					{
+ 						if (DEBUG == 1)
+ 							std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->_getRequest()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
+ 						job->set_xxx_response(job->correct_config, 204);
+ 					}
+					job->type = Job::READY_TO_WRITE;
+				}
+				else if (job->type == Job::READY_TO_WRITE)
+				{
 					this->betterClientResponse(job);
-					// exit(1);
-					// this->responseWrite(job, &this->fds);
-					// this->closeConnection(job, &this->fds);
 				}
 				else if (job->type == Job::WRITING)
 				{
 					this->postHandler(job);
 				}
-				else if (job->type == Job::DELETING)
-				{
-					
-				}
-				// if (job->type == Job::CLIENT_RESPONSE)
-				// 	this->client_response(job);
-				// else if (job->type == Job::FILE_WRITE) // DELETE
-				// {
-				// 	if (remove(job->get_request()._uri.c_str()) < 0)
-				// 	{
-				// 		if (errno == EACCES)
-				// 			job->set_xxx_response(job->correct_config, 403);
-				// 		else
-				// 			job->set_xxx_response(job->correct_config, 404);
-				// 	}
-				// 	else
-				// 	{
-				// 		if (DEBUG == 1)
-				// 			std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->get_request()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
-				// 		job->set_xxx_response(job->correct_config, 204);
-				// 	}
-				// 	this->client_response(job);
-				// }
+				else if ( job->type == Job::READY_TO_CGI)
+					this->do_cgi(job, &copy_writefds);
 			}
 		}
 
@@ -443,82 +433,88 @@ void 					Webserv::client_response(Job *job)
 
 void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 {
+	
 	int ret;
+	bool post;
+	bool get;
+	char *body;
+	size_t bodyVec_size;
+	std::string extension;
+	std::string path;
+	pid_t pid;
+	int fd_out[2];
+	int fd_in[2];
 
-	ret = 0;
-	std::vector<unsigned char>	&bodyVector = job->get_request()._body;//! _get_request gebruiken
+	Request &req = job->_getRequest();
+	std::vector<unsigned char>	&bodyVector = req._body;
 	bodyVector.push_back('\0');
-	char						*body = reinterpret_cast<char*>(&bodyVector[0]);
-	size_t bodyVec_size = bodyVector.size();
+	body = reinterpret_cast<char*>(&bodyVector[0]);
+	bodyVec_size = bodyVector.size();
+	extension = req._uri.substr(req._uri.find_last_of("."));
+	path = job->correct_config.get_cgi().find(extension)->second;
+	post = req.is_method_post();
+	get = req.is_method_get();
+	ret = 0;
 
-	std::string extension = job->get_request()._uri.substr(job->get_request()._uri.find_last_of("."));
-
-
-	std::string path = job->correct_config.get_cgi().find(extension)->second;
-
-	if (access(path.c_str(), F_OK) != 0) // File doesn't exist
+	if (DEBUG == 1)
 	{
-		job->set_xxx_response(job->correct_config, 404);
+		std::stringstream ss;
+		ss << CLRS_BLU;
+		ss << "server : >> [cgi: " << path << "] ";
+		ss << "[client: " << job->fd << "] ";
+		ss << CLRS_reset;
+		std::cerr << ss.str() << std::endl;
 	}
-	else // File Exist
+
+
+	if (pipe(fd_out) < 0)
+		throw std::runtime_error("pipe: failed to create pipe on fd_out.");
+	if (post && pipe(fd_in) < 0)
+		throw std::runtime_error("pipe: failed to create pipe on fd_in.");
+	pid = fork();
+	if (pid < 0)
+		throw std::runtime_error("fork: failed to fork.");
+	if (pid == 0)
 	{
-		pid_t pid;
-		int fd_out[2];
-		int fd_in[2];
-		bool post = job->get_request().is_method_post();
-		bool get = job->get_request().is_method_get();
+		job->set_environment_variables();
 
-		if (pipe(fd_out) < 0)
-			throw std::runtime_error("pipe: failed to create pipe on fd_out.");
-		
-		if (post && pipe(fd_in) < 0)
-			throw std::runtime_error("pipe: failed to create pipe on fd_in.");
+		close(fd_out[0]);
 
-		pid = fork();
-		if (pid < 0)
-			throw std::runtime_error("fork: failed to fork.");
-
-		if (pid == 0)
-		{
-			job->set_environment_variables();
-
-			close(fd_out[0]);
-
-			dup2(fd_out[1], 1);
-			close(fd_out[1]);
-			if (post)
-			{
-				close(fd_in[1]);
-				dup2(fd_in[0], STDIN_FILENO);
-				close(fd_in[0]);
-			}
-			char	*args[2] = {const_cast<char*>(path.c_str()), NULL};
-			execv(path.c_str(), args);
-			exit(EXIT_FAILURE);
-		}
+		dup2(fd_out[1], 1);
 		close(fd_out[1]);
 		if (post)
 		{
-			close(fd_in[0]);
-			ret = write(fd_in[1], body, bodyVec_size);
 			close(fd_in[1]);
+			dup2(fd_in[0], STDIN_FILENO);
+			close(fd_in[0]);
 		}
-
-		if (ret < 0)
-		{
-			std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
-			job->set_xxx_response(job->correct_config, 500);
-		}
-		else if (get == true)
-			job->handle_file(fd_out[0], copy_writefds);
-		else if (post == true)
-			job->handle_file(fd_out[0], copy_writefds);
-		else
-			throw std::runtime_error("Something went terribbly wrong");
-
-		close(fd_out[0]);
+		char	*args[2] = {const_cast<char*>(path.c_str()), NULL};
+		execv(path.c_str(), args);
+		exit(EXIT_FAILURE);
 	}
-	job->set_client_response(copy_writefds);
+	close(fd_out[1]);
+	if (post)
+	{
+		close(fd_in[0]);
+		ret = write(fd_in[1], body, bodyVec_size);
+		close(fd_in[1]);
+	}
+	if (ret < 0)
+	{
+		std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
+		job->set_xxx_response(job->correct_config, 500);
+	}
+	else if (get == true || post == true)
+		ret = job->fileReader(fd_out[0]);
+	else
+	{
+		std::cerr << "Removing client in " << __FILE__ << ":" << __LINE__ << std::endl;
+		job->type = Job::CLIENT_REMOVE;
+	}
+	close(fd_out[0]);
+
+	job->type = Job::READY_TO_WRITE;
+	FD_SET(job->fd, copy_writefds);
 }
 size_t					Webserv::method_handling(Request &request, Configuration &config)
 {

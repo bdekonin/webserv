@@ -134,15 +134,22 @@ class Webserv
 				if (job->get_request().get_header("connection").compare("Close") == 0)
 					connection_close = true;
 
-				job->clear();
-				this->jobs[job->fd].clear();
-				this->jobs[job->fd].type = Job::READY_TO_READ;
+				if (job->_getRequest().is_method_delete() == false)
+					this->reset(job);
+
+
 
 				if (connection_close)
 					job->type = Job::CLIENT_REMOVE;
 			}
 		}
 		
+			void reset(Job *job) {
+				job->clear();
+				this->jobs[job->fd].clear();
+				this->jobs[job->fd].type = Job::READY_TO_READ;
+			}
+
 		/**
 		 * @brief The CGI Function that handles CGI requests.
 		 * 
@@ -334,6 +341,15 @@ class Webserv
 						FD_SET(ret, wr);
 						FD_SET(ret, fds);
 					}
+					else if (job->type == Job::WAIT_FOR_CGIING)
+					{
+						FD_SET(job->fd, wr);
+						job->type = Job::READY_TO_CGI;
+					}
+					else if (job->type == Job::WAIT_FOR_DELETING)
+					{
+						FD_SET(ret, wr);
+					}
 					return (0);
 				}
 				else
@@ -365,12 +381,11 @@ class Webserv
 				}
 				else if (type == Job::WAIT_FOR_DELETING)
 				{
-					this->createDeletingJobs();
 					return (job->fd);
 				}
 				else if (type == Job::WAIT_FOR_CGIING)
 				{
-					this->createCGIJobs();
+					this->createCGIJobs(job);
 					return (job->fd);
 				}
 				else
@@ -390,6 +405,7 @@ class Webserv
 				this->jobs[fd].setServer(NULL);
 				this->jobs[fd].setAddress("");
 				this->jobs[fd].setClient(job);
+				std::cout << this->jobs[fd].job_type_to_char() << " job created" << std::endl;
 				return (fd);
 			}
 			int createReadingJobs(Job *job)
@@ -537,17 +553,31 @@ class Webserv
 				fd = this->openFileForWriting(uri);
 				return (fd);
 			}
-			void createCGIJobs()
+			int createCGIJobs(Job *job)
 			{
-				std::cout << "CGI jobs" << std::endl;
+				int fd;
+				Job::PATH_TYPE type;
+				std::string const &uri = job->_getRequest()._uri;
+
+				type = job->get_path_options();
+
+				if (type == Job::NO_PERMISSIONS)
+				{
+					job->set_xxx_response(job->correct_config, 403);
+					return (0);
+				}
+				if (type == Job::DIRECTORY || job->get_path_options(uri + "/") == Job::DIRECTORY)
+				{
+					job->set_xxx_response(job->correct_config, 400);
+					return (0);
+				}
+				if (type == Job::NOT_FOUND)
+				{
+					job->set_xxx_response(job->correct_config, 404);
+					return (0);
+				}
+				return (1);
 			}
-			void createDeletingJobs()
-			{
-				std::cout << "Deleting jobs" << std::endl;
-			}
-
-
-
 
 
 			int openFileForWriting(std::string const &path)
@@ -700,10 +730,6 @@ class Webserv
 					job->set_xxx_response(job->correct_config, 201);
 				}
 			}
-
-
-
-
 
 			void http_index_module() // Function that calls functiosn below when nessecasry
 			{

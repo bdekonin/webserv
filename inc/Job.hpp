@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 22:07:18 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 15:21:42 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,7 +235,6 @@ class Job
 			}
 			const char *job_type_to_char(JOB_TYPE type)
 			{
-				std::cout << "job_type_to_char: " << type << std::endl;
 				switch (type)
 				{
 					case WAIT_FOR_CONNECTION: return "SERVER: WAIT_FOR_CONNECTION";
@@ -253,7 +252,12 @@ class Job
 					case CGIING: return "TASK: CGIING";
 					case CLIENT_REMOVE: return "CLIENT: CLIENT_REMOVE";
 					case TASK_REMOVE: return "TASK: TASK_REMOVE";
-					default: return "UNKOWN";
+					case CLIENT_RESPONSE: return "CLIENT: CLIENT_RESPONSE";
+					case CLIENT_READ: return "CLIENT: CLIENT_READ";
+					case FILE_WRITE: return "TASK: FILE_WRITE";
+					case FILE_READ: return "TASK: FILE_READ";
+					case CGI_WRITE: return "TASK: CGI_WRITE";
+					case CGI_READ: return "TASK: CGI_READ";
 				}
 				return "UNKNOWN";
 			}
@@ -294,6 +298,47 @@ class Job
 			}
 
 
+
+			int fileReader2(int fd)
+			{
+				Response &res = this->_getResponse();
+				Request &req = this->_getRequest();
+				std::string &uri = req._uri;
+
+				int ret, pos = 0;
+				char *pointer = NULL;
+				char buf[4096 + 1];
+				
+				bzero(buf, 4096 + 1);
+				while ((ret = read(fd, buf, 4096)) > 0)
+				{
+					if (ret == 0)
+					{
+						// blocking
+						return (0);
+					}
+					if (ret < 0)
+					{
+						return (-1);
+					}
+
+					pointer = ft_strnstr(buf, "\r\n\r\n", ret);
+					if (pointer != NULL)
+						pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
+					else
+						pos = 0;
+					if (pointer != NULL && pos > 0)
+						res.set_header(std::string(buf, pos));
+
+					res.set_body(buf, ret, pos);
+					if (ret < 4096)
+						break;
+					bzero(buf, 4096);
+					pos = 0;
+					pointer = NULL;
+				}
+				return (1);
+			}
 
 			// int fileReader(int fd)
 			// {
