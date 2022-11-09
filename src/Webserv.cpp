@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 15:03:08 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 15:35:15 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,14 +86,22 @@ void 					Webserv::run()
 			if (FD_ISSET(it->first, &copy_writefds))
 			{
 				job = &it->second;
-				if (job->type == Job::DELETING)
+				if (job->type == Job::WAIT_FOR_DELETING)
 				{
-					remove(job->_getRequest()._uri.c_str());
-					
-					if (DEBUG == 1)
-						std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->_getRequest()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
-					job->type = Job::TASK_REMOVE;
-					this->reset(job->client);
+					if (remove(job->_getRequest()._uri.c_str()) < 0)
+ 					{
+ 						if (errno == EACCES)
+ 							job->set_xxx_response(job->correct_config, 403);
+ 						else
+ 							job->set_xxx_response(job->correct_config, 404);
+ 					}
+ 					else
+ 					{
+ 						if (DEBUG == 1)
+ 							std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->_getRequest()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
+ 						job->set_xxx_response(job->correct_config, 204);
+ 					}
+					job->type = Job::READY_TO_WRITE;
 				}
 				else if (job->type == Job::READY_TO_WRITE)
 				{

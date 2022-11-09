@@ -349,8 +349,6 @@ class Webserv
 					else if (job->type == Job::WAIT_FOR_DELETING)
 					{
 						FD_SET(ret, wr);
-						FD_SET(ret, fds);
-						job->type = Job::READY_TO_WRITE;
 					}
 					return (0);
 				}
@@ -383,9 +381,7 @@ class Webserv
 				}
 				else if (type == Job::WAIT_FOR_DELETING)
 				{
-					std::cout << "Creating deleting jobs" << std::endl;
-					fd = this->createDeletingJobs(job);
-					taskType = Job::DELETING;
+					return (job->fd);
 				}
 				else if (type == Job::WAIT_FOR_CGIING)
 				{
@@ -581,37 +577,6 @@ class Webserv
 					return (0);
 				}
 				return (1);
-			}
-			int createDeletingJobs(Job *job)
-			{
-				int fd;
-				Job::PATH_TYPE type;
-				std::string const &uri = job->_getRequest()._uri;
-
-				type = job->get_path_options();
-
-				if (type == Job::NO_PERMISSIONS)
-				{
-					job->set_xxx_response(job->correct_config, 403);
-					return (0);
-				}
-				if (type == Job::DIRECTORY || job->get_path_options(uri + "/") == Job::DIRECTORY)
-				{
-					job->set_xxx_response(job->correct_config, 403);
-					return (0);
-				}
-				if (type == Job::NOT_FOUND)
-				{
-					job->set_xxx_response(job->correct_config, 404);
-					return (0);
-				}
-				job->type = Job::WAIT_FOR_DELETING;
-				fd = dup(job->fd);
-
-				job->set_xxx_response(job->correct_config, 204);
-
-				std::cout << "Response has been set";
-				return fd;
 			}
 
 
