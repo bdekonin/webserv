@@ -685,13 +685,20 @@ class Webserv
 
 				int ret = write(job->fd, body, bodyVec_size);
 				std::cout << "ret: " << ret << std::endl;
-				if (ret == 0)
-				{ // Client is done?
-					
+				if (ret == -1)
+				{
+					job->bytes_sent = 0;
+					job->type = Job::CLIENT_REMOVE;
+					return ;
 				}
-
-				std::cout << ret << std::endl;
-				exit(1);
+				job->bytes_sent += ret;
+				if (job->bytes_sent >= bodyVec_size)
+				{
+					job->bytes_sent = 0;
+					job->type = Job::READY_TO_READ;
+					FD_SET(job->fd, &this->fds);
+					job->set_xxx_response(job->correct_config, 201);
+				}
 			}
 
 
