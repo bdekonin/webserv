@@ -702,31 +702,32 @@ class Webserv
 				return (1);
 			}
 
-			void postHandler(Job *job)
+			void postHandler(Job *job, fd_set *wr)
 			{
 				Request &req = job->_getRequest();
 				std::vector<unsigned char>	&bodyVector = req._body;
-				bodyVector.push_back(0);
 				char	*body = reinterpret_cast<char*>(&bodyVector[0]);
 				size_t bodyVec_size = bodyVector.size();
 
-				std::cout << "body: " << body << std::endl;
-
 				int ret = write(job->fd, body, bodyVec_size);
-				std::cout << "ret: " << ret << std::endl;
 				if (ret == -1)
 				{
 					job->bytes_sent = 0;
-					job->type = Job::CLIENT_REMOVE;
+					std::cout << "Error: " << strerror(errno) << std::endl;
+					job->type = Job::TASK_REMOVE;
 					return ;
 				}
 				job->bytes_sent += ret;
+				std::cout << "Bytes sent: " << job->bytes_sent << std::endl;
+				std::cout << "bodyvec_size: " << bodyVec_size << std::endl;
 				if (job->bytes_sent >= bodyVec_size)
 				{
+					// std::cout 
 					job->bytes_sent = 0;
-					job->type = Job::READY_TO_READ;
-					FD_SET(job->fd, &this->fds);
-					job->set_xxx_response(job->correct_config, 201);
+					job->client->type = Job::READY_TO_WRITE;
+					job->type = Job::TASK_REMOVE;
+					job->client->set_xxx_response(job->client->correct_config, 201);
+					return ;
 				}
 			}
 

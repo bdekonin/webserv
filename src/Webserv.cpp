@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 17:05:58 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 17:44:05 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,7 @@ void 					Webserv::run()
 				}
 				else if (job->type == Job::WRITING)
 				{
-					this->postHandler(job);
+					this->postHandler(job, &copy_writefds);
 				}
 				else if ( job->type == Job::READY_TO_CGI)
 					this->do_cgi(job, &copy_writefds);
