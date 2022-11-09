@@ -51,6 +51,7 @@ class Response
 		void set_status_code(int status_code);
 		void set_header(std::string const &header);
 		void set_body(const char *body, size_t length, size_t start);
+		void set_body(const char *body, size_t length);
 		bool is_body_empty() const;
 		int get_status_code() const;
 		const std::string &get_headers() const;
