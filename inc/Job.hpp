@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 22:07:18 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 13:54:29 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -317,13 +317,15 @@ class Job
 					{
 						return (-1);
 					}
-					// pointer = ft_strnstr(buf, "\r\n\r\n", ret);
-					// if (pointer != NULL)
-					// 	pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
-					// else
-					// 	pos = 0;
-					// if (pointer != NULL && pos > 0)
-					// 	res.set_header(std::string(buf, pos));
+
+					pointer = ft_strnstr(buf, "\r\n\r\n", ret);
+					if (pointer != NULL)
+						pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
+					else
+						pos = 0;
+					if (pointer != NULL && pos > 0)
+						res.set_header(std::string(buf, pos));
+
 					res.set_body(buf, ret, pos);
 					if (ret < 4096)
 						break;
