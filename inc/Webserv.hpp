@@ -134,15 +134,22 @@ class Webserv
 				if (job->get_request().get_header("connection").compare("Close") == 0)
 					connection_close = true;
 
-				job->clear();
-				this->jobs[job->fd].clear();
-				this->jobs[job->fd].type = Job::READY_TO_READ;
+				if (job->_getRequest().is_method_delete() == false)
+					this->reset(job);
+
+
 
 				if (connection_close)
 					job->type = Job::CLIENT_REMOVE;
 			}
 		}
 		
+			void reset(Job *job) {
+				job->clear();
+				this->jobs[job->fd].clear();
+				this->jobs[job->fd].type = Job::READY_TO_READ;
+			}
+
 		/**
 		 * @brief The CGI Function that handles CGI requests.
 		 * 
@@ -342,6 +349,7 @@ class Webserv
 					else if (job->type == Job::WAIT_FOR_DELETING)
 					{
 						FD_SET(ret, wr);
+						FD_SET(ret, fds);
 						job->type = Job::READY_TO_WRITE;
 					}
 					return (0);
@@ -375,6 +383,7 @@ class Webserv
 				}
 				else if (type == Job::WAIT_FOR_DELETING)
 				{
+					std::cout << "Creating deleting jobs" << std::endl;
 					fd = this->createDeletingJobs(job);
 					taskType = Job::DELETING;
 				}
@@ -400,6 +409,7 @@ class Webserv
 				this->jobs[fd].setServer(NULL);
 				this->jobs[fd].setAddress("");
 				this->jobs[fd].setClient(job);
+				std::cout << this->jobs[fd].job_type_to_char() << " job created" << std::endl;
 				return (fd);
 			}
 			int createReadingJobs(Job *job)
@@ -599,6 +609,8 @@ class Webserv
 				fd = dup(job->fd);
 
 				job->set_xxx_response(job->correct_config, 204);
+
+				std::cout << "Response has been set";
 				return fd;
 			}
 
@@ -746,10 +758,6 @@ class Webserv
 				std::cout << ret << std::endl;
 				exit(1);
 			}
-
-
-
-
 
 			void http_index_module() // Function that calls functiosn below when nessecasry
 			{

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 14:33:43 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 15:03:08 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,16 @@ void 					Webserv::run()
 			if (FD_ISSET(it->first, &copy_writefds))
 			{
 				job = &it->second;
-				if (job->type == Job::READY_TO_WRITE)
+				if (job->type == Job::DELETING)
+				{
+					remove(job->_getRequest()._uri.c_str());
+					
+					if (DEBUG == 1)
+						std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->_getRequest()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
+					job->type = Job::TASK_REMOVE;
+					this->reset(job->client);
+				}
+				else if (job->type == Job::READY_TO_WRITE)
 				{
 					this->betterClientResponse(job);
 				}
@@ -94,14 +103,6 @@ void 					Webserv::run()
 				{
 					// -1 means blocking
 					this->postHandler(job);
-				}
-				else if (job->type == Job::DELETING)
-				{
-					remove(job->_getRequest()._uri.c_str());
-					
-					if (DEBUG == 1)
-						std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->_getRequest()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
-					job->type = Job::TASK_REMOVE;
 				}
 				else if ( job->type == Job::READY_TO_CGI)
 					this->do_cgi(job, &copy_writefds);
