@@ -300,6 +300,7 @@ class Webserv
 				Request &req = job->get_request();
 
 				type = req.add_incoming_data(buffer, bytes);
+				std::cout << "type: " << type << std::endl;
 				if (type == Request::MAX_ENTITY) // 413 Payload Too Large
 				{
 					// 413
@@ -311,8 +312,12 @@ class Webserv
 					return (0);
 				}
 
-				if (type == Request::ERROR || req.is_complete() == false)
-					return (1);
+
+				if (job->get_request()._type != Request::ERROR && job->request.is_complete() == false)
+					return (1); 
+
+				// if (type == Request::ERROR || req.is_complete() == false)
+				// 	return (1);
 
 				ret = this->isError(job, req);
 				if (ret == 0)
@@ -615,7 +620,7 @@ class Webserv
 
 				if (request.is_bad_request() == true)
 				{
-					if (request.get_header("content-length").empty() == true)
+					if (request.is_method_post() == true && request.get_header("content-length").empty() == true)
 						job->set_xxx_response(job->correct_config, 411);
 					else if (request._method == Request::UNSUPPORTED) // Just checks in general if its a GET POST DELETE
 						job->set_xxx_response(job->correct_config, 405);

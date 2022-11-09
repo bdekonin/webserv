@@ -31,6 +31,6 @@ else
 	}
 }
 
-phpinfo();
+// phpinfo();
 
 ?>
