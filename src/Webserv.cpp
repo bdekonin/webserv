@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 17:44:05 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 19:44:26 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,17 +25,6 @@ Webserv::~Webserv()
 {
 }
 
-/* Signals */
-// static void				interruptHandler(int sig_int)
-// {
-// 	(void)sig_int;
-// 	g_is_running = false;
-// 	std::cout << "\b\b \b\b";
-// 	// std::cout << "Interrupt signal (" << sig_int << ") received." << std::endl;
-// 	throw std::runtime_error("Interrupt signal (" + std::to_string(sig_int) + ") received.");
-// 	// exit(EXIT_SUCCESS); // Dont use this because it will close the server without closing the connections.
-// }
-
 /* Public Main Methods */
 void 					Webserv::setupServers()
 {
@@ -47,9 +36,6 @@ void 					Webserv::setupServers()
 }
 void 					Webserv::run()
 {
-	// signal(SIGINT, interruptHandler);
-	// signal(SIGQUIT, interruptHandler);
-
 	std::cerr << CLRS_GRN << "server : starting" << CLRS_reset << std::endl;
 	Job *job;
 	while (g_is_running == true)
