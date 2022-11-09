@@ -339,6 +339,11 @@ class Webserv
 						FD_SET(job->fd, wr);
 						job->type = Job::READY_TO_CGI;
 					}
+					else if (job->type == Job::WAIT_FOR_DELETING)
+					{
+						FD_SET(ret, wr);
+						job->type = Job::READY_TO_WRITE;
+					}
 					return (0);
 				}
 				else
@@ -370,8 +375,8 @@ class Webserv
 				}
 				else if (type == Job::WAIT_FOR_DELETING)
 				{
-					this->createDeletingJobs();
-					return (job->fd);
+					fd = this->createDeletingJobs(job);
+					taskType = Job::DELETING;
 				}
 				else if (type == Job::WAIT_FOR_CGIING)
 				{
@@ -567,9 +572,34 @@ class Webserv
 				}
 				return (1);
 			}
-			void createDeletingJobs()
+			int createDeletingJobs(Job *job)
 			{
-				std::cout << "Deleting jobs" << std::endl;
+				int fd;
+				Job::PATH_TYPE type;
+				std::string const &uri = job->_getRequest()._uri;
+
+				type = job->get_path_options();
+
+				if (type == Job::NO_PERMISSIONS)
+				{
+					job->set_xxx_response(job->correct_config, 403);
+					return (0);
+				}
+				if (type == Job::DIRECTORY || job->get_path_options(uri + "/") == Job::DIRECTORY)
+				{
+					job->set_xxx_response(job->correct_config, 403);
+					return (0);
+				}
+				if (type == Job::NOT_FOUND)
+				{
+					job->set_xxx_response(job->correct_config, 404);
+					return (0);
+				}
+				job->type = Job::WAIT_FOR_DELETING;
+				fd = dup(job->fd);
+
+				job->set_xxx_response(job->correct_config, 204);
+				return fd;
 			}
 
 

@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 13:53:38 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 14:33:43 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,11 +88,7 @@ void 					Webserv::run()
 				job = &it->second;
 				if (job->type == Job::READY_TO_WRITE)
 				{
-					// this->client_response(job);
 					this->betterClientResponse(job);
-					// exit(1);
-					// this->responseWrite(job, &this->fds);
-					// this->closeConnection(job, &this->fds);
 				}
 				else if (job->type == Job::WRITING)
 				{
@@ -101,30 +97,14 @@ void 					Webserv::run()
 				}
 				else if (job->type == Job::DELETING)
 				{
+					remove(job->_getRequest()._uri.c_str());
 					
+					if (DEBUG == 1)
+						std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->_getRequest()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
+					job->type = Job::TASK_REMOVE;
 				}
 				else if ( job->type == Job::READY_TO_CGI)
 					this->do_cgi(job, &copy_writefds);
-				
-				// if (job->type == Job::CLIENT_RESPONSE)
-				// 	this->client_response(job);
-				// else if (job->type == Job::FILE_WRITE) // DELETE
-				// {
-				// 	if (remove(job->get_request()._uri.c_str()) < 0)
-				// 	{
-				// 		if (errno == EACCES)
-				// 			job->set_xxx_response(job->correct_config, 403);
-				// 		else
-				// 			job->set_xxx_response(job->correct_config, 404);
-				// 	}
-				// 	else
-				// 	{
-				// 		if (DEBUG == 1)
-				// 			std::cerr << CLRS_RED <<  "FILE DELETED \'" << CLRS_MAG << job->get_request()._uri << CLRS_RED << "\'" << CLRS_reset << std::endl;
-				// 		job->set_xxx_response(job->correct_config, 204);
-				// 	}
-				// 	this->client_response(job);
-				// }
 			}
 		}
 
