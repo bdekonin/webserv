@@ -617,6 +617,9 @@ int						Webserv::openSocket(int port, const char *hostname)
 	ret = setsockopt(socketFD, SOL_SOCKET, SO_REUSEPORT, &options, sizeof(options));
 	if (ret < 0)
 		throw std::runtime_error("Failed to set socket options.");
+	ret = setsockopt(socketFD, SOL_SOCKET, SO_NOSIGPIPE, &options, sizeof(options));
+	if (ret < 0)
+		throw std::runtime_error("Failed to set socket options.");
 
 	bzero(&sock_struct, sizeof(sock_struct));
 

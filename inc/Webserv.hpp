@@ -36,6 +36,8 @@
 # include "Request.hpp" // Class that handles a request.
 # include "Response.hpp" // Class that handles a response.
 # include "Utils.hpp"
+#include <sys/types.h>
+#include <sys/socket.h>
 
 class Webserv
 {
@@ -110,7 +112,7 @@ class Webserv
 			size_t response_size = response.size();
 			char *response_char = reinterpret_cast<char*> (&response[0]);
 
-			bytes = send(job->fd, response_char + job->bytes_sent, response_size - job->bytes_sent, MSG_NOSIGNAL);
+			bytes = send(job->fd, response_char + job->bytes_sent, response_size - job->bytes_sent, SO_NOSIGPIPE);
 			if (bytes == -1)
 			{
 				job->type = Job::CLIENT_REMOVE;
