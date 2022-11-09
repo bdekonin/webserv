@@ -300,7 +300,6 @@ class Webserv
 				Request &req = job->get_request();
 
 				type = req.add_incoming_data(buffer, bytes);
-				std::cout << "type: " << type << std::endl;
 				if (type == Request::MAX_ENTITY) // 413 Payload Too Large
 				{
 					// 413

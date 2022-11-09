@@ -176,7 +176,7 @@ def test_xxx():
     # invalid content length 2
     length = '100000000000000000000000'
     request_header = 'GET / HTTP/1.1\r\nHost:{}\r\nContent-Length: {}\r\n\r\n'.format(host, length)
-    compare(request_header, 431, '5. invalid content length 2')
+    compare(request_header, 413, '5. invalid content length 2')
 
     # Post not allowed in root
     request_header = 'POST / HTTP/1.1\r\nHost:{}\r\nContent-Length: 23\r\n\r\nHallo Dit is een test\r\n'.format(host)
@@ -195,9 +195,9 @@ def test_xxx():
     compare(request_header, 405, '9. empty request')
 
 def tester():
-    # test_400()
+    test_400()
     test_200()
-    # test_xxx()
+    test_xxx()
     # stress_test(2048)
 
 
