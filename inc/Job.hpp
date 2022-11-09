@@ -295,95 +295,70 @@ class Job
 
 
 
-			int fileReader(int fd)
-			{
-				Response &res = this->_getResponse();
-				Request &req = this->_getRequest();
-				std::string &uri = req._uri;
-
-				int ret, pos = 0;
-				char *pointer = NULL;
-				char buf[4096 + 1];
-				
-				bzero(buf, 4096 + 1);
-				while ((ret = read(fd, buf, 4096)) > 0)
-				{
-					if (ret == 0)
-					{
-						// blocking
-						return (0);
-					}
-					if (ret < 0)
-					{
-						return (-1);
-					}
-					// pointer = ft_strnstr(buf, "\r\n\r\n", ret);
-					// if (pointer != NULL)
-					// 	pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
-					// else
-					// 	pos = 0;
-					// if (pointer != NULL && pos > 0)
-					// 	res.set_header(std::string(buf, pos));
-					res.set_body(buf, ret, pos);
-					if (ret < 4096)
-						break;
-					bzero(buf, 4096);
-					pos = 0;
-					pointer = NULL;
-				}
-				return (1);
-			}
-
 			// int fileReader(int fd)
 			// {
 			// 	Response &res = this->_getResponse();
 			// 	Request &req = this->_getRequest();
 			// 	std::string &uri = req._uri;
-				
+
+			// 	int ret, pos = 0;
+			// 	char *pointer = NULL;
 			// 	char buf[4096 + 1];
 				
 			// 	bzero(buf, 4096 + 1);
-
-			// 	int ret = read(fd, buf, 4096);
-			// 	if (ret < 0)
+			// 	while ((ret = read(fd, buf, 4096)) > 0)
 			// 	{
-			// 		return (-1);
+			// 		if (ret == 0)
+			// 		{
+			// 			// blocking
+			// 			return (0);
+			// 		}
+			// 		if (ret < 0)
+			// 		{
+			// 			return (-1);
+			// 		}
+			// 		// pointer = ft_strnstr(buf, "\r\n\r\n", ret);
+			// 		// if (pointer != NULL)
+			// 		// 	pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
+			// 		// else
+			// 		// 	pos = 0;
+			// 		// if (pointer != NULL && pos > 0)
+			// 		// 	res.set_header(std::string(buf, pos));
+			// 		res.set_body(buf, ret, pos);
+			// 		if (ret < 4096)
+			// 			break;
+			// 		bzero(buf, 4096);
+			// 		pos = 0;
+			// 		pointer = NULL;
 			// 	}
-			// 	if (ret == 0)
-			// 	{
-			// 		// blocking
-			// 		return (0);
-			// 	}
-			// 	res.set_body(buf, ret, 0);
+			// 	return (1);
 			// }
 
+			int fileReader(int fd)
+			{
+				Response &res = this->_getResponse();
+				Request &req = this->_getRequest();
+				std::string &uri = req._uri;
+				
+				char buf[4096 + 1];
+				
+				bzero(buf, 4096 + 1);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+				int ret = read(fd, buf, 4096);
+				if (ret < 0)
+				{
+					this->bytes_sent = 0;
+					return (-1);
+				}
+				if (ret == 0)
+				{
+					this->bytes_sent = 0;
+					return (1);
+				}
+				this->bytes_sent += ret;
+				res.set_body(buf, ret);
+				return (0);
+			}
 };
 
 // std::ostream&	operator<<(std::ostream& out, const Job &c);
