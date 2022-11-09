@@ -123,7 +123,7 @@ class Webserv
 				{
 					std::stringstream ss;
 					ss << CLRS_BLU;
-					bytes = strstr(response_char, "\r\n\r\n") - response_char;
+					bytes = strstr(response_char, "\r\n") - response_char;
 					ss << "server : >> [status: " << std::string(response_char, bytes)  << "] ";
 					ss << "[length: " << response_size - job->bytes_sent << "] ";
 					ss << "[client: " << job->fd << "] ";
@@ -327,7 +327,6 @@ class Webserv
 					{
 						FD_SET(ret, rd);
 						FD_SET(ret, fds);
-
 					}
 					else if (job->type == Job::WAIT_FOR_WRITING)
 					{
