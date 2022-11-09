@@ -57,6 +57,11 @@ void Response::set_body(const char *body, size_t length, size_t start)
 		return ;
 	this->_body.insert(this->_body.end(), body + start, body + length);
 }
+void Response::set_body(const char *body, size_t length)
+{
+	this->_body.insert(this->_body.end(), body, body + length);
+	// this->_body.insert(this->_body.end(), body, length);
+}
 int Response::get_status_code() const
 {
 	return this->_status_code;
