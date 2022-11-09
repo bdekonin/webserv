@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 19:44:26 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 22:12:46 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,14 +100,12 @@ void 					Webserv::run()
 				}
 				else if (job->type == Job::WRITING)
 				{
-					this->postHandler(job, &copy_writefds);
+					this->postHandler(job);
 				}
 				else if ( job->type == Job::READY_TO_CGI)
 					this->do_cgi(job, &copy_writefds);
 			}
 		}
-
-
 
 		std::map<int, Job>::iterator it = this->jobs.begin();
 		while(it != this->jobs.end())
@@ -394,7 +392,6 @@ void 					Webserv::client_response(Job *job)
 	while (response_size > 0) 
 	{
 		bytes = send(job->fd, response_char, response_size, 0);
-		std::cout << "bytes: " << bytes << std::endl;
 		if (bytes == -1)
 		{
 			job->type = Job::CLIENT_REMOVE;
@@ -493,6 +490,7 @@ void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 	else if (get == true || post == true)
 	{
 		ret = 0;
+		job->_getResponse().set_status_code(200);
 		while (!ret)
 			ret = job->fileReader2(fd_out[0]);
 	}

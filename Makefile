@@ -4,7 +4,7 @@
 
 NAME        := webserv
 CC         := c++
-# FLAGS    := -Wall -Wextra -Werror 
+FLAGS    := -Wall -Wextra -Werror 
 FLAGS += -g
 
 ifeq ($(DEBUG),1)
@@ -88,7 +88,7 @@ re:			fclean all
 
 
 chunk:
-	curl -X POST -H "Transfer-Encoding: chunked" -H Expect: -F 'file=@inc/Parser.hpp' localhost:8080/post/upload2.php
+	curl -X POST -H "Transfer-Encoding: chunked" -H Expect: -F 'file=@inc/Parser.hpp' 127.0.0.1:8080/post/upload2.php
 
 upload:
-	curl -X POST -H Expect: -F 'file=@inc/Parser.hpp' localhost:8080/post/upload2.php
+	curl -X POST -H Expect: -F 'file=@inc/Parser.hpp' 127.0.0.1:8080/post/upload2.php

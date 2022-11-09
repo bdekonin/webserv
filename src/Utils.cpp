@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 15:03:05 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/08 13:51:07 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 22:00:03 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -459,8 +459,8 @@ std::string ft::MimeTypes::getMimeType(std::string extension)
 	std::string mime = this->mimes[extension];
 	if (mime.empty())
 	{
-		mime = "application/octet-stream";
-		// mime = "text/plain";
+		// mime = "application/octet-stream";
+		mime = "text/plain";
 	}
 	return mime;
 }

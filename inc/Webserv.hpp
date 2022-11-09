@@ -134,8 +134,7 @@ class Webserv
 				if (job->get_request().get_header("connection").compare("Close") == 0)
 					connection_close = true;
 
-				if (job->_getRequest().is_method_delete() == false)
-					this->reset(job);
+				this->reset(job);
 
 
 
@@ -322,7 +321,7 @@ class Webserv
 					FD_SET(job->fd, wr);
 					return (0);
 				}
-				ret = this->setupNewJobs(job, (Job::JOB_TYPE)job->type, fds, wr, rd);
+				ret = this->setupNewJobs(job, (Job::JOB_TYPE)job->type);
 				if (ret == 0) // means somethinig to be written as error or autoindex?
 				{
 					job->type = Job::READY_TO_WRITE;
@@ -363,7 +362,7 @@ class Webserv
 				return 1;
 			}
 
-			int setupNewJobs(Job *job, Job::JOB_TYPE type, fd_set *fds, fd_set *wr, fd_set *rd)
+			int setupNewJobs(Job *job, Job::JOB_TYPE type)
 			{
 				int fd;
 
@@ -420,7 +419,7 @@ class Webserv
 					endsWithSlash = job->_getRequest()._uri.rbegin()[0] == '/';
 					autoindex = job->correct_config.get_autoindex();
 					if (autoindex == true && endsWithSlash == true)
-						this->autoindex_module();
+						this->autoindex_module(job, job->correct_config);
 					else
 						job->set_xxx_response(job->correct_config, 404);
 					return (0);
@@ -470,7 +469,7 @@ class Webserv
 						}
 					}
 					if (config.get_autoindex() == true)
-						this->autoindex_module();
+						this->autoindex_module(job, job->correct_config);
 					else
 						job->set_xxx_response(config, 404);
 					return (0);
@@ -554,7 +553,6 @@ class Webserv
 			}
 			int createCGIJobs(Job *job)
 			{
-				int fd;
 				Job::PATH_TYPE type;
 				std::string const &uri = job->_getRequest()._uri;
 
@@ -582,7 +580,6 @@ class Webserv
 			int openFileForWriting(std::string const &path)
 			{
 				int fd;
-
 				fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 				if (fd >this->_max_fd)
 					this->_max_fd = fd;
@@ -639,6 +636,7 @@ class Webserv
 					return (0);
 				}
 				/* 413 Payload Too Large */
+
 				if (post && request._body.size() > job->correct_config.get_client_max_body_size())
 				{
 					job->set_xxx_response(job->correct_config, 413);
@@ -698,11 +696,12 @@ class Webserv
 				if (job->get_response().get_status_code() != 0)
 				{
 					job->set_3xx_response(job->correct_config);
+					return (0);
 				}
 				return (1);
 			}
 
-			void postHandler(Job *job, fd_set *wr)
+			void postHandler(Job *job)
 			{
 				Request &req = job->_getRequest();
 				std::vector<unsigned char>	&bodyVector = req._body;
@@ -713,13 +712,10 @@ class Webserv
 				if (ret == -1)
 				{
 					job->bytes_sent = 0;
-					std::cout << "Error: " << strerror(errno) << std::endl;
 					job->type = Job::TASK_REMOVE;
 					return ;
 				}
 				job->bytes_sent += ret;
-				std::cout << "Bytes sent: " << job->bytes_sent << std::endl;
-				std::cout << "bodyvec_size: " << bodyVec_size << std::endl;
 				if (job->bytes_sent >= bodyVec_size)
 				{
 					// std::cout 
@@ -731,26 +727,47 @@ class Webserv
 				}
 			}
 
-			void http_index_module() // Function that calls functiosn below when nessecasry
+			// void http_index_module() // Function that calls functiosn below when nessecasry
+			// {
+			// 	std::cout << "http_index_module" << std::endl;
+			// }
+			// void http_file_module()
+			// {
+			// 	std::cout << "http_file_module" << std::endl;
+			// }
+			int autoindex_module(Job *job, Configuration &config)
 			{
-				std::cout << "http_index_module" << std::endl;
+				std::string temp;
+				Request &req = job->_getRequest();
+				Response &res = job->_getResponse();
+
+				// check root options
+
+				int ret = get_root_options(req._uri.c_str());
+				if (ret == -1 || ret == 1)
+				{
+					job->set_xxx_response(config, 404);
+					return (0);
+				}
+
+
+				if (job->generate_autoindex(job, req._uri, temp) == 0)
+					res.set_body(temp.c_str(), temp.size(), 0);
+				else
+				{
+					std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
+					job->set_xxx_response(config, 500);
+				}
+				return (0);
 			}
-			void http_file_module()
-			{
-				std::cout << "http_file_module" << std::endl;
-			}
-			void autoindex_module()
-			{
-				std::cout << "autoindex_module" << std::endl;
-			}
-			void http_dir_module()
-			{
-				std::cout << "http_dir_module" << std::endl;
-			}
-			void http_error_module()
-			{
-				std::cout << "http_error_module" << std::endl;
-			}
+			// void http_dir_module()
+			// {
+			// 	std::cout << "http_dir_module" << std::endl;
+			// }
+			// void http_error_module()
+			// {
+			// 	std::cout << "http_error_module" << std::endl;
+			// }
 
 
 

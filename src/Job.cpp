@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 20:27:38 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 22:11:34 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,11 +18,11 @@
 
 /* Constructors */
 Job::Job()
-: request(Request()), response(Response()), correct_config(Configuration()), client(NULL), bytes_sent(0)
+: bytes_sent(0), request(Request()), response(Response()), correct_config(Configuration()), client(NULL)
 {
 }
 Job::Job(int type, int fd, Server *server, Job *client)
-: type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration()), client(client), bytes_sent(0)
+: bytes_sent(0), type(type), fd(fd), server(server), request(Request()), response(Response()), correct_config(Configuration()), client(client)
 {
 }
 Job::Job(const Job &src)
@@ -74,7 +74,6 @@ void 			Job::parse_request(std::string &ConfigToChange_path) // config is config
 {
 	if (this->correct_config.get_return().size() != 0)
 	{
-		std::cout << "Redirection now\n";
 		this->get_response().set_status_code(this->correct_config.get_return().begin()->first);
 	}
 	else

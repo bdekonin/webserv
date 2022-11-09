@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 15:21:42 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 21:16:21 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,8 +125,8 @@ class Job
 		std::string		address; // only set when its a user; else its empty.
 		Request			request;
 		Response		response;
-		Configuration correct_config;
-
+		Configuration	correct_config;
+		Job				*client;
 
 		/* Set responses functions */
 			void set_3xx_response(Configuration &config); // Redirection response
@@ -155,11 +155,6 @@ class Job
 			 * @param copy_writefds this is the fd_set that will be used loop over with FD_ISSET
 			 */
 			void set_client_response(fd_set *copy_writefds);
-	private:
-		/* Private Member Functions */
-			void	_set_environment_variable(const char *name, const char *value);
-			void	_set_environment_variable(const char *name, std::string &value);
-			void	_set_environment_variable(const char *name, std::string value);
 			/**
 			 * @brief This function will generate a entire autoindex page and store it in the response body.
 			 * 
@@ -169,34 +164,12 @@ class Job
 			 * @return int return > 0 if correct
 			 */
 			int		generate_autoindex(Job *job, std::string &uri, std::string &body);
+	private:
+		/* Private Member Functions */
+			void	_set_environment_variable(const char *name, const char *value);
+			void	_set_environment_variable(const char *name, std::string &value);
+			void	_set_environment_variable(const char *name, std::string value);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// 	void 	setRefs(Request &req, Job &job, Response &resp);
 		public:
 			enum JOB_TYPE
 			{
@@ -262,9 +235,6 @@ class Job
 				return "UNKNOWN";
 			}
 
-			// If the type is a FILE_READ 
-			Job *client;
-
 			bool isClient() const {
 				return (!this->isTask() && !this->isServer());
 			}
@@ -302,8 +272,6 @@ class Job
 			int fileReader2(int fd)
 			{
 				Response &res = this->_getResponse();
-				Request &req = this->_getRequest();
-				std::string &uri = req._uri;
 
 				int ret, pos = 0;
 				char *pointer = NULL;
@@ -382,9 +350,7 @@ class Job
 			int fileReader(int fd)
 			{
 				Response &res = this->_getResponse();
-				Request &req = this->_getRequest();
-				std::string &uri = req._uri;
-				
+
 				char buf[4096 + 1];
 				
 				bzero(buf, 4096 + 1);
