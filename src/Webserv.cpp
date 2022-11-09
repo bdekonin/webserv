@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/08 22:40:20 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/09 09:37:37 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,7 @@ void 					Webserv::run()
 		{
 			if (it->second.type == Job::TASK_REMOVE)
 			{
-				this->closeConnection(it, "TASK");
+				this->closeConnection(it, NULL);
 				this->jobs.erase(it++);
 			}
 			else if (it->second.type == Job::CLIENT_REMOVE)
