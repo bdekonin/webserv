@@ -242,7 +242,7 @@ Job::PATH_TYPE Job::get_path_options(std::string const &uri)
 		return this->NOT_FOUND; // NOT FOUND
 	if (S_ISDIR(sb.st_mode) && uri[uri.size() - 1] == '/')
 	{
-		returnstat = sb.st_mode & S_IRUSR | S_IRGRP | S_IROTH;
+		returnstat = sb.st_mode & (S_IRUSR | S_IRGRP | S_IROTH);
 		if (returnstat == 0)
 			return this->NO_PERMISSIONS; // NO PERMISSIONS
 		else
@@ -250,7 +250,7 @@ Job::PATH_TYPE Job::get_path_options(std::string const &uri)
 	}
 	else if (ret == 0)
 	{
-		returnstat = sb.st_mode & S_IRUSR | S_IRGRP | S_IROTH;
+		returnstat = sb.st_mode & (S_IRUSR | S_IRGRP | S_IROTH);
 		if (returnstat == 0)
 			return this->NO_PERMISSIONS; // NO PERMISSIONS
 		else if (S_ISDIR(sb.st_mode) == false)

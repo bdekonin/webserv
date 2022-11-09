@@ -36,13 +36,12 @@
 # include "Request.hpp" // Class that handles a request.
 # include "Response.hpp" // Class that handles a response.
 # include "Utils.hpp"
-#include <sys/types.h>
-#include <sys/socket.h>
 
 class Webserv
 {
 	public:
 		typedef std::map<int, Job>::iterator	iterator;
+
 		/* Constructor  */
 		Webserv(std::vector<ServerConfiguration> &configs);
 
@@ -525,12 +524,12 @@ class Webserv
 
 				type = job->get_path_options();
 
-				if (type == Job::PATH_TYPE::NO_PERMISSIONS)
+				if (type == Job::NO_PERMISSIONS)
 				{
 					job->set_xxx_response(job->correct_config, 403);
 					return (0);
 				}
-				if (type == Job::PATH_TYPE::DIRECTORY || job->get_path_options(uri + "/") == Job::PATH_TYPE::DIRECTORY)
+				if (type == Job::DIRECTORY || job->get_path_options(uri + "/") == Job::DIRECTORY)
 				{
 					job->set_xxx_response(job->correct_config, 400);
 					return (0);
@@ -621,11 +620,11 @@ class Webserv
 
 				if (extension == request._uri)
 					extension.clear();
-				if (get == true && job->correct_config.is_method_allowed(Request::Method::GET) == false)
+				if (get == true && job->correct_config.is_method_allowed(Request::GET) == false)
 					get = false;
-				else if (post == true && job->correct_config.is_method_allowed(Request::Method::POST) == false)
+				else if (post == true && job->correct_config.is_method_allowed(Request::POST) == false)
 					post = false;
-				else if (del == true && job->correct_config.is_method_allowed(Request::Method::DELETE) == false)
+				else if (del == true && job->correct_config.is_method_allowed(Request::DELETE) == false)
 					del = false;
 
 				std::map<std::string, std::string>::iterator it;

@@ -96,11 +96,11 @@ bool Configuration::is_method_allowed(const char *method) const
 }
 bool Configuration::is_method_allowed(Request::Method const type) const
 {
-	if (type == Request::Method::GET)
+	if (type == Request::GET)
 		return (this->_methods[0]);
-	else if (type == Request::Method::POST)
+	else if (type == Request::POST)
 		return (this->_methods[1]);
-	else if (type == Request::Method::DELETE)
+	else if (type == Request::DELETE)
 		return (this->_methods[2]);
 	return false;
 }

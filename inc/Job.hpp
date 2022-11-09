@@ -235,6 +235,7 @@ class Job
 			}
 			const char *job_type_to_char(JOB_TYPE type)
 			{
+				std::cout << "job_type_to_char: " << type << std::endl;
 				switch (type)
 				{
 					case WAIT_FOR_CONNECTION: return "SERVER: WAIT_FOR_CONNECTION";
@@ -252,8 +253,8 @@ class Job
 					case CGIING: return "TASK: CGIING";
 					case CLIENT_REMOVE: return "CLIENT: CLIENT_REMOVE";
 					case TASK_REMOVE: return "TASK: TASK_REMOVE";
+					default: return "UNKOWN";
 				}
-				std::cout << "job_type_to_char: " << type << std::endl;
 				return "UNKNOWN";
 			}
 
