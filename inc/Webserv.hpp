@@ -336,7 +336,6 @@ class Webserv
 					}
 					else if (job->type == Job::WAIT_FOR_CGIING)
 					{
-						std::cout << "Setting fd: " << job->fd << " | type: " << job->job_type_to_char() << std::endl;
 						FD_SET(job->fd, wr);
 						job->type = Job::READY_TO_CGI;
 					}
