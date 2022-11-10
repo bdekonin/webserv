@@ -6,7 +6,7 @@
 /*   By: rkieboom <rkieboom@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/05 15:03:05 by rkieboom      #+#    #+#                 */
-/*   Updated: 2022/11/09 22:00:03 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/10 14:31:12 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ ft::RespondCodes::RespondCodes()
 	// this->response_codes[103] = "Early Hints";
 
 	this->response_codes[200] = "OK";
-	// this->response_codes[201] = "Created";
+	this->response_codes[201] = "Created";
 	// this->response_codes[202] = "Accepted";
 	this->response_codes[204] = "No Content";
 	// this->response_codes[205] = "Reset Content";
