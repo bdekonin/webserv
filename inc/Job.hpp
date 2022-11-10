@@ -196,102 +196,17 @@ class Job
 				TASK_REMOVE, // Task type (Task is REMOVEing)
 			};
 
-			const char *job_type_to_char()
-			{
-				return this->job_type_to_char((JOB_TYPE)this->type);
-			}
-			const char *job_type_to_char(JOB_TYPE type)
-			{
-				switch (type)
-				{
-					case WAIT_FOR_CONNECTION: return "SERVER: WAIT_FOR_CONNECTION";
-					case WAIT_FOR_READING: return "CLIENT: WAIT_FOR_READING";
-					case WAIT_FOR_WRITING: return "CLIENT: WAIT_FOR_WRITING";
-					case WAIT_FOR_DELETING: return "CLIENT: WAIT_FOR_DELETING";
-					case WAIT_FOR_CGIING: return "CLIENT: WAIT_FOR_CGIING";
-					case READY_TO_READ: return "CLIENT: READY_TO_READ";
-					case READY_TO_WRITE: return "CLIENT: READY_TO_WRITE";
-					case READY_TO_DELETE: return "CLIENT: READY_TO_DELETE";
-					case READY_TO_CGI: return "CLIENT: READY_TO_CGI";
-					case READING: return "TASK: READING";
-					case WRITING: return "TASK: WRITING";
-					case DELETING: return "TASK: DELETING";
-					case CGIING: return "TASK: CGIING";
-					case CLIENT_REMOVE: return "CLIENT: CLIENT_REMOVE";
-					case TASK_REMOVE: return "TASK: TASK_REMOVE";
-					case CLIENT_RESPONSE: return "CLIENT: CLIENT_RESPONSE";
-					case CLIENT_READ: return "CLIENT: CLIENT_READ";
-					case FILE_WRITE: return "TASK: FILE_WRITE";
-					case FILE_READ: return "TASK: FILE_READ";
-					case CGI_WRITE: return "TASK: CGI_WRITE";
-					case CGI_READ: return "TASK: CGI_READ";
-				}
-				return "UNKNOWN";
-			}
+			const char *job_type_to_char();
+			const char *job_type_to_char(JOB_TYPE type);
 
-			bool isClient() const {
-				return (!this->isTask() && !this->isServer());
-			}
-			bool isTask() const {
-				return (
-					this->type == Job::READING ||
-					this->type == Job::WRITING ||
-					this->type == Job::DELETING ||
-					this->type == Job::CGIING
-				);
-			}
-			bool isServer() const {
-				return this->type == Job::WAIT_FOR_CONNECTION;
-			}
+			bool isClient() const;
+			bool isTask() const;
+			bool isServer() const;
 
-			Request &_getRequest()
-			{
-				if (this->isClient()) // If it is the user then return main otherwise return reference
-					return this->request;
-				if (this->client)
-					return this->client->get_request();
-				throw std::runtime_error("Job::_getRequest() - No request found");
-			}
-			Response		&_getResponse()
-			{
-				if (this->isClient()) // If it is the user then return main otherwise return reference
-					return this->response;
-				if (this->client)
-					return this->client->get_response();
-				throw std::runtime_error("Job::_getResponse() - No request found");
-			}
+			Request &_getRequest();
+			Response		&_getResponse();
 
-			int fileReader(int fd)
-			{
-				Response &res = this->_getResponse();
-				char *pointer = NULL;
-				char buf[4096 + 1];
-				int ret, pos = 0;
-				
-				bzero(buf, 4096 + 1);
-
-				ret = read(fd, buf, 4096);
-				if (ret < 0)
-				{
-					this->bytes_sent = 0;
-					return (-1);
-				}
-				if (ret == 0)
-				{
-					this->bytes_sent = 0;
-					return (1);
-				}
-				this->bytes_sent += ret;
-					pointer = ft_strnstr(buf, "\r\n\r\n", ret);
-					if (pointer != NULL)
-						pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
-					else
-						pos = 0;
-					if (pointer != NULL && pos > 0)
-						res.set_header(std::string(buf, pos));
-				res.set_body(buf, ret);
-				return (0);
-			}
+			int fileReader(int fd);
 };
 
 // std::ostream&	operator<<(std::ostream& out, const Job &c);
