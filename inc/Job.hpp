@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 21:16:21 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/10 13:59:56 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -350,12 +350,13 @@ class Job
 			int fileReader(int fd)
 			{
 				Response &res = this->_getResponse();
-
+				char *pointer = NULL;
 				char buf[4096 + 1];
+				int ret, pos = 0;
 				
 				bzero(buf, 4096 + 1);
 
-				int ret = read(fd, buf, 4096);
+				ret = read(fd, buf, 4096);
 				if (ret < 0)
 				{
 					this->bytes_sent = 0;
@@ -367,6 +368,13 @@ class Job
 					return (1);
 				}
 				this->bytes_sent += ret;
+					pointer = ft_strnstr(buf, "\r\n\r\n", ret);
+					if (pointer != NULL)
+						pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
+					else
+						pos = 0;
+					if (pointer != NULL && pos > 0)
+						res.set_header(std::string(buf, pos));
 				res.set_body(buf, ret);
 				return (0);
 			}

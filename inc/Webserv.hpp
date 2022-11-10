@@ -558,10 +558,14 @@ class Webserv
 			int createCGIJobs(Job *job)
 			{
 				Job::PATH_TYPE type;
-				std::string const &uri = job->_getRequest()._uri;
+				std::string extension;
+				Request &req = job->_getRequest();
 
-				type = job->get_path_options();
+				std::string &path = job->correct_config.get_cgi().find(extension)->second;
+				std::string const &uri = req._uri;
+				extension = req._uri.substr(req._uri.find_last_of("."));
 
+				type = job->get_path_options(path);
 				if (type == Job::NO_PERMISSIONS)
 				{
 					job->set_xxx_response(job->correct_config, 403);

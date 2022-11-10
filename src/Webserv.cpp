@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 22:31:52 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/10 14:00:16 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -492,7 +492,7 @@ void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 		ret = 0;
 		job->_getResponse().set_status_code(200);
 		while (!ret)
-			ret = job->fileReader2(fd_out[0]);
+			ret = job->fileReader(fd_out[0]);
 	}
 	else
 	{
