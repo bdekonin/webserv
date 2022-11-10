@@ -74,34 +74,12 @@ class Webserv
 
 
 		void						closeConnection(iterator &it, const char *connectionClosedBy);
-		
-		/**
-		 * @brief Main function that reads from a connection using recv,
-		 * 
-		 * @param job The connection that needs to be read.
-		 * @param loop_job_counter The counter of the job in the loop.
-		 * @param copy_writefds The copy of the writefds.
-		 * @return int 
-		 */
-		int									client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds);
-		
-		/**
-		 * @brief Main function that reads a file and stores it in job.response
-		 * 
-		 * @param job The connection
-		 * @param copy_writefds The copy of the writefds.
-		 * @param isRecursive Is this function called recursively?
-		 * @param type The type of file that needs to be read.
-		 * @return char 
-		 */
-		char								file_read(Job *job, fd_set *copy_writefds, bool isRecursive, Job::PATH_TYPE type);
-		
+
 		/**
 		 * @brief Main function that writes to a connection using send,
 		 * 
 		 * @param job The connection that needs to be written to.
 		 */
-		void								client_response(Job *job);
 		void								betterClientResponse(Job *job)
 		{
 			bool connection_close = false;
@@ -158,15 +136,6 @@ class Webserv
 		void								do_cgi(Job *job, fd_set *copy_writefds);
 		
 		int									create_correct_configfile(Request &request, ServerConfiguration &config, Configuration &ConfigToChange, std::string &ConfigToChange_path);
-
-		/**
-		 * @brief This function checks if a method is allowed and returns a value of it
-		 * 
-		 * @param request The request that needs to be checked.
-		 * @param config The config that needs to be checked.
-		 * @return size_t status code of the method. either 200 or 405.
-		 */
-		size_t								method_handling(Request &request, Configuration &config);
 
 		/**
 		 * @brief This function accepts a connection from a serverFD and stores it in this->jobs
@@ -388,7 +357,8 @@ class Webserv
 				}
 				else if (type == Job::WAIT_FOR_CGIING)
 				{
-					this->createCGIJobs(job);
+					if (this->createCGIJobs(job) == 0)
+						return (0);
 					return (job->fd);
 				}
 				else
@@ -485,6 +455,42 @@ class Webserv
 					return (0);
 				}
 			}
+
+			int createWritingJobs(Job *job)
+			{
+				int fd;
+				Job::PATH_TYPE type;
+				std::string const &uri = job->_getRequest()._uri;
+
+				type = job->get_path_options();
+
+				if (type == Job::NO_PERMISSIONS)
+				{
+					job->set_xxx_response(job->correct_config, 403);
+					return (0);
+				}
+				if (type == Job::DIRECTORY || job->get_path_options(uri + "/") == Job::DIRECTORY)
+				{
+					job->set_xxx_response(job->correct_config, 400);
+					return (0);
+				}
+				fd = this->openFileForWriting(uri);
+				return (fd);
+			}
+			int createCGIJobs(Job *job)
+			{
+				std::string extension;
+				Request &req = job->_getRequest();
+
+				extension = req._uri.substr(req._uri.find_last_of("."));
+				std::string &path = job->correct_config.get_cgi().find(extension)->second;
+				if (access(path.c_str(), F_OK) != 0) // File doesn't exist
+				{
+					job->set_xxx_response(job->correct_config, 404);
+					return (0);
+				}
+				return (1);
+			}
 			int openFileForReading(std::string const &path)
 			{
 				int fd;
@@ -500,7 +506,6 @@ class Webserv
 				}
 				return (fd);
 			}
-			void searchInDirectory();
 
 			int readFile(int fd, std::string const &uri, Response &resp)
 			{
@@ -532,58 +537,6 @@ class Webserv
 				}
 				return (0);
 			}
-
-
-			int createWritingJobs(Job *job)
-			{
-				int fd;
-				Job::PATH_TYPE type;
-				std::string const &uri = job->_getRequest()._uri;
-
-				type = job->get_path_options();
-
-				if (type == Job::NO_PERMISSIONS)
-				{
-					job->set_xxx_response(job->correct_config, 403);
-					return (0);
-				}
-				if (type == Job::DIRECTORY || job->get_path_options(uri + "/") == Job::DIRECTORY)
-				{
-					job->set_xxx_response(job->correct_config, 400);
-					return (0);
-				}
-				fd = this->openFileForWriting(uri);
-				return (fd);
-			}
-			int createCGIJobs(Job *job)
-			{
-				Job::PATH_TYPE type;
-				std::string extension;
-				Request &req = job->_getRequest();
-
-				std::string &path = job->correct_config.get_cgi().find(extension)->second;
-				std::string const &uri = req._uri;
-				extension = req._uri.substr(req._uri.find_last_of("."));
-
-				type = job->get_path_options(path);
-				if (type == Job::NO_PERMISSIONS)
-				{
-					job->set_xxx_response(job->correct_config, 403);
-					return (0);
-				}
-				if (type == Job::DIRECTORY || job->get_path_options(uri + "/") == Job::DIRECTORY)
-				{
-					job->set_xxx_response(job->correct_config, 400);
-					return (0);
-				}
-				if (type == Job::NOT_FOUND)
-				{
-					job->set_xxx_response(job->correct_config, 404);
-					return (0);
-				}
-				return (1);
-			}
-
 
 			int openFileForWriting(std::string const &path)
 			{
@@ -644,7 +597,6 @@ class Webserv
 					return (0);
 				}
 				/* 413 Payload Too Large */
-
 				if (post && request._body.size() > job->correct_config.get_client_max_body_size())
 				{
 					job->set_xxx_response(job->correct_config, 413);
@@ -735,14 +687,6 @@ class Webserv
 				}
 			}
 
-			// void http_index_module() // Function that calls functiosn below when nessecasry
-			// {
-			// 	std::cout << "http_index_module" << std::endl;
-			// }
-			// void http_file_module()
-			// {
-			// 	std::cout << "http_file_module" << std::endl;
-			// }
 			int autoindex_module(Job *job, Configuration &config)
 			{
 				std::string temp;
@@ -768,40 +712,6 @@ class Webserv
 				}
 				return (0);
 			}
-			// void http_dir_module()
-			// {
-			// 	std::cout << "http_dir_module" << std::endl;
-			// }
-			// void http_error_module()
-			// {
-			// 	std::cout << "http_error_module" << std::endl;
-			// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 };
 
 #endif // WEBSERV_HPP

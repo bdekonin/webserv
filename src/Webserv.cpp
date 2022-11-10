@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/06 20:25:27 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/10 14:00:16 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/10 15:28:20 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,6 +128,8 @@ void 					Webserv::run()
 
 	}
 }
+
+/* Private Main Methods */
 void 					Webserv::closeAll()
 {
 	Job *job;
@@ -143,8 +145,6 @@ void 					Webserv::closeAll()
 		}
 	}
 }
-
-/* Private Main Methods */
 void					Webserv::closeConnection(iterator &it, const char *connectionClosedBy)
 {
 	if (DEBUG == 1 && connectionClosedBy)
@@ -153,270 +153,9 @@ void					Webserv::closeConnection(iterator &it, const char *connectionClosedBy)
 	FD_CLR(it->first, &this->fds);
 	close(it->first);
 }
-int 					Webserv::client_read(Job *job, size_t &loop_job_counter, fd_set *copy_writefds)
-{
-	std::string ConfigToChange_path = "";
-	char	buffer[4096 + 1];
-	int		bytesRead = 0;
-	bzero(buffer, 4096 + 1);
-	bytesRead = recv(job->fd, buffer, 4096, 0);
-	if (bytesRead <= 0)
-	{
-		// this->closeConnection(job, "client");
-		loop_job_counter--;
-		return (0);
-	}
-
-	// TODO is Chunked? if so, read until 0\r
-	job->request.add_incoming_data(buffer, bytesRead);
-
-	Request::Type rtype = job->request.get_type();
-
-	if (rtype == Request::MAX_ENTITY)
-	{
-		job->set_xxx_response(job->correct_config, 431);
-		job->get_response().set_header("Connection: close");
-		this->client_response(job);
-		return (0);
-	}
-	if (job->get_request()._type != Request::ERROR && job->request.is_complete() == false)
-		return (1); 
-
-
-	bool get = job->request.is_method_get();
-	bool post = job->request.is_method_post();
-	bool del = job->request.is_method_delete();
-
-	/* Checks */
-	// 413 Request Entity Too Large
-	// 400 Bad Request
-	if (job->get_request().is_bad_request() == true)
-	{
-		// if (411)
-		if (job->get_request()._method == Request::UNSUPPORTED)
-			job->set_xxx_response(job->correct_config, 405);
-		else
-			job->set_xxx_response(job->correct_config, 400);
-		this->client_response(job);
-		return (0);
-	}
-	// 505 HTTP Version Not Supported
-	if (job->get_request().is_http_supported() == false)
-	{
-		job->set_xxx_response(job->correct_config, 505);
-		this->client_response(job);
-		return (0);
-	}
-
-	// 414 Request-URI Too Long
-	if (job->get_request()._uri.size() > 1024)
-	{
-		job->set_xxx_response(job->correct_config, 414);
-		this->client_response(job);
-		return (0);
-	}
-	if (post && job->correct_config.get_client_max_body_size() < job->get_request()._body.size())
-	{
-		job->set_xxx_response(job->correct_config, 413);
-		job->set_client_response(copy_writefds);
-		return (0);
-	}
-
-
-
-	ServerConfiguration server_configuration = this->get_correct_server_configuration(job);
-	this->create_correct_configfile(job->request, server_configuration, job->correct_config, ConfigToChange_path);
-
-	std::string &uri = job->get_request()._uri;
-	std::string extension = uri.substr(uri.find_last_of(".") + 1);
-
-	if (extension == uri)
-		extension = "";
-	if (get == true && job->correct_config.is_method_allowed("GET") == false)
-		get = false;
-	else if (post == true && job->correct_config.is_method_allowed("POST") == false)
-		post = false;
-	else if (del == true && job->correct_config.is_method_allowed("DELETE") == false)
-		del = false;
-
-	std::map<std::string, std::string>::iterator it;
-	it = job->correct_config.get_cgi().find("." + extension);
-
-	if (del == true) // method is DELETE
-	{
-		job->set_client_response(copy_writefds);
-		job->type = Job::FILE_WRITE;
-	}
-	else if (extension != "" &&  it != job->correct_config.get_cgi().end())
-	{
-		if (get == true)
-			job->type = Job::CGI_READ;
-		else
-			job->type = Job::CGI_WRITE;
-	}
-	else
-	{
-		if (get == true)
-			job->type = Job::FILE_READ;
-		else
-		{
-			job->set_405_response(job->correct_config);
-			job->set_client_response(copy_writefds);
-		}
-	}
-	loop_job_counter--;
-	/* Parse Request */
-	job->parse_request(ConfigToChange_path);
-
-	if (DEBUG == 1)
-	{
-		// Print nice things
-		std::stringstream ss;
-		ss << CLRS_YEL;
-		ss << "server : << [method: " << job->get_request().method_to_s() << "] ";
-		ss << "[target: " << job->get_request().get_unedited_uri() << "] ";
-		ss << "[location: " << ConfigToChange_path << "] ";
-		ss << "[client fd: " << job->fd << "]";
-		ss << CLRS_reset << std::endl;
-		std::cerr << ss.str();
-	}
-	return (0);
-}
-char 					Webserv::file_read(Job *job, fd_set *copy_writefds, bool isRecursive, Job::PATH_TYPE type)
-{
-	Configuration &config = job->correct_config;
-	if (isRecursive == false)
-		type = job->get_path_options();
-
-	if (job->get_response().get_status_code() != 0)
-	{
-		job->set_3xx_response(config);
-	}
-	else if (type == Job::NOT_FOUND) // NOT FOUND
-	{
-		if (job->get_response().is_body_empty() == false)
-			;
-		else if (config.get_autoindex() == true && job->get_request()._uri.rbegin()[0] == '/')
-			job->generate_autoindex_add_respone(config);
-		else
-			job->set_xxx_response(config, 404);
-	}
-	else if (type == Job::NO_PERMISSIONS) // FORBIDDEN
-	{
-		job->set_xxx_response(config, 403);
-	}
-	else if (type == Job::FILE_FOUND) // FILE
-	{
-		int fd;
-
-		fd = open(job->get_request()._uri.c_str(), O_RDONLY);
-		if (fd == -1)
-		{
-			std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
-			job->set_xxx_response(config, 500);
-		}
-		job->handle_file(fd, copy_writefds);
-		close(fd);
-	}
-	else if (type == Job::DIRECTORY) // DIRECTORY
-	{
-		size_t i = 0;
-		Job::PATH_TYPE copy_type;
-
-		if (isRecursive == true)
-		{
-			// Should not go here
-			job->set_xxx_response(config, 400);
-			job->set_client_response(copy_writefds); 
-		}
-		else
-		{
-			if (config.get_index().size() == 0)
-				config.get_index().push_back("index.html");
-
-			for (i = 0; i < config.get_index().size(); i++)
-			{
-				Job copy = *job;
-				copy.get_request()._uri = copy.get_request()._uri + config.get_index()[i];
-				copy_type = copy.get_path_options();
-				if (copy_type == Job::NOT_FOUND)
-					continue;
-				this->file_read(&copy, copy_writefds, true, copy_type);
-				if (copy_type == Job::FILE_FOUND || copy_type == Job::NO_PERMISSIONS)
-				{
-					job->get_request() = copy.get_request();
-					job->get_response() = copy.get_response();
-					break;
-				}
-			}
-			if (copy_type != Job::FILE_FOUND  && copy_type != Job::NO_PERMISSIONS && config.get_autoindex() == true)
-				job->generate_autoindex_add_respone(config);
-			else if (copy_type != Job::FILE_FOUND && copy_type != Job::NO_PERMISSIONS)
-			{
-				job->set_xxx_response(config, 404);
-			}
-		}
-	}
-	else // ERROR
-	{
-		std::cerr << "Setting 500 in " << __FILE__ << ":" << __LINE__ << std::endl;
-		job->set_xxx_response(config, 500);
-	}
-	if (isRecursive == false)
-		job->set_client_response(copy_writefds); 
-	return type;
-}
-void 					Webserv::client_response(Job *job)
-{
-	bool connection_close = false;
-	int bytes;
-	job->response.build_response_text();
-	std::vector<unsigned char> &response = job->_getResponse().get_response();
-	size_t response_size = response.size();
-	char *response_char = reinterpret_cast<char*> (&response[0]);
-
-
-	if (DEBUG == 1)
-	{
-		std::stringstream ss;
-		ss << CLRS_BLU;
-		bytes = ft_strnstr(response_char, "\r\n", 60) - response_char;
-		ss << "server : >> [status: " << std::string(response_char, bytes)  << "] ";
-		ss << "[length: " << response_size << "] ";
-		ss << "[client: " << job->fd << "] ";
-		ss << CLRS_reset;
-		std::cerr << ss.str() << std::endl;
-	}
-
-	bytes = 0;
-	while (response_size > 0) 
-	{
-		bytes = send(job->fd, response_char, response_size, 0);
-		if (bytes == -1)
-		{
-			job->type = Job::CLIENT_REMOVE;
-			return ; 
-		}
-		response_size -= bytes;
-		response_char += bytes;
-	}
-
-	if (job->get_request().get_header("connection").compare("Close") == 0)
-		connection_close = true;
-
-	job->clear();
-	this->jobs[job->fd].clear();
-	this->jobs[job->fd].type = Job::READY_TO_READ; // READY_TO_READ
-
-	if (connection_close)
-		job->type = Job::CLIENT_REMOVE;
-}
-
-
 
 void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 {
-	
 	int ret;
 	bool post;
 	bool get;
@@ -503,12 +242,6 @@ void 					Webserv::do_cgi(Job *job, fd_set *copy_writefds)
 
 	job->type = Job::READY_TO_WRITE;
 	FD_SET(job->fd, copy_writefds);
-}
-size_t					Webserv::method_handling(Request &request, Configuration &config)
-{
-	if (config.is_method_allowed(request.method_to_s()) == false)
-		return (405);
-	return (200); // 200 OK
 }
 int 					Webserv::accept_connection(Job *job, fd_set *set)
 {

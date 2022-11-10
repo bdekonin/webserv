@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/11/03 21:52:53 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/09 22:11:34 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/10 14:52:01 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,41 +81,6 @@ void 			Job::parse_request(std::string &ConfigToChange_path) // config is config
 		std::string path = this->request._uri;
 		path.replace(path.find(ConfigToChange_path), ConfigToChange_path.size(), ConfigToChange_path);
 		this->request._uri = this->correct_config.get_root() + path;
-	}
-}
-void 			Job::handle_file(int fd, fd_set *fds)
-{
-	std::string &uri = this->_getRequest()._uri;
-
-	this->get_response().set_status_code(200);
-	this->get_response().set_default_headers(uri.substr(uri.find_last_of(".") + 1));
-
-	int ret, pos = 0;
-	char *pointer = NULL;
-	char buf[4096 + 1];
-	
-	bzero(buf, 4096 + 1);
-	while ((ret = read(fd, buf, 4096)) > 0)
-	{
-		if (ret < 0)
-		{
-			this->set_500_response(this->correct_config);
-			this->set_client_response(fds);
-			return ;
-		}
-		pointer = ft_strnstr(buf, "\r\n\r\n", ret);
-		if (pointer != NULL)
-			pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
-		else
-			pos = 0;
-		if (pointer != NULL && pos > 0)
-			this->get_response().set_header(std::string(buf, pos));
-		this->get_response().set_body(buf, ret, pos);
-		if (ret < 4096)
-			break;
-		bzero(buf, 4096);
-		pos = 0;
-		pointer = NULL;
 	}
 }
 void 			Job::generate_autoindex_add_respone(Configuration &config)
@@ -195,11 +160,6 @@ void 			Job::set_xxx_response(Configuration &config, int code)
 		this->set_500_response(config);
 	else
 		this->response.set_xxx_response(config, code);
-}
-void 			Job::set_client_response(fd_set *copy_writefds) // fd_sets to write fd_set. and set client_response
-{
-	this->type = CLIENT_RESPONSE;
-	FD_SET(this->fd, copy_writefds);
 }
 
 void Job::setType(int type)

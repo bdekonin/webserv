@@ -6,7 +6,7 @@
 /*   By: bdekonin <bdekonin@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/08/31 16:44:20 by bdekonin      #+#    #+#                 */
-/*   Updated: 2022/11/10 13:59:56 by bdekonin      ########   odam.nl         */
+/*   Updated: 2022/11/10 14:52:18 by bdekonin      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,12 +97,12 @@ class Job
 			/// @brief This function reads from the file descriptor and saves the header in the request. and the body in the body.
 			/// @param fd The file descriptor to read from.
 
-			/**
-			 * @brief This function reads from the file descriptor and saves the header in the request. and the body in the body.
-			 * 
-			 * @param fd The file descriptor to read from.
-			 */
-			void handle_file(int fd, fd_set *fds);
+			// /**
+			//  * @brief This function reads from the file descriptor and saves the header in the request. and the body in the body.
+			//  * 
+			//  * @param fd The file descriptor to read from.
+			//  */
+			// void handle_file(int fd, fd_set *fds);
 
 			/**
 			 * @brief This function creates a list of all the files in the directory. 'autoindex' and stores it into the response body.
@@ -149,12 +149,6 @@ class Job
 			 */
 			void set_xxx_response(Configuration &config, int code);
 
-			/**
-			 * @brief This function gets called after you are done with it. It will FD_SET the fd to write and makes sure it will be writen
-			 * 
-			 * @param copy_writefds this is the fd_set that will be used loop over with FD_ISSET
-			 */
-			void set_client_response(fd_set *copy_writefds);
 			/**
 			 * @brief This function will generate a entire autoindex page and store it in the response body.
 			 * 
@@ -266,86 +260,6 @@ class Job
 					return this->client->get_response();
 				throw std::runtime_error("Job::_getResponse() - No request found");
 			}
-
-
-
-			int fileReader2(int fd)
-			{
-				Response &res = this->_getResponse();
-
-				int ret, pos = 0;
-				char *pointer = NULL;
-				char buf[4096 + 1];
-				
-				bzero(buf, 4096 + 1);
-				while ((ret = read(fd, buf, 4096)) > 0)
-				{
-					if (ret == 0)
-					{
-						// blocking
-						return (0);
-					}
-					if (ret < 0)
-					{
-						return (-1);
-					}
-
-					pointer = ft_strnstr(buf, "\r\n\r\n", ret);
-					if (pointer != NULL)
-						pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
-					else
-						pos = 0;
-					if (pointer != NULL && pos > 0)
-						res.set_header(std::string(buf, pos));
-
-					res.set_body(buf, ret, pos);
-					if (ret < 4096)
-						break;
-					bzero(buf, 4096);
-					pos = 0;
-					pointer = NULL;
-				}
-				return (1);
-			}
-
-			// int fileReader(int fd)
-			// {
-			// 	Response &res = this->_getResponse();
-			// 	Request &req = this->_getRequest();
-			// 	std::string &uri = req._uri;
-
-			// 	int ret, pos = 0;
-			// 	char *pointer = NULL;
-			// 	char buf[4096 + 1];
-				
-			// 	bzero(buf, 4096 + 1);
-			// 	while ((ret = read(fd, buf, 4096)) > 0)
-			// 	{
-			// 		if (ret == 0)
-			// 		{
-			// 			// blocking
-			// 			return (0);
-			// 		}
-			// 		if (ret < 0)
-			// 		{
-			// 			return (-1);
-			// 		}
-			// 		// pointer = ft_strnstr(buf, "\r\n\r\n", ret);
-			// 		// if (pointer != NULL)
-			// 		// 	pos = ft_strnstr(buf, "\r\n\r\n", ret) - buf;
-			// 		// else
-			// 		// 	pos = 0;
-			// 		// if (pointer != NULL && pos > 0)
-			// 		// 	res.set_header(std::string(buf, pos));
-			// 		res.set_body(buf, ret, pos);
-			// 		if (ret < 4096)
-			// 			break;
-			// 		bzero(buf, 4096);
-			// 		pos = 0;
-			// 		pointer = NULL;
-			// 	}
-			// 	return (1);
-			// }
 
 			int fileReader(int fd)
 			{
