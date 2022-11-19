@@ -4,8 +4,7 @@
 
 NAME        := webserv
 CC         := c++
-FLAGS    := -Wall -Wextra -Werror 
-FLAGS += -g
+FLAGS    := -Wall -Wextra -Werror
 
 ifeq ($(DEBUG),1)
 FLAGS += -D DEBUG=1
