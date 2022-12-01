@@ -1,4 +1,29 @@
 
+# Webserv
+This project is about creating your own web server, written in C++, that is capable of running an HTTP server, handling requests, and parsing configuration files.
+
+## Prerequisites
+- C++ Compiler
+- Basic Knowledge of the HTTP Protocol
+- Knowledge of Networking
+
+## Features
+- Ability to run an HTTP server
+- Ability to handle requests
+- Ability to parse configuration files
+
+## Installation
+1. Download the project files.
+2. Compile the project using your C++ compiler.
+3. Run the executable.
+
+## Usage
+1. Configure the server by editing the configuration files.
+2. Start the server.
+3. Use your web browser to access the server.
+
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ## Resources
 [Nginx server blocks](https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms)
