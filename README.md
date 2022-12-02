@@ -1,6 +1,14 @@
-
 # Webserv
+
+[![CodeFactor](https://www.codefactor.io/repository/github/bdekonin/webserv/badge)](https://www.codefactor.io/repository/github/bdekonin/webserv)
+
+
 This project is about creating your own web server, written in C++, that is capable of running an HTTP server, handling requests, and parsing configuration files.
+
+## Collabaration
+This project has been created in collaboration between [@rkieboom](http://github.com/rkieboom) and [@lskywalker](http://github.com/lskywalker).
+We worked together to create a project that met our specific goals and requirements. Through communication and collaboration, we were able to create a project that we are both proud of. 
+We hope that you find this project useful and enjoy the results of our hard work. Thank you for taking the time to view our collaboration.
 
 ## Prerequisites
 - C++ Compiler
